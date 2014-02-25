@@ -7,7 +7,9 @@ public class Main {
 
 		DatabaseConnector db = new DatabaseConnector();
 		
-		db.selectUserById(1);
+		UserDto u = db.selectUserById(1);
+		
+		System.out.println(u.toString());
 		
 		
 		

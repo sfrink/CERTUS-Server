@@ -88,7 +88,27 @@ public class UserDto {
 		this.status = status;
 	}
 	
-	
+	public String toString() {
+		String out = "";
+		String delimiter = "\n";
+		String endOfString = "\n\n";
 
+		out += "User ";
+		out += "id: " + this.getUser_id() + delimiter;
+		out += "first name: " + this.getFirst_name() + delimiter;
+		out += "last name: " + this.getLast_name() + delimiter;
+		out += "email: " + this.getEmail() + delimiter;
+		out += "password: " + this.getPassword() + delimiter;
+		out += "salt: " + this.getSalt() + delimiter;
+		out += "temp_pass: " + this.getTemp_password() + delimiter;
+		out += "temp_salt: " + this.getTemp_salt() + delimiter;
+		out += "activation_code: " + this.getActivation_code() + delimiter;
+		out += "public key: " + this.getPublic_key() + delimiter;
+		out += "admin_flag: " + this.getAdministrator_flag() + delimiter;
+		out += "status: " + this.getStatus() + delimiter;
 
+		out += endOfString;
+
+		return out;
+	}
 }
