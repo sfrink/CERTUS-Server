@@ -8,18 +8,27 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.certus.server.server.*;
 
 public class DatabaseConnector {
-	private static String dbHost = "128.164.159.149";
-	private static String dbPort = "3306";
-	private static String dbUser = "repo6908";
-	private static String dbPassword = "arWqs1931_6908";
-	private static String dbName = "repo6908";
+	private static String dbHost;
+	private static String dbPort;
+	private static String dbUser;
+	private static String dbPassword;
+	private static String dbName;
 	private Connection con;
 
 	
 	public DatabaseConnector() {
 		Connection con = null;
+		
+		dbHost = ReaderConfig.getDbHostIp();
+		dbPort = ReaderConfig.getDbPort();
+		dbName = ReaderConfig.getDbSchema();
+		dbUser = ReaderConfig.getDbUser();
+		dbPassword = ReaderConfig.getDbPassword();
+		
+		
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			String url = "jdbc:mysql://" + dbHost + ":" + dbPort + "/" + dbName;
