@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Certus>
+    <database>  
+        <hostIP>128.164.159.149</hostIP>
+        <port>3306</port>
+        <schema>repo6908</schema>
+        <user>repo6908</user>
+        <password>arWqs1931_6908</password>
+    </database>
+    <encryption>
+        <iv>ABAFACAFAA5ABBAA</iv>
+        <key>0123456789abcdef</key>
+    </encryption>
+</Certus>
