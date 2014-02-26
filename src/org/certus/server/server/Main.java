@@ -1,4 +1,7 @@
-package org.certus.server.dto;
+package org.certus.server.server;
+
+import org.certus.server.dto.DatabaseConnector;
+import org.certus.server.dto.UserDto;
 
 public class Main {
 
@@ -10,9 +13,6 @@ public class Main {
 		UserDto u = db.selectUserById(1);
 		
 		System.out.println(u.toString());
-		
-		
-		
 		
 	}
 
