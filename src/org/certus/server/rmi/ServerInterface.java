@@ -5,5 +5,4 @@ import java.rmi.RemoteException;
 
 public interface ServerInterface extends Remote {
     String sayHello(String name) throws RemoteException;
-    
 }

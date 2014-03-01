@@ -24,7 +24,7 @@ public class RMISSLServerSocketFactory implements RMIServerSocketFactory {
 
 			char[] passphrase = "CertusKeysPass".toCharArray();
 			ks = KeyStore.getInstance("JKS");
-			ks.load(new FileInputStream("/Users/dkarmazi/git/CERTUS-Server/src/org/certus/server/rmi/CertusKeystore"), passphrase);
+			ks.load(new FileInputStream("/Users/dkarmazi/Desktop/files/CertusKeystore"), passphrase);
 
 			kmf = KeyManagerFactory.getInstance("SunX509");
 			kmf.init(ks, passphrase);

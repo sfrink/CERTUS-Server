@@ -9,7 +9,6 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 
-
 public class CertusServer extends UnicastRemoteObject implements ServerInterface {
 
     private static final int PORT = 2019;
@@ -25,10 +24,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 		return "Hello Certus Client: " + name;
     }
 
-
     public static void main(String args[]) {
 		
-		System.setProperty("java.security.policy", "/Users/dkarmazi/git/CERTUS-Server/src/org/certus/server/rmi/policy");
+		System.setProperty("java.security.policy", "/Users/dkarmazi/Desktop/files/policy");
+		
 		// Create and install a security manager
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new RMISecurityManager());
