@@ -26,7 +26,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
     public static void main(String args[]) {
 		
-		System.setProperty("java.security.policy", "/Users/dkarmazi/Desktop/files/policy");
+    	//String filePath = "/Users/dkarmazi/Desktop/files/";
+    	String filePath = "/home/dkarmazi/files/";
+		System.setProperty("java.security.policy", filePath + "policy");
 		
 		// Create and install a security manager
 		if (System.getSecurityManager() == null) {

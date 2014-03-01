@@ -3,8 +3,11 @@
 import java.io.*;
 import java.net.*;
 import java.rmi.server.*;
+
 import javax.net.ssl.*;
+
 import java.security.KeyStore;
+
 import javax.net.ssl.*;
 
 public class RMISSLServerSocketFactory implements RMIServerSocketFactory {
@@ -22,9 +25,11 @@ public class RMISSLServerSocketFactory implements RMIServerSocketFactory {
 			KeyManagerFactory kmf;
 			KeyStore ks;
 
+//			String filePath = "/Users/dkarmazi/Desktop/files/";
+			String filePath = "/home/dkarmazi/files/";
 			char[] passphrase = "CertusKeysPass".toCharArray();
 			ks = KeyStore.getInstance("JKS");
-			ks.load(new FileInputStream("/Users/dkarmazi/Desktop/files/CertusKeystore"), passphrase);
+			ks.load(new FileInputStream(filePath + "CertusKeystore"), passphrase);
 
 			kmf = KeyManagerFactory.getInstance("SunX509");
 			kmf.init(ks, passphrase);
