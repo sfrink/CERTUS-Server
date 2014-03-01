@@ -1,3 +1,4 @@
+package rmi;
 
 
 import java.io.*;
@@ -25,11 +26,11 @@ public class RMISSLServerSocketFactory implements RMIServerSocketFactory {
 			KeyManagerFactory kmf;
 			KeyStore ks;
 
-//			String filePath = "/Users/dkarmazi/Desktop/files/";
-			String filePath = "/home/dkarmazi/files/";
-			char[] passphrase = "CertusKeysPass".toCharArray();
+			
+			String filePath = CertusServer.prop.getProperty("rmi_basepath");
+			char[] passphrase = CertusServer.prop.getProperty("rmi_file_keystore_password").toCharArray();
 			ks = KeyStore.getInstance("JKS");
-			ks.load(new FileInputStream(filePath + "CertusKeystore"), passphrase);
+			ks.load(new FileInputStream(filePath + CertusServer.prop.getProperty("rmi_file_keystore")), passphrase);
 
 			kmf = KeyManagerFactory.getInstance("SunX509");
 			kmf.init(ks, passphrase);

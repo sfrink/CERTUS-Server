@@ -1,3 +1,4 @@
+package rmi;
 
 
 import java.rmi.Remote;
