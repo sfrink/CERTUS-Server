@@ -1,4 +1,4 @@
-package org.certus.server.enumeration;
+package server.enumeration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,14 +8,12 @@ import java.util.Map;
  * @author : Hirosh Wickramasuriya
  */
 
-public enum UserStatus {
+public enum XmlFileIdentifier {
 	
-	//ALL(-1, "All", "All the users"),
-	//DEFAULT(0, "Default", "All the users"),
-	ACTIVE (1, "Active", "Active User"),
-	LOCKED (2, "Locked", "User account is locked");
+	
+	SERVER_CONFIGURATION (5000, "ServerConfigFile", "Server configuration details in xml format.");
 
-	
+ 
     private int code;
     private String label;
     private String description;
@@ -23,15 +21,15 @@ public enum UserStatus {
     /**
      * A mapping between the integer code and its corresponding Status to facilitate lookup by code.
      */
-    private static Map<Integer, UserStatus> codeToStatusMapping;
+    private static Map<Integer, XmlFileIdentifier> codeToStatusMapping;
  
-    private UserStatus(int code, String label, String description) {
+    private XmlFileIdentifier(int code, String label, String description) {
         this.code = code;
         this.label = label;
         this.description = description;
     }
     
-    public static UserStatus getStatus(int i) {
+    public static XmlFileIdentifier getStatus(int i) {
         if (codeToStatusMapping == null) {
             initMapping();
         }
@@ -39,8 +37,8 @@ public enum UserStatus {
     }
  
     private static void initMapping() {
-        codeToStatusMapping = new HashMap<Integer, UserStatus>();
-        for (UserStatus s : values()) {
+        codeToStatusMapping = new HashMap<Integer, XmlFileIdentifier>();
+        for (XmlFileIdentifier s : values()) {
             codeToStatusMapping.put(s.code, s);
         }
     }

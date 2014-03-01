@@ -1,4 +1,4 @@
-package org.certus.server.enumeration;
+package server.enumeration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,15 +8,14 @@ import java.util.Map;
  * @author : Hirosh Wickramasuriya
  */
 
-public enum ElectionStatus {
+public enum UserStatus {
 	
-	
-	NEW (1, "New", "New election."), 
-	OPEN (2, "Open", "Election is opened for submit vote."),
-	CLOSED (3, "Closed", "Election is closed, cannot submit vote."),
-	PUBLISHED (4, "Result Published", "Results of the election is published and finalized.");
+	//ALL(-1, "All", "All the users"),
+	//DEFAULT(0, "Default", "All the users"),
+	ACTIVE (1, "Active", "Active User"),
+	LOCKED (2, "Locked", "User account is locked");
 
- 
+	
     private int code;
     private String label;
     private String description;
@@ -24,15 +23,15 @@ public enum ElectionStatus {
     /**
      * A mapping between the integer code and its corresponding Status to facilitate lookup by code.
      */
-    private static Map<Integer, ElectionStatus> codeToStatusMapping;
+    private static Map<Integer, UserStatus> codeToStatusMapping;
  
-    private ElectionStatus(int code, String label, String description) {
+    private UserStatus(int code, String label, String description) {
         this.code = code;
         this.label = label;
         this.description = description;
     }
     
-    public static ElectionStatus getStatus(int i) {
+    public static UserStatus getStatus(int i) {
         if (codeToStatusMapping == null) {
             initMapping();
         }
@@ -40,8 +39,8 @@ public enum ElectionStatus {
     }
  
     private static void initMapping() {
-        codeToStatusMapping = new HashMap<Integer, ElectionStatus>();
-        for (ElectionStatus s : values()) {
+        codeToStatusMapping = new HashMap<Integer, UserStatus>();
+        for (UserStatus s : values()) {
             codeToStatusMapping.put(s.code, s);
         }
     }

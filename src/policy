@@ -4,8 +4,3 @@ grant {
 	permission java.net.SocketPermission "*", "accept,resolve";
 	permission java.security.AllPermission "", "";
 };
-
-// for Linux:
-//grant codeBase "file:/home/ahmadko/RMISSL/" {
-    //permission java.security.AllPermission;
-//};

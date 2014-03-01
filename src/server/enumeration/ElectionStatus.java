@@ -1,4 +1,4 @@
-package org.certus.server.enumeration;
+package server.enumeration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,10 +8,13 @@ import java.util.Map;
  * @author : Hirosh Wickramasuriya
  */
 
-public enum XmlFileIdentifier {
+public enum ElectionStatus {
 	
 	
-	SERVER_CONFIGURATION (5000, "ServerConfigFile", "Server configuration details in xml format.");
+	NEW (1, "New", "New election."), 
+	OPEN (2, "Open", "Election is opened for submit vote."),
+	CLOSED (3, "Closed", "Election is closed, cannot submit vote."),
+	PUBLISHED (4, "Result Published", "Results of the election is published and finalized.");
 
  
     private int code;
@@ -21,15 +24,15 @@ public enum XmlFileIdentifier {
     /**
      * A mapping between the integer code and its corresponding Status to facilitate lookup by code.
      */
-    private static Map<Integer, XmlFileIdentifier> codeToStatusMapping;
+    private static Map<Integer, ElectionStatus> codeToStatusMapping;
  
-    private XmlFileIdentifier(int code, String label, String description) {
+    private ElectionStatus(int code, String label, String description) {
         this.code = code;
         this.label = label;
         this.description = description;
     }
     
-    public static XmlFileIdentifier getStatus(int i) {
+    public static ElectionStatus getStatus(int i) {
         if (codeToStatusMapping == null) {
             initMapping();
         }
@@ -37,8 +40,8 @@ public enum XmlFileIdentifier {
     }
  
     private static void initMapping() {
-        codeToStatusMapping = new HashMap<Integer, XmlFileIdentifier>();
-        for (XmlFileIdentifier s : values()) {
+        codeToStatusMapping = new HashMap<Integer, ElectionStatus>();
+        for (ElectionStatus s : values()) {
             codeToStatusMapping.put(s.code, s);
         }
     }

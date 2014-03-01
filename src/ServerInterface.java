@@ -1,4 +1,4 @@
-package org.certus.server.rmi;
+
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

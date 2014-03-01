@@ -1,15 +1,16 @@
-package org.certus.server.server;
+package server;
 
 import java.io.File;
-import org.w3c.dom.Document;
+
 import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import org.certus.server.enumeration.*;
+import server.enumeration.*;
 
 /**
  * @date : Feb 26, 2014

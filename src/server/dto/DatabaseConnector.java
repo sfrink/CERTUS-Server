@@ -1,4 +1,4 @@
-package org.certus.server.dto;
+package server.dto;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.certus.server.server.*;
+import server.*;
 
 public class DatabaseConnector {
 	private static String dbHost;

@@ -1,4 +1,4 @@
-package org.certus.server.dto;
+package server.dto;
 
 public class UserDto {
 	

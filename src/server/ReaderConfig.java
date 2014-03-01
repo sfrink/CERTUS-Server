@@ -1,6 +1,6 @@
-package org.certus.server.server;
+package server;
 
-import org.certus.server.enumeration.XmlFileIdentifier;
+import server.enumeration.XmlFileIdentifier;
 
 /**
  * @date : Feb 26, 2014

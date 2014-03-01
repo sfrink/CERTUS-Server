@@ -1,7 +1,7 @@
-package org.certus.server.server;
+package server;
 
-import org.certus.server.dto.DatabaseConnector;
-import org.certus.server.dto.UserDto;
+import server.dto.DatabaseConnector;
+import server.dto.UserDto;
 
 public class Main {
 

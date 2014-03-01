@@ -1,4 +1,4 @@
-package org.certus.server.rmi;
+
 
 import java.io.*;
 import java.net.InetAddress;
