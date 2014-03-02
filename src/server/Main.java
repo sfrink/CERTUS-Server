@@ -1,5 +1,6 @@
 package server;
 
+import database.DatabaseConnector;
 import dto.*;
 
 public class Main {

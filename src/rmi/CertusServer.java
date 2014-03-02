@@ -10,6 +10,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
+import database.DatabaseConnector;
 import dto.*;
 import server.PasswordHasher;
 
@@ -17,6 +18,7 @@ import server.PasswordHasher;
 public class CertusServer extends UnicastRemoteObject implements ServerInterface {
 
     private static int PORT;
+    private static DatabaseConnector dbc;
 
     
     public CertusServer() throws Exception {
@@ -49,6 +51,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 			// Bind this object instance to the name "CertusServer"
 			registry.bind(ConfigurationProperties.rmiRegistry(), obj);
 
+			dbc = new DatabaseConnector();
+			
+			
 			System.out.println("Certus Service bound in registry");
 		} catch (Exception e) {
 			System.out.println("Certus RMI service exception: " + e.getMessage());
@@ -59,8 +64,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator checkIfUsernamePasswordMatch(String email, String plainPass)  throws RemoteException{
     	//Look up username in db, get salt, password hash
-    	DatabaseConnector db = new DatabaseConnector();
-    	Validator validator = db.checkIfUsernamePasswordMatch(email, plainPass);
+    	//DatabaseConnector db = new DatabaseConnector();
+    	Validator validator = dbc.checkIfUsernamePasswordMatch(email, plainPass);
     	
 //    	UserDto userDto=selectUserByEmailLimited(username);
 //    	String hash=PasswordHasher.sha512(password,userDto.getSalt());

@@ -1,4 +1,4 @@
-package dto;
+package database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,6 +11,9 @@ import java.util.logging.Logger;
 
 import org.omg.CORBA.INITIALIZE;
 
+import dto.ConfigurationProperties;
+import dto.UserDto;
+import dto.Validator;
 import server.*;
 
 public class DatabaseConnector {
@@ -119,6 +122,7 @@ public class DatabaseConnector {
 
 			//updateDatabaseIntField("USERS", "ID", "FALSELOGINS", id, 0);
 			//unsetActivationCodeAndTempPassword(id);
+			result.setObject(userDto);
 			result.setVerified(true);
 			result.setStatus("Welcome to Certus");
 
@@ -230,9 +234,10 @@ public class DatabaseConnector {
 
 			if (res.next()) {
 				int user_id = res.getInt(1);
+				String first_name = res.getString(2);
+				String last_name = res.getString(3);
 				String password = res.getString(4);
 				String salt = res.getString(5);
-				
 				
 				int statusId = res.getInt(6);
 				
@@ -248,6 +253,8 @@ public class DatabaseConnector {
 //				int firmId = res.getInt(11);
 
 				userDto.setUser_id(user_id);
+				userDto.setFirst_name(first_name);
+				userDto.setLast_name(last_name);
 				userDto.setPassword(password);
 				userDto.setSalt(salt);
 				userDto.setStatus(statusId);

@@ -6,7 +6,16 @@ public class Validator implements Serializable {
 	
 	private boolean verified = false;
 	private String status = "";
+	private Object object = null;
 
+
+	public Object getObject() {
+		return object;
+	}
+
+	public void setObject(Object object) {
+		this.object = object;
+	}
 
 	public boolean isVerified() {
 		return verified;
