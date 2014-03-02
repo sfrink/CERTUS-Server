@@ -11,7 +11,7 @@ import java.security.KeyStore;
 
 import javax.net.ssl.*;
 
-import server.dto.ConfigurationProperties;
+import dto.ConfigurationProperties;
 
 public class RMISSLServerSocketFactory implements RMIServerSocketFactory {
 

@@ -1,6 +1,8 @@
-package server.dto;
+package dto;
 
-public class Validator {
+import java.io.Serializable;
+
+public class Validator implements Serializable {
 	
 	private boolean verified = false;
 	private String status = "";

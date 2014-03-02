@@ -1,7 +1,6 @@
 package server;
 
-import server.dto.DatabaseConnector;
-import server.dto.UserDto;
+import dto.*;
 
 public class Main {
 
@@ -13,6 +12,9 @@ public class Main {
 		UserDto u = db.selectUserById(1);
 		
 		System.out.println(u.toString());
+		
+		Validator v = db.checkIfUsernamePasswordMatch("jgalt@jg.com", "password");
+		System.out.println(v.getStatus());
 		
 	}
 
