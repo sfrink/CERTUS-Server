@@ -10,7 +10,9 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
+import server.PasswordHasher;
 import server.dto.ConfigurationProperties;
+import server.dto.UserDto;
 
 
 public class CertusServer extends UnicastRemoteObject implements ServerInterface {
@@ -29,7 +31,11 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 		return "Hello Certus Client: " + name;
     }
     
-    public byte[] getHash(String message, byte[] salt){
+    public boolean checkUserLogin(String username, String password){
+    	//Look up username in db, get salt, password hash
+    	UserDto user=selectUserByEmailLimited(username);
+    	String hash=PasswordHasher.sha512(password,user.getSalt());
+    	return hash==user.getPassword();
     	
     	
     }

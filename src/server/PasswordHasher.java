@@ -1,3 +1,5 @@
+package server;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -21,7 +23,7 @@ public class PasswordHasher implements Serializable {
 		return randSalt;
 	}
 
-	public String sha512(String pwd, String salt) {
+	public static String sha512(String pwd, String salt) {
 		try {
 			MessageDigest sha = MessageDigest.getInstance("SHA-512");
 
