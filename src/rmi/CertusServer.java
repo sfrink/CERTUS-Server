@@ -10,11 +10,12 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
+import server.dto.ConfigurationProperties;
+
 
 public class CertusServer extends UnicastRemoteObject implements ServerInterface {
 
     private static int PORT;
-    public static Properties prop;
 
     
     public CertusServer() throws Exception {
@@ -35,10 +36,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
     public static void main(String args[]) {
     	
-    	prop = getProperties();
-    	PORT = Integer.parseInt(prop.getProperty("rmi_port"));
-    	String filePath = prop.getProperty("rmi_basepath");
-		System.setProperty("java.security.policy", filePath + prop.getProperty("rmi_file_policy"));
+    	PORT = Integer.parseInt(ConfigurationProperties.rmiPort());
+    	String filePath = ConfigurationProperties.rmiBasePath();
+		System.setProperty("java.security.policy", filePath + ConfigurationProperties.rmiFilePolicy());
 		
 		// Create and install a security manager
 		if (System.getSecurityManager() == null) {
@@ -54,31 +54,14 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 			CertusServer obj = new CertusServer();
 
 			// Bind this object instance to the name "CertusServer"
-			registry.bind(prop.getProperty("rmi_registry"), obj);
+			registry.bind(ConfigurationProperties.rmiRegistry(), obj);
 
 			System.out.println("Certus Service bound in registry");
 		} catch (Exception e) {
-			System.out.println("Certus Server exception: " + e.getMessage());
+			System.out.println("Certus RMI service exception: " + e.getMessage());
 			e.printStackTrace();
 		}
     }
     
     
-    public static Properties getProperties() {
-		Properties prop = new Properties();
-		InputStream input = CertusServer.class.getClassLoader().getResourceAsStream("config.properties");;
-		
-		try {
-			// load a properties file
-			prop.load(input);
-	 
-			// get the property value and print it out
-			System.out.println(prop.toString());
-			
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-		
-		return prop;
-    }
 }
