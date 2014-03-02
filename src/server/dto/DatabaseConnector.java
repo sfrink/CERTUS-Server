@@ -5,8 +5,11 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.omg.CORBA.INITIALIZE;
 
 import server.*;
 
@@ -17,16 +20,17 @@ public class DatabaseConnector {
 	private static String dbPassword;
 	private static String dbName;
 	private Connection con;
-
 	
 	public DatabaseConnector() {
 		Connection con = null;
 		
-		dbHost = ReaderConfig.getDbHostIp();
-		dbPort = ReaderConfig.getDbPort();
-		dbName = ReaderConfig.getDbSchema();
-		dbUser = ReaderConfig.getDbUser();
-		dbPassword = ReaderConfig.getDbPassword();
+		//System.out.println(ConfigurationProperties.dbHost());
+
+		dbHost = ConfigurationProperties.dbHost();
+		dbPort = ConfigurationProperties.dbPort();
+		dbName = ConfigurationProperties.dbSchema();
+		dbUser = ConfigurationProperties.dbUser();
+		dbPassword = ConfigurationProperties.dbPassword();
 		
 		
 		try {
