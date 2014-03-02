@@ -27,6 +27,11 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 		System.out.println("Request received from the client: " + name);
 		return "Hello Certus Client: " + name;
     }
+    
+    public byte[] getHash(String message, byte[] salt){
+    	
+    	
+    }
 
     public static void main(String args[]) {
     	
