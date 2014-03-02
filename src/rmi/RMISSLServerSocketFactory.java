@@ -11,6 +11,8 @@ import java.security.KeyStore;
 
 import javax.net.ssl.*;
 
+import server.dto.ConfigurationProperties;
+
 public class RMISSLServerSocketFactory implements RMIServerSocketFactory {
 
     /*
@@ -26,12 +28,11 @@ public class RMISSLServerSocketFactory implements RMIServerSocketFactory {
 			KeyManagerFactory kmf;
 			KeyStore ks;
 
-			
-			String filePath = CertusServer.prop.getProperty("rmi_basepath");
-			char[] passphrase = CertusServer.prop.getProperty("rmi_file_keystore_password").toCharArray();
+			String filePath = ConfigurationProperties.rmiBasePath();
+			char[] passphrase = ConfigurationProperties.rmiPasswordKeystore().toCharArray();
 			ks = KeyStore.getInstance("JKS");
-			ks.load(new FileInputStream(filePath + CertusServer.prop.getProperty("rmi_file_keystore")), passphrase);
-
+			ks.load(new FileInputStream(filePath + ConfigurationProperties.rmiFileKeystore()), passphrase);
+			
 			kmf = KeyManagerFactory.getInstance("SunX509");
 			kmf.init(ks, passphrase);
 
