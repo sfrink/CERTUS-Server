@@ -10,9 +10,8 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Properties;
 
+import dto.*;
 import server.PasswordHasher;
-import server.dto.ConfigurationProperties;
-import server.dto.UserDto;
 
 
 public class CertusServer extends UnicastRemoteObject implements ServerInterface {
@@ -26,19 +25,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 		new RMISSLServerSocketFactory());
     }
 
-    public String sayHello(String name) {
-		System.out.println("Request received from the client: " + name);
-		return "Hello Certus Client: " + name;
-    }
-    
-    public boolean checkUserLogin(String username, String password){
-    	//Look up username in db, get salt, password hash
-    	UserDto user=DatabaseConnector.selectUserByEmailLimited(username);
-    	String hash=PasswordHasher.sha512(password,user.getSalt());
-    	return hash==user.getPassword();
-    	
-    	
-    }
+
 
     public static void main(String args[]) {
     	
@@ -69,5 +56,23 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 		}
     }
     
+    @Override
+    public Validator checkIfUsernamePasswordMatch(String email, String plainPass)  throws RemoteException{
+    	//Look up username in db, get salt, password hash
+    	DatabaseConnector db = new DatabaseConnector();
+    	Validator validator = db.checkIfUsernamePasswordMatch(email, plainPass);
+    	
+//    	UserDto userDto=selectUserByEmailLimited(username);
+//    	String hash=PasswordHasher.sha512(password,userDto.getSalt());
+//    	return hash==userDto.getPassword();
+    	return validator;
+    	
+    }
+    
+
+    public String sayHello(String name) {
+		System.out.println("Request received from the client: " + name);
+		return "Hello Certus Client: " + name;
+    }
     
 }

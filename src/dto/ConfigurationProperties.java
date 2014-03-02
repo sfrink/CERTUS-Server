@@ -1,4 +1,4 @@
-package server.dto;
+package dto;
 
 import java.io.IOException;
 import java.io.InputStream;
