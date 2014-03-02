@@ -33,7 +33,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     
     public boolean checkUserLogin(String username, String password){
     	//Look up username in db, get salt, password hash
-    	UserDto user=selectUserByEmailLimited(username);
+    	UserDto user=DatabaseConnector.selectUserByEmailLimited(username);
     	String hash=PasswordHasher.sha512(password,user.getSalt());
     	return hash==user.getPassword();
     	
