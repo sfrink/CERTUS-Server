@@ -43,6 +43,7 @@ public class DatabaseConnector {
 					dbPassword);
 			this.con = con;
 		} catch (Exception e) {
+			System.out.println("Db connection failed");
 			e.printStackTrace();
 		}
 
