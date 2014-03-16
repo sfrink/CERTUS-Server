@@ -11,10 +11,10 @@ import java.util.Map;
 public enum ElectionStatus {
 	
 	
-	NEW (1, "New", "New election."), 
-	OPEN (2, "Open", "Election is opened for submit vote."),
-	CLOSED (3, "Closed", "Election is closed, cannot submit vote."),
-	PUBLISHED (4, "Result Published", "Results of the election is published and finalized.");
+	NEW (0, "New", "New election."), 
+	OPEN (1, "Open", "Election is opened for voting."),
+	CLOSED (8, "Closed", "Election is closed, cannot submit vote."),
+	PUBLISHED (9, "Result Published", "Results of the election is published and finalized.");
 
  
     private int code;
