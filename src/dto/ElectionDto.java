@@ -6,6 +6,10 @@ import java.util.Enumeration;
 
 import enumeration.ElectionStatus;
 
+/**
+ * @date : Mar 16, 2014
+ * @author : Hirosh Wickramasuriya
+ */
 
 
 public class ElectionDto implements Serializable{
