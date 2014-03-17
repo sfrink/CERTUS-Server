@@ -8,10 +8,13 @@ import java.rmi.RMISecurityManager;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import database.DatabaseConnector;
 import dto.*;
+import enumeration.CandidateStatus;
+import enumeration.ElectionStatus;
 import server.PasswordHasher;
 
 
@@ -80,4 +83,38 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 		return "Hello Certus Client: " + name;
     }
     
+    // Election
+    
+    @Override
+    public ElectionDto getElection(int id) throws RemoteException{
+    	return dbc.selectElection(id);
+    }
+    
+    @Override
+    public ArrayList<ElectionDto> getElections(ElectionStatus electionStatus) throws RemoteException{
+    	return dbc.selectElections(electionStatus);
+    }
+    
+    
+    @Override
+    public ArrayList<ElectionDto> getElections() throws RemoteException{
+    	return dbc.selectElections();
+    }
+    
+    // Candidate
+    
+    @Override
+    public CandidateDto getCandidate(int id) throws RemoteException{
+    	return dbc.selectCandidate(id);
+    }
+    
+    @Override
+    public ArrayList<CandidateDto> getCandidatesOfElection(int election_id) throws RemoteException{
+    	return dbc.selectCandidatesOfElection(election_id);
+    }
+    
+    @Override
+    public ArrayList<CandidateDto> getCandidatesOfElection(int election_id, CandidateStatus candidateStatus) throws RemoteException{
+    	return dbc.selectCandidatesOfElection(election_id, candidateStatus);
+    }
 }

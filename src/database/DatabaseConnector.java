@@ -5,15 +5,17 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.omg.CORBA.INITIALIZE;
 
-import dto.ConfigurationProperties;
-import dto.UserDto;
-import dto.Validator;
+import dto.*;
+import enumeration.CandidateStatus;
+import enumeration.ElectionStatus;
 import server.*;
 
 public class DatabaseConnector {
@@ -271,6 +273,285 @@ public class DatabaseConnector {
 
 		return userDto;
 	}
+	
+	// Election
+	/**
+	 * @param id(int) - Election identification number (primary key)
+	 * @return ElectionDto - Details of a particular election
+	 * @author Hirosh Wickramasuriya
+	 */
+	public ElectionDto selectElection(int id)
+	{
+		ElectionDto electionDto = new ElectionDto();
+		
+		PreparedStatement st = null;
+
+		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status FROM election WHERE election_id = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, id);
+
+			ResultSet res = st.executeQuery();
+
+			if (res.next()) {
+				int election_id = res.getInt(1);
+				String election_name = res.getString(2);
+				Timestamp start_datetime = res.getTimestamp(3);
+				Timestamp close_datetime = res.getTimestamp(4);
+				int statusId = res.getInt(5);
+
+				electionDto.setElection_id(election_id);
+				electionDto.setElection_name(election_name);
+				electionDto.setStart_datetime(start_datetime);
+				electionDto.setClose_datetime(close_datetime);
+				electionDto.setStatus(statusId);
+				
+			} else {
+
+			}
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		return electionDto;
+	}
+	
+	/**
+	 * @param status(ElectionStatus) - specific status to be searched
+	 * @return ArrayList<ElectionDto> - List of elections that matches a specific status
+	 * @author Hirosh Wickramasuriya
+	 */
+	public ArrayList<ElectionDto> selectElections(ElectionStatus electionStatus)
+	{
+		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
+		
+		PreparedStatement st = null;
+
+		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status FROM election WHERE status = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, electionStatus.getCode());
+
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+
+				int election_id = res.getInt(1);
+				String election_name = res.getString(2);
+				Timestamp start_datetime = res.getTimestamp(3);
+				Timestamp close_datetime = res.getTimestamp(4);
+				int statusId = res.getInt(5);
+
+				ElectionDto electionDto = new ElectionDto();
+				electionDto.setElection_id(election_id);
+				electionDto.setElection_name(election_name);
+				electionDto.setStart_datetime(start_datetime);
+				electionDto.setClose_datetime(close_datetime);
+				electionDto.setStatus(statusId);
+				
+				elections.add(electionDto);
+				
+			} 
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		
+		return elections;
+		
+	}
+	
+	/**
+	 * @return ArrayList<ElectionDto>  - List of all the elections (regardless of status)
+	 * @author Hirosh Wickramasuriya
+	 */
+	public ArrayList<ElectionDto> selectElections()
+	{
+		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
+		
+		PreparedStatement st = null;
+
+		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status FROM election";
+
+		try {
+			st = this.con.prepareStatement(query);
+
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+
+				int election_id = res.getInt(1);
+				String election_name = res.getString(2);
+				Timestamp start_datetime = res.getTimestamp(3);
+				Timestamp close_datetime = res.getTimestamp(4);
+				int statusId = res.getInt(5);
+
+				ElectionDto electionDto = new ElectionDto();
+				electionDto.setElection_id(election_id);
+				electionDto.setElection_name(election_name);
+				electionDto.setStart_datetime(start_datetime);
+				electionDto.setClose_datetime(close_datetime);
+				electionDto.setStatus(statusId);
+				
+				elections.add(electionDto);
+				
+			} 
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		
+		return elections;
+		
+	}
+	
+	// Candidates
+	/**
+	 * @param id - candidate identification number (primary key)
+	 * @return CandidateDto - Details of a particular candidate
+	 * @author Hirosh Wickramasuriya
+	 */
+	public CandidateDto selectCandidate(int id)
+	{
+		CandidateDto candidateDto = new CandidateDto();
+		
+		PreparedStatement st = null;
+
+		String query = "SELECT candidate_id, candidate_name, election_id, display_order, status FROM candidate WHERE candidate_id = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, id);
+
+			ResultSet res = st.executeQuery();
+
+			if (res.next()) {
+				
+				int candidate_id = res.getInt(1);
+				String candidate_name = res.getString(2);
+				int election_id = res.getInt(3);
+				int display_order = res.getInt(4);
+				int statusId = res.getInt(5);
+
+				candidateDto.setCandidate_id(candidate_id);
+				candidateDto.setCandidate_name(candidate_name);
+				candidateDto.setElection_id(election_id);
+				candidateDto.setDisplay_order(display_order);
+				candidateDto.setStatus(statusId);
+				
+			} else {
+
+			}
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		return candidateDto;
+	}
+	
+	/**
+	 * @param election_id - election identification number
+	 * @return ArrayList<CandidateDto> - list of all the candidates under specified election
+	 * @author Hirosh Wickramasuriya
+	 */
+	public ArrayList<CandidateDto> selectCandidatesOfElection(int election_id)
+	{
+		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
+		
+		PreparedStatement st = null;
+
+		String query = "SELECT candidate_id, candidate_name, election_id, display_order, status FROM candidate WHERE election_id = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, election_id);
+
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+
+				int candidate_id = res.getInt(1);
+				String candidate_name = res.getString(2);
+				int election_id_2 = res.getInt(3);
+				int display_order = res.getInt(4);
+				int statusId = res.getInt(5);
+
+				CandidateDto candidateDto = new CandidateDto();
+				candidateDto.setCandidate_id(candidate_id);
+				candidateDto.setCandidate_name(candidate_name);
+				candidateDto.setElection_id(election_id_2);
+				candidateDto.setDisplay_order(display_order);
+				candidateDto.setStatus(statusId);
+				
+				candidates.add(candidateDto);
+				
+			} 
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		
+		return candidates;
+	}
+	
+	/**
+	 * @param election_id - election identification number
+	 * @param candidateStatus - desired status of candidate which required to be returned for given election
+	 * @return ArrayList<CandidateDto> - list of all the candidates that matches the status under specified election
+	 * @author Hirosh Wickramasuriya
+	 */
+	public ArrayList<CandidateDto> selectCandidatesOfElection(int election_id, CandidateStatus candidateStatus)
+	{
+		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
+		
+		PreparedStatement st = null;
+
+		String query = "SELECT candidate_id, candidate_name, election_id, display_order, status "
+						+ "	FROM candidate "
+						+ " WHERE election_id = ?"
+						+ " AND status = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, election_id);
+			st.setInt(2, candidateStatus.getCode());
+			
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+
+				int candidate_id = res.getInt(1);
+				String candidate_name = res.getString(2);
+				int election_id_2 = res.getInt(3);
+				int display_order = res.getInt(4);
+				int statusId = res.getInt(5);
+
+				CandidateDto candidateDto = new CandidateDto();
+				candidateDto.setCandidate_id(candidate_id);
+				candidateDto.setCandidate_name(candidate_name);
+				candidateDto.setElection_id(election_id_2);
+				candidateDto.setDisplay_order(display_order);
+				candidateDto.setStatus(statusId);
+				
+				candidates.add(candidateDto);
+				
+			} 
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		
+		return candidates;
+	}
+	
 }
 	
 	

@@ -4,17 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @date : Feb 26, 2014
+ * @date : Mar 16, 2014
  * @author : Hirosh Wickramasuriya
  */
 
-public enum ElectionStatus {
+public enum CandidateStatus {
 	
 	
-	NEW (0, "New", "New election."), 
-	OPEN (1, "Open", "Election is opened for voting."),
-	CLOSED (8, "Closed", "Election is closed, cannot submit vote."),
-	PUBLISHED (9, "Result Published", "Results of the election is published and finalized.");
+	DISABLED (0, "Disabled", "In active candidate."), 
+	ENABLED (1, "Enabled", "Active candidate.");
 
  
     private int code;
@@ -24,15 +22,15 @@ public enum ElectionStatus {
     /**
      * A mapping between the integer code and its corresponding Status to facilitate lookup by code.
      */
-    private static Map<Integer, ElectionStatus> codeToStatusMapping;
+    private static Map<Integer, CandidateStatus> codeToStatusMapping;
  
-    private ElectionStatus(int code, String label, String description) {
+    private CandidateStatus(int code, String label, String description) {
         this.code = code;
         this.label = label;
         this.description = description;
     }
     
-    public static ElectionStatus getStatus(int i) {
+    public static CandidateStatus getStatus(int i) {
         if (codeToStatusMapping == null) {
             initMapping();
         }
@@ -40,8 +38,8 @@ public enum ElectionStatus {
     }
  
     private static void initMapping() {
-        codeToStatusMapping = new HashMap<Integer, ElectionStatus>();
-        for (ElectionStatus s : values()) {
+        codeToStatusMapping = new HashMap<Integer, CandidateStatus>();
+        for (CandidateStatus s : values()) {
             codeToStatusMapping.put(s.code, s);
         }
     }
