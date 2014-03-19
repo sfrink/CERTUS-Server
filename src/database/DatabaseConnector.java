@@ -1,6 +1,5 @@
 package database;
 
-import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -16,6 +15,7 @@ import server.InputValidator;
 import server.PasswordHasher;
 import dto.CandidateDto;
 import dto.ElectionDto;
+import dto.InputValidation;
 import dto.UserDto;
 import dto.Validator;
 import enumeration.CandidateStatus;
