@@ -11,7 +11,7 @@ import java.util.Map;
 public enum CandidateStatus {
 	
 	
-	DISABLED (0, "Disabled", "In active candidate."), 
+	DISABLED (0, "Disabled", "Inactive candidate."), 
 	ENABLED (1, "Enabled", "Active candidate.");
 
  

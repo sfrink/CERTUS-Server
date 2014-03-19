@@ -1,5 +1,6 @@
 package database;
 
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -552,6 +553,51 @@ public class DatabaseConnector {
 		return candidates;
 	}
 	
+	
+	/**
+	 * @param name - election name
+	 * Add new election to db
+	 * @author Steven Frink
+	 */
+	public void createNewElection(String name){
+		PreparedStatement st=null;
+		try{
+			String query = "INSERT INTO election (election_name, status) VALUES (?,?)";
+			int status=0;
+			st=this.con.prepareStatement(query);
+			st.setString(1, name);
+			st.setInt(2, status);
+			st.execute();
+		}
+		catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
+	
+	/**
+	 * @param names - candidate names
+	 * @param election_id - the election to add candidates to
+	 * Add candidates to an election
+	 * @author Steven Frink
+	 */
+	public void addCandidatesToelection(String[] names, int election_id){
+		PreparedStatement st=null;
+		try{
+			for(int i=0;i<names.length;i++){
+				String query="INSERT INTO candidates (candidate_name, election_id, status) VALUES (?,?,?)";
+				st=this.con.prepareStatement(query);
+				st.setString(1,names[i]);
+				st.setInt(2, election_id);
+				st.setInt(3,1);
+				st.execute();
+			}
+		}
+		catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
 }
 	
 	
