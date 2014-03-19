@@ -1,5 +1,6 @@
 package database;
 
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -554,6 +555,68 @@ public class DatabaseConnector {
 		return candidates;
 	}
 	
+	
+	/**
+	 * @param name - election name
+	 * Add new election to db
+	 * @author Steven Frink
+	 */
+	public void createNewElection(String name){
+		PreparedStatement st=null;
+		InputValidation iv=new InputValidation();
+		Validator val=new Validator();
+		
+		try{
+			val=iv.validateString(name, "Election name");
+			if(val.isVerified()){
+				String query = "INSERT INTO election (election_name, status) VALUES (?,?)";
+				int status=0;
+				st=this.con.prepareStatement(query);
+				st.setString(1, name);
+				st.setInt(2, status);
+				st.execute();
+			}
+			else{
+				System.out.println("Failed to validate");
+			}
+		}
+		catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
+	
+	/**
+	 * @param names - candidate names
+	 * @param election_id - the election to add candidates to
+	 * Add candidates to an election
+	 * @author Steven Frink
+	 */
+	public void addCandidatesToElection(String[] names, int election_id){
+		PreparedStatement st=null;
+		InputValidation iv=new InputValidation();
+		Validator val = new Validator();
+		try{
+			for(int i=0;i<names.length;i++){
+				val = iv.validateString(names[i], "Candidate Name");
+				if(val.isVerified()){
+					String query="INSERT INTO candidates (candidate_name, election_id, status) VALUES (?,?,?)";
+					st=this.con.prepareStatement(query);
+					st.setString(1,names[i]);
+					st.setInt(2, election_id);
+					st.setInt(3,1);
+					st.execute();
+				}
+				else{
+					System.out.println("Failed to validate");
+				}
+			}
+		}
+		catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
 }
 	
 	
