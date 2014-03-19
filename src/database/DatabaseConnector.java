@@ -561,13 +561,22 @@ public class DatabaseConnector {
 	 */
 	public void createNewElection(String name){
 		PreparedStatement st=null;
+		InputValidation iv=new InputValidation();
+		Validator val=new Validator();
+		
 		try{
-			String query = "INSERT INTO election (election_name, status) VALUES (?,?)";
-			int status=0;
-			st=this.con.prepareStatement(query);
-			st.setString(1, name);
-			st.setInt(2, status);
-			st.execute();
+			val=iv.validateString(name, "Election name");
+			if(val.isVerified()){
+				String query = "INSERT INTO election (election_name, status) VALUES (?,?)";
+				int status=0;
+				st=this.con.prepareStatement(query);
+				st.setString(1, name);
+				st.setInt(2, status);
+				st.execute();
+			}
+			else{
+				System.out.println("Failed to validate");
+			}
 		}
 		catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -581,16 +590,24 @@ public class DatabaseConnector {
 	 * Add candidates to an election
 	 * @author Steven Frink
 	 */
-	public void addCandidatesToelection(String[] names, int election_id){
+	public void addCandidatesToElection(String[] names, int election_id){
 		PreparedStatement st=null;
+		InputValidation iv=new InputValidation();
+		Validator val = new Validator();
 		try{
 			for(int i=0;i<names.length;i++){
-				String query="INSERT INTO candidates (candidate_name, election_id, status) VALUES (?,?,?)";
-				st=this.con.prepareStatement(query);
-				st.setString(1,names[i]);
-				st.setInt(2, election_id);
-				st.setInt(3,1);
-				st.execute();
+				val = iv.validateString(names[i], "Candidate Name");
+				if(val.isVerified()){
+					String query="INSERT INTO candidates (candidate_name, election_id, status) VALUES (?,?,?)";
+					st=this.con.prepareStatement(query);
+					st.setString(1,names[i]);
+					st.setInt(2, election_id);
+					st.setInt(3,1);
+					st.execute();
+				}
+				else{
+					System.out.println("Failed to validate");
+				}
 			}
 		}
 		catch (SQLException ex) {
