@@ -615,6 +615,42 @@ public class DatabaseConnector {
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 	}
+	
+	/**
+	 * @param election_id - the election to open
+	 * Add candidates to an election
+	 * @author Steven Frink
+	 */
+	public void openElection(int election_id){
+		PreparedStatement st=null;
+		try{
+			String query="UPDATE election SET status=1 WHERE election_id="+election_id;
+			st=this.con.prepareStatement(query);
+			st.execute();
+		}
+		catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
+	
+	/**
+	 * @param election_id - the election to close
+	 * Add candidates to an election
+	 * @author Steven Frink
+	 */
+	public void closeElection(int election_id){
+		PreparedStatement st=null;
+		try{
+			String query="UPDATE election SET status=8 WHERE election_id="+election_id;
+			st=this.con.prepareStatement(query);
+			st.execute();
+		}
+		catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
 }
 	
 	
