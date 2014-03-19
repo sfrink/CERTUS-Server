@@ -1,6 +1,5 @@
 package database;
 
-import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -8,16 +7,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.omg.CORBA.INITIALIZE;
-
-import dto.*;
+import server.ConfigurationProperties;
+import server.InputValidator;
+import server.PasswordHasher;
+import dto.CandidateDto;
+import dto.ElectionDto;
+import dto.InputValidation;
+import dto.UserDto;
+import dto.Validator;
 import enumeration.CandidateStatus;
 import enumeration.ElectionStatus;
-import server.*;
 
 public class DatabaseConnector {
 	private static String dbHost;

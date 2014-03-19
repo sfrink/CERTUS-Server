@@ -1,21 +1,20 @@
 package rmi;
 
 
-import java.io.*;
-import java.net.InetAddress;
-import java.rmi.RemoteException;
 import java.rmi.RMISecurityManager;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Properties;
 
+import server.ConfigurationProperties;
 import database.DatabaseConnector;
-import dto.*;
+import dto.CandidateDto;
+import dto.ElectionDto;
+import dto.Validator;
 import enumeration.CandidateStatus;
 import enumeration.ElectionStatus;
-import server.PasswordHasher;
 
 
 public class CertusServer extends UnicastRemoteObject implements ServerInterface {
