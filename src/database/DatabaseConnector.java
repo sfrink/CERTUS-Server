@@ -590,19 +590,20 @@ public class DatabaseConnector {
 	 * Add new election to db
 	 * @author Steven Frink
 	 */
-	public void createNewElection(ElectionDto name, int owner_id){
+	public void createNewElection(ElectionDto elec, int owner_id){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val=new Validator();
 		
 		try{
-			val=iv.validateString(name, "Election name");
+			val=iv.validateString(elec.getElection_name(), "Election name");
 			if(val.isVerified()){
-				String query = "INSERT INTO election (election_name, status) VALUES (?,?)";
+				String query = "INSERT INTO election (election_name, status, owner_id) VALUES (?,?,?)";
 				int status=0;
 				st=this.con.prepareStatement(query);
-				st.setString(1, name);
+				st.setString(1, elec.getElection_name());
 				st.setInt(2, status);
+				st.setInt(3, owner_id);
 				st.execute();
 			}
 			else{
@@ -621,17 +622,17 @@ public class DatabaseConnector {
 	 * Add candidates to an election
 	 * @author Steven Frink
 	 */
-	public void addCandidatesToElection(ArrayList<CandidateDto> names, int election_id){
+	public void addCandidatesToElection(ArrayList<CandidateDto> cands, int election_id){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val = new Validator();
 		try{
-			for(int i=0;i<names.size();i++){
-				val = iv.validateString(names[i], "Candidate Name");
+			for(int i=0;i<cands.size();i++){
+				val = iv.validateString(cands.get(i).getCandidate_name(), "Candidate Name");
 				if(val.isVerified()){
 					String query="INSERT INTO candidates (candidate_name, election_id, status) VALUES (?,?,?)";
 					st=this.con.prepareStatement(query);
-					st.setString(1,names[i]);
+					st.setString(1,cands.get(i).getCandidate_name());
 					st.setInt(2, election_id);
 					st.setInt(3,1);
 					st.execute();
