@@ -561,7 +561,7 @@ public class DatabaseConnector {
 	 * Add new election to db
 	 * @author Steven Frink
 	 */
-	public void createNewElection(String name){
+	public void createNewElection(ElectionDto name, int owner_id){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val=new Validator();
@@ -592,12 +592,12 @@ public class DatabaseConnector {
 	 * Add candidates to an election
 	 * @author Steven Frink
 	 */
-	public void addCandidatesToElection(String[] names, int election_id){
+	public void addCandidatesToElection(ArrayList<CandidateDto> names, int election_id){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val = new Validator();
 		try{
-			for(int i=0;i<names.length;i++){
+			for(int i=0;i<names.size();i++){
 				val = iv.validateString(names[i], "Candidate Name");
 				if(val.isVerified()){
 					String query="INSERT INTO candidates (candidate_name, election_id, status) VALUES (?,?,?)";
@@ -654,8 +654,3 @@ public class DatabaseConnector {
 		}
 	}
 }
-	
-	
-	
-	
-	
