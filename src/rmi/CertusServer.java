@@ -13,7 +13,7 @@ import database.DatabaseConnector;
 import dto.CandidateDto;
 import dto.ElectionDto;
 import dto.Validator;
-import enumeration.CandidateStatus;
+import enumeration.Status;
 import enumeration.ElectionStatus;
 
 
@@ -113,7 +113,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
-    public ArrayList<CandidateDto> getCandidatesOfElection(int election_id, CandidateStatus candidateStatus) throws RemoteException{
+    public ArrayList<CandidateDto> getCandidatesOfElection(int election_id, Status candidateStatus) throws RemoteException{
     	return dbc.selectCandidatesOfElection(election_id, candidateStatus);
     }
 }
