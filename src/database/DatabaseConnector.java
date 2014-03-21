@@ -1,5 +1,6 @@
 package database;
 
+import java.security.acl.Owner;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -390,6 +391,66 @@ public class DatabaseConnector {
 	}
 	
 	/**
+	 * @param election_owner_id(int) - user_id of the user who owns this election
+	 * @param status(ElectionStatus) - specific status to be searched
+	 * @return ArrayList<ElectionDto> - List of elections owned by the specific user, that matches a specific status
+	 * @author Hirosh Wickramasuriya
+	 */
+	public ArrayList<ElectionDto> selectElectionsOwnedByUser(int election_owner_id, ElectionStatus electionStatus)
+	{
+		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
+		
+		PreparedStatement st = null;
+
+		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status, s.code, s.description, owner_id"
+				+ " FROM election e"
+				+ " INNER JOIN status_election s "
+				+ " ON (e.status = s.status_id) " 
+				+ " WHERE owner_id = ?"
+				+ " AND status = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, election_owner_id);
+			st.setInt(2, electionStatus.getCode());
+
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+
+				int election_id = res.getInt(1);
+				String election_name = res.getString(2);
+				Timestamp start_datetime = res.getTimestamp(3);
+				Timestamp close_datetime = res.getTimestamp(4);
+				int statusId = res.getInt(5);
+				String statusCode = res.getString(6);
+				String statusDescription = res.getString(7);
+				int owner_id = res.getInt(8);
+				
+				ElectionDto electionDto = new ElectionDto();
+				electionDto.setElection_id(election_id);
+				electionDto.setElection_name(election_name);
+				electionDto.setStart_datetime(start_datetime);
+				electionDto.setClose_datetime(close_datetime);
+				electionDto.setStatus(statusId);
+				electionDto.setStatusCode(statusCode);
+				electionDto.setStatusDescription(statusDescription);
+				electionDto.setOwner_id(owner_id);
+				
+				elections.add(electionDto);
+				
+			} 
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		
+		return elections;
+		
+	}
+	
+	/**
 	 * @return ArrayList<ElectionDto>  - List of all the elections (regardless of status)
 	 * @author Hirosh Wickramasuriya
 	 */
@@ -399,7 +460,7 @@ public class DatabaseConnector {
 		
 		PreparedStatement st = null;
 
-		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status, status, s.code, s.description, owner_id"
+		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status, s.code, s.description, owner_id"
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) " ;
@@ -443,6 +504,62 @@ public class DatabaseConnector {
 		
 	}
 	
+	/**
+	 * @param election_owner_id(int) - user_id of the user who owns elections
+	 * @return ArrayList<ElectionDto>  - List of all the elections owned by the specific user (regardless of status)
+	 * @author Hirosh Wickramasuriya
+	 */
+	public ArrayList<ElectionDto> selectElectionsOwnedByUser(int election_owner_id)
+	{
+		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
+		
+		PreparedStatement st = null;
+
+		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status, s.code, s.description, owner_id"
+				+ " FROM election e"
+				+ " INNER JOIN status_election s "
+				+ " ON (e.status = s.status_id) "
+				+ " WHERE owner_id = ?" ;
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, election_owner_id);
+
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+
+				int election_id = res.getInt(1);
+				String election_name = res.getString(2);
+				Timestamp start_datetime = res.getTimestamp(3);
+				Timestamp close_datetime = res.getTimestamp(4);
+				int statusId = res.getInt(5);
+				String statusCode = res.getString(6);
+				String statusDescription = res.getString(7);
+				int owner_id = res.getInt(8);
+				
+				ElectionDto electionDto = new ElectionDto();
+				electionDto.setElection_id(election_id);
+				electionDto.setElection_name(election_name);
+				electionDto.setStart_datetime(start_datetime);
+				electionDto.setClose_datetime(close_datetime);
+				electionDto.setStatus(statusId);
+				electionDto.setStatusCode(statusCode);
+				electionDto.setStatusDescription(statusDescription);
+				electionDto.setOwner_id(owner_id);
+				
+				elections.add(electionDto);
+				
+			} 
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		
+		return elections;
+		
+	}
 	// Candidates
 	/**
 	 * @param id - candidate identification number (primary key)
