@@ -13,6 +13,7 @@ import database.DatabaseConnector;
 import dto.CandidateDto;
 import dto.ElectionDto;
 import dto.Validator;
+import dto.VoteDto;
 import enumeration.Status;
 import enumeration.ElectionStatus;
 
