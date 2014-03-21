@@ -86,74 +86,90 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     // Election
     
     @Override
-    public ElectionDto getElection(int id) throws RemoteException{
+    public Validator selectElection(int id) throws RemoteException{
     	return dbc.selectElection(id);
     }
     
     @Override
-    public ArrayList<ElectionDto> getElections(ElectionStatus electionStatus) throws RemoteException{
+    public Validator selectElections(ElectionStatus electionStatus) throws RemoteException{
     	return dbc.selectElections(electionStatus);
     }
     
-    
     @Override
-    public ArrayList<ElectionDto> getElections() throws RemoteException{
+    public Validator selectElections() throws RemoteException{
     	return dbc.selectElections();
     }
     
     @Override
-    public void addElection(String name, int owner_id) throws RemoteException{
-    	ElectionDto elec=new ElectionDto();
-    	elec.setElection_name(name);
-    	elec.setOwner_id(owner_id);
-    	dbc.createNewElection(elec);
+    public Validator selectElectionsOwnedByUser(int election_owner_id, ElectionStatus electionStatus) throws RemoteException{
+    	return dbc.selectElectionsOwnedByUser(election_owner_id, electionStatus);
     }
     
     @Override
-    public void editElection(ElectionDto election) throws RemoteException{
-    	dbc.editElection(election);
+    public Validator selectElectionsOwnedByUser(int election_owner_id) throws RemoteException{
+    	return  dbc.selectElectionsOwnedByUser(election_owner_id);
     }
     
-    public void deleteElection(int election_id) throws RemoteException{
-    	dbc.deleteElection(election_id);
+    @Override
+    public Validator addElection(String name, int owner_id) throws RemoteException{
+    	Validator validator = new Validator();
+    	ElectionDto elec=new ElectionDto();
+    	elec.setElection_name(name);
+    	elec.setOwner_id(owner_id);
+    	
+    	return dbc.createNewElection(elec);
+    }
+    
+    @Override
+    public Validator editElection(ElectionDto election) throws RemoteException{
+       	return dbc.editElection(election);
+    }
+    
+    public Validator deleteElection(int election_id) throws RemoteException{
+    	return dbc.deleteElection(election_id);
+    	
     }
     
     // Candidate
     
     @Override
-    public CandidateDto getCandidate(int id) throws RemoteException{
+    public Validator getCandidate(int id) throws RemoteException{
     	return dbc.selectCandidate(id);
+ 
     }
     
     @Override
-    public ArrayList<CandidateDto> getCandidatesOfElection(int election_id) throws RemoteException{
+    public Validator getCandidatesOfElection(int election_id) throws RemoteException{
+    	
     	return dbc.selectCandidatesOfElection(election_id);
     }
     
     @Override
-    public ArrayList<CandidateDto> getCandidatesOfElection(int election_id, Status candidateStatus) throws RemoteException{
-    	return dbc.selectCandidatesOfElection(election_id, candidateStatus);
+    public Validator getCandidatesOfElection(int election_id, Status candidateStatus) throws RemoteException{
+    	return  dbc.selectCandidatesOfElection(election_id, candidateStatus);
     }
     
     @Override
-    public void addCandidates(ArrayList<String> names, int election_id) throws RemoteException{
+    public Validator addCandidates(ArrayList<String> names, int election_id) throws RemoteException{
+    	
     	ArrayList<CandidateDto> cands=new ArrayList<CandidateDto>();
     	for(int i=0;i<names.size();i++){
     		CandidateDto cand=new CandidateDto();
     		cand.setCandidate_name(names.get(i));
     		cands.add(cand);
     	}
-    	dbc.addCandidatesToElection(cands, election_id);
+
+    	return dbc.addCandidatesToElection(cands, election_id);
     }
     
     @Override
-    public void editCandidate(CandidateDto candidate) throws RemoteException{
-    	dbc.editCandidate(candidate);
+    public Validator editCandidate(CandidateDto candidate) throws RemoteException{
+    	return dbc.editCandidate(candidate);
     }
     
     //Vote
-    public void vote(VoteDto v) throws RemoteException{
-    	dbc.vote(v);
+    public Validator vote(VoteDto v) throws RemoteException{
+    	return dbc.vote(v);
     }
     
 }

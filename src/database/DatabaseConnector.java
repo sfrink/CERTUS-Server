@@ -283,11 +283,12 @@ public class DatabaseConnector {
 	// Election
 	/**
 	 * @param id(int) - Election identification number (primary key)
-	 * @return ElectionDto - Details of a particular election
+	 * @return Validator : ElectionDto - Details of a particular election
 	 * @author Hirosh Wickramasuriya
 	 */
-	public ElectionDto selectElection(int id)
+	public Validator selectElection(int id)
 	{
+		Validator validator = new Validator();
 		ElectionDto electionDto = new ElectionDto();
 		
 		PreparedStatement st = null;
@@ -331,16 +332,19 @@ public class DatabaseConnector {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
-		return electionDto;
+		
+		validator.setObject(electionDto);
+		return validator;
 	}
 	
 	/**
 	 * @param status(ElectionStatus) - specific status to be searched
-	 * @return ArrayList<ElectionDto> - List of elections that matches a specific status
+	 * @return Validator : ArrayList<ElectionDto> - List of elections that matches a specific status
 	 * @author Hirosh Wickramasuriya
 	 */
-	public ArrayList<ElectionDto> selectElections(ElectionStatus electionStatus)
+	public Validator selectElections(ElectionStatus electionStatus)
 	{
+		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
 		
 		PreparedStatement st = null;
@@ -387,18 +391,20 @@ public class DatabaseConnector {
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 		
-		return elections;
+		validator.setObject(elections);
+		return validator;
 		
 	}
 	
 	/**
 	 * @param election_owner_id(int) - user_id of the user who owns this election
 	 * @param status(ElectionStatus) - specific status to be searched
-	 * @return ArrayList<ElectionDto> - List of elections owned by the specific user, that matches a specific status
+	 * @return Validator : ArrayList<ElectionDto> - List of elections owned by the specific user, that matches a specific status
 	 * @author Hirosh Wickramasuriya
 	 */
-	public ArrayList<ElectionDto> selectElectionsOwnedByUser(int election_owner_id, ElectionStatus electionStatus)
+	public Validator selectElectionsOwnedByUser(int election_owner_id, ElectionStatus electionStatus)
 	{
+		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
 		
 		PreparedStatement st = null;
@@ -447,16 +453,18 @@ public class DatabaseConnector {
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 		
-		return elections;
+		validator.setObject(elections);
+		return validator;
 		
 	}
 	
 	/**
-	 * @return ArrayList<ElectionDto>  - List of all the elections (regardless of status)
+	 * @return Validator : ArrayList<ElectionDto>  - List of all the elections (regardless of status)
 	 * @author Hirosh Wickramasuriya
 	 */
-	public ArrayList<ElectionDto> selectElections()
+	public Validator selectElections()
 	{
+		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
 		
 		PreparedStatement st = null;
@@ -500,18 +508,19 @@ public class DatabaseConnector {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
-		
-		return elections;
+		validator.setObject(elections);
+		return validator;
 		
 	}
 	
 	/**
 	 * @param election_owner_id(int) - user_id of the user who owns elections
-	 * @return ArrayList<ElectionDto>  - List of all the elections owned by the specific user (regardless of status)
+	 * @return Validator : ArrayList<ElectionDto> - List of all the elections owned by the specific user (regardless of status)
 	 * @author Hirosh Wickramasuriya
 	 */
-	public ArrayList<ElectionDto> selectElectionsOwnedByUser(int election_owner_id)
+	public Validator selectElectionsOwnedByUser(int election_owner_id)
 	{
+		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
 		
 		PreparedStatement st = null;
@@ -557,18 +566,19 @@ public class DatabaseConnector {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
-		
-		return elections;
+		validator.setObject(elections);
+		return validator;
 		
 	}
 	// Candidates
 	/**
 	 * @param id - candidate identification number (primary key)
-	 * @return CandidateDto - Details of a particular candidate
+	 * @return Validator :CandidateDto - Details of a particular candidate
 	 * @author Hirosh Wickramasuriya
 	 */
-	public CandidateDto selectCandidate(int id)
+	public Validator selectCandidate(int id)
 	{
+		Validator validator = new Validator();
 		CandidateDto candidateDto = new CandidateDto();
 		
 		PreparedStatement st = null;
@@ -603,16 +613,18 @@ public class DatabaseConnector {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
-		return candidateDto;
+		validator.setObject(candidateDto);
+		return validator;
 	}
 	
 	/**
 	 * @param election_id - election identification number
-	 * @return ArrayList<CandidateDto> - list of all the candidates under specified election
+	 * @return Validator : ArrayList<CandidateDto>- list of all the candidates under specified election
 	 * @author Hirosh Wickramasuriya
 	 */
-	public ArrayList<CandidateDto> selectCandidatesOfElection(int election_id)
+	public Validator selectCandidatesOfElection(int election_id)
 	{
+		Validator validator = new Validator();
 		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
 		
 		PreparedStatement st = null;
@@ -649,17 +661,19 @@ public class DatabaseConnector {
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 		
-		return candidates;
+		validator.setObject(candidates);
+		return validator;
 	}
 	
 	/**
 	 * @param election_id - election identification number
 	 * @param candidateStatus - desired status of candidate which required to be returned for given election
-	 * @return ArrayList<CandidateDto> - list of all the candidates that matches the status under specified election
+	 * @return Validator :ArrayList<CandidateDto> - list of all the candidates that matches the status under specified election
 	 * @author Hirosh Wickramasuriya
 	 */
-	public ArrayList<CandidateDto> selectCandidatesOfElection(int election_id, Status candidateStatus)
+	public Validator selectCandidatesOfElection(int election_id, Status candidateStatus)
 	{
+		Validator validator = new Validator();
 		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
 		
 		PreparedStatement st = null;
@@ -700,7 +714,8 @@ public class DatabaseConnector {
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 		
-		return candidates;
+		validator.setObject(candidates);
+		return validator;
 	}
 	
 	
