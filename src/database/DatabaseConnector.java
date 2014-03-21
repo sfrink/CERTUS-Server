@@ -658,11 +658,16 @@ public class DatabaseConnector {
 		Validator val = new Validator();
 		try{
 			val = iv.validateString(cand.getCandidate_name(), "Candidate Name");
-			if(val.isVerified()){
-				String query="UPDATE candidate SET candidate_name=? WHERE candidate_id=?";
+			boolean valid=true;
+			valid&=val.isVerified();
+			val=iv.validateInt(cand.getDisplay_order(), "Display Order");
+			valid&=val.isVerified();
+			if(valid){
+				String query="UPDATE candidate SET (candidate_name, display_order)=(?,?) WHERE candidate_id=?";
 				st=this.con.prepareStatement(query);
 				st.setString(1, cand.getCandidate_name());
-				st.setInt(2,cand.getCandidate_id());
+				st.setInt(2, cand.getDisplay_order());
+				st.setInt(3,cand.getCandidate_id());
 				st.execute();
 			}
 		}
@@ -708,4 +713,30 @@ public class DatabaseConnector {
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 	}
+	
+	/**
+	 * @param elec - the election to edit
+	 * Edit an election
+	 * @author Steven Frink
+	 */
+	public void editElection(ElectionDto elec){
+		PreparedStatement st=null;
+		InputValidation iv=new InputValidation();
+		Validator val = new Validator();
+		try{
+			val = iv.validateString(elec.getElection_name(), "Election Name");
+			if(val.isVerified()){
+				String query="UPDATE election SET election_name=? WHERE election_id=?";
+				st=this.con.prepareStatement(query);
+				st.setString(1, elec.getElection_name());
+				st.setInt(2,elec.getElection_id());
+				st.execute();
+			}
+		}
+		catch(SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
+	
 }
