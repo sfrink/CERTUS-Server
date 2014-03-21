@@ -113,6 +113,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	dbc.editElection(election);
     }
     
+    public void deleteElection(int election_id) throws RemoteException{
+    	dbc.deleteElection(election_id);
+    }
+    
     // Candidate
     
     @Override

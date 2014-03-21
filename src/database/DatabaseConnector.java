@@ -698,7 +698,7 @@ public class DatabaseConnector {
 	
 	/**
 	 * @param election_id - the election to close
-	 * Add candidates to an election
+	 * Close an election
 	 * @author Steven Frink
 	 */
 	public void closeElection(int election_id){
@@ -713,6 +713,25 @@ public class DatabaseConnector {
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 	}
+	
+	/**
+	 * @param election_id - the election to delete
+	 * Delete an election
+	 * @author Steven Frink
+	 */
+	public void deleteElection(int election_id){
+		PreparedStatement st=null;
+		try{
+			String query="UPDATE election SET status=7 WHERE election_id="+election_id;
+			st=this.con.prepareStatement(query);
+			st.execute();
+		}
+		catch(SQLException ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
+	
 	
 	/**
 	 * @param elec - the election to edit
