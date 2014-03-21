@@ -18,6 +18,7 @@ import dto.ElectionDto;
 import dto.InputValidation;
 import dto.UserDto;
 import dto.Validator;
+import dto.VoteDto;
 import enumeration.Status;
 import enumeration.ElectionStatus;
 
@@ -758,4 +759,39 @@ public class DatabaseConnector {
 		}
 	}
 	
+	//Vote
+	
+	/**
+	 * @param v - the vote to submit
+	 * Submit a vote
+	 * @author Steven Frink
+	 */
+	
+	public void vote(VoteDto v){
+		PreparedStatement st=null;
+		InputValidation iv=new InputValidation();
+		Validator val=new Validator();
+		boolean valid=true;
+		val=iv.validateInt(v.getUser_id(), "User ID");
+		valid&=val.isVerified();
+		val=iv.validateInt(v.getElection_id(), "Election ID");
+		valid&=val.isVerified();
+		val=iv.validateString(v.getVote_encrypted(), "Encrypted Vote");
+		
+		try{
+			
+			String query="INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
+					+ " VALUES (?,?,?,?)";
+			st=this.con.prepareStatement(query);
+			st.setInt(1, v.getUser_id());
+			st.setInt(2, v.getElection_id());
+			st.setString(3, v.getVote_encrypted());
+			st.setString(4, v.getVote_signature());
+			st.execute();
+		}
+		catch(SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
 }

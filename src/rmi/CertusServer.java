@@ -150,4 +150,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	dbc.editCandidate(candidate);
     }
     
+    //Vote
+    public void vote(VoteDto v) throws RemoteException{
+    	dbc.vote(v);
+    }
+    
 }
