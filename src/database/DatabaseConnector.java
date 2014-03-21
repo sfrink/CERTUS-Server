@@ -590,7 +590,7 @@ public class DatabaseConnector {
 	 * Add new election to db
 	 * @author Steven Frink
 	 */
-	public void createNewElection(ElectionDto elec, int owner_id){
+	public void createNewElection(ElectionDto elec){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val=new Validator();
@@ -603,7 +603,7 @@ public class DatabaseConnector {
 				st=this.con.prepareStatement(query);
 				st.setString(1, elec.getElection_name());
 				st.setInt(2, status);
-				st.setInt(3, owner_id);
+				st.setInt(3, elec.getOwner_id());
 				st.execute();
 			}
 			else{
@@ -646,6 +646,31 @@ public class DatabaseConnector {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
+	}
+	
+	/**
+	 * @param cand - candidate object
+	 * @author Steven Frink
+	 */
+	public void editCandidate(CandidateDto cand){
+		PreparedStatement st=null;
+		InputValidation iv=new InputValidation();
+		Validator val = new Validator();
+		try{
+			val = iv.validateString(cand.getCandidate_name(), "Candidate Name");
+			if(val.isVerified()){
+				String query="UPDATE candidate SET candidate_name=? WHERE candidate_id=?";
+				st=this.con.prepareStatement(query);
+				st.setString(1, cand.getCandidate_name());
+				st.setInt(2,cand.getCandidate_id());
+				st.execute();
+			}
+		}
+		catch(SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		
 	}
 	
 	/**

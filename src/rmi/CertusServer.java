@@ -100,6 +100,14 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	return dbc.selectElections();
     }
     
+    @Override
+    public void addElection(String name, int owner_id) throws RemoteException{
+    	ElectionDto elec=new ElectionDto();
+    	elec.setElection_name(name);
+    	elec.setOwner_id(owner_id);
+    	dbc.createNewElection(elec);
+    }
+    
     // Candidate
     
     @Override
@@ -116,4 +124,21 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public ArrayList<CandidateDto> getCandidatesOfElection(int election_id, Status candidateStatus) throws RemoteException{
     	return dbc.selectCandidatesOfElection(election_id, candidateStatus);
     }
+    
+    @Override
+    public void addCandidates(ArrayList<String> names, int election_id) throws RemoteException{
+    	ArrayList<CandidateDto> cands=new ArrayList<CandidateDto>();
+    	for(int i=0;i<names.size();i++){
+    		CandidateDto cand=new CandidateDto();
+    		cand.setCandidate_name(names.get(i));
+    		cands.add(cand);
+    	}
+    	dbc.addCandidatesToElection(cands, election_id);
+    }
+    
+    @Override
+    public void editCandidate(CandidateDto candidate) throws RemoteException{
+    	dbc.editCandidate(candidate);
+    }
+    
 }
