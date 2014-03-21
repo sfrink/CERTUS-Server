@@ -709,7 +709,7 @@ public class DatabaseConnector {
 	 * Add new election to db
 	 * @author Steven Frink
 	 */
-	public boolean createNewElection(ElectionDto elec){
+	public Validator createNewElection(ElectionDto elec){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val=new Validator();
@@ -724,17 +724,19 @@ public class DatabaseConnector {
 				st.setInt(2, status);
 				st.setInt(3, elec.getOwner_id());
 				st.execute();
-				return true;
+				val.setStatus("Election added to DB");
+				return val;
 			}
 			else{
-				System.out.println("Failed to validate");
-				return false;
+				val.setStatus("Name failed to validate");
+				return val;
 			}
 		}
 		catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return false;
+			val.setStatus("SQL error");
+			return val;
 		}
 	}
 	
@@ -744,7 +746,7 @@ public class DatabaseConnector {
 	 * Add candidates to an election
 	 * @author Steven Frink
 	 */
-	public boolean addCandidatesToElection(ArrayList<CandidateDto> cands, int election_id){
+	public Validator addCandidatesToElection(ArrayList<CandidateDto> cands, int election_id){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val = new Validator();
@@ -752,7 +754,10 @@ public class DatabaseConnector {
 		try{
 			for(int i=0;i<cands.size();i++){
 				val = iv.validateString(cands.get(i).getCandidate_name(), "Candidate Name");
-				if(val.isVerified()){
+				aOK&=val.isVerified();
+			}
+			if(aOK){
+				for(int i=0;i<cands.size();i++){
 					String query="INSERT INTO candidates (candidate_name, election_id, status) VALUES (?,?,?)";
 					st=this.con.prepareStatement(query);
 					st.setString(1,cands.get(i).getCandidate_name());
@@ -760,17 +765,21 @@ public class DatabaseConnector {
 					st.setInt(3,1);
 					st.execute();
 				}
-				else{
-					System.out.println("Failed to validate");
-					aOK=false;
-				}
+				val.setStatus("Candidates added to DB");
 			}
-			return aOK;
+			else{
+				val.setStatus("Candidate names failed to validate");
+			}
+			val.setVerified(aOK);
+			return val;
+			
 		}
 		catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return false;
+			val.setVerified(false);
+			val.setStatus("SQL Error");
+			return val;
 		}
 	}
 	
@@ -778,7 +787,7 @@ public class DatabaseConnector {
 	 * @param cand - candidate object
 	 * @author Steven Frink
 	 */
-	public boolean editCandidate(CandidateDto cand){
+	public Validator editCandidate(CandidateDto cand){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val = new Validator();
@@ -795,16 +804,21 @@ public class DatabaseConnector {
 				st.setInt(2, cand.getDisplay_order());
 				st.setInt(3,cand.getCandidate_id());
 				st.execute();
-				return true;
+				val.setStatus("Candidate information updated");
+				return val;
 			}
 			else{
-				return false;
+				val.setStatus("Candidate information did not validate");
+				val.setVerified(false);
+				return val;
 			}
 		}
 		catch(SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return false;
+			val.setStatus("SQL Error");
+			val.setVerified(false);
+			return val;
 		}
 		
 	}
@@ -814,18 +828,23 @@ public class DatabaseConnector {
 	 * Add candidates to an election
 	 * @author Steven Frink
 	 */
-	public boolean openElection(int election_id){
+	public Validator openElection(int election_id){
 		PreparedStatement st=null;
+		Validator val=new Validator();
 		try{
 			String query="UPDATE election SET status=1 WHERE election_id="+election_id;
 			st=this.con.prepareStatement(query);
 			st.execute();
-			return true;
+			val.setVerified(true);
+			val.setStatus("Election opened");
+			return val;
 		}
 		catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return false;
+			val.setStatus("SQL Error");
+			val.setVerified(false);
+			return val;
 		}
 	}
 	
@@ -834,18 +853,23 @@ public class DatabaseConnector {
 	 * Close an election
 	 * @author Steven Frink
 	 */
-	public boolean closeElection(int election_id){
+	public Validator closeElection(int election_id){
 		PreparedStatement st=null;
+		Validator val=new Validator();
 		try{
 			String query="UPDATE election SET status=8 WHERE election_id="+election_id;
 			st=this.con.prepareStatement(query);
 			st.execute();
-			return true;
+			val.setVerified(true);
+			val.setStatus("Election closed");
+			return val;
 		}
 		catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return false;
+			val.setVerified(false);
+			val.setStatus("SQL Error");
+			return val;
 		}
 	}
 	
@@ -854,18 +878,23 @@ public class DatabaseConnector {
 	 * Delete an election
 	 * @author Steven Frink
 	 */
-	public boolean deleteElection(int election_id){
+	public Validator deleteElection(int election_id){
 		PreparedStatement st=null;
+		Validator val=new Validator();
 		try{
 			String query="UPDATE election SET status=7 WHERE election_id="+election_id;
 			st=this.con.prepareStatement(query);
 			st.execute();
-			return true;
+			val.setStatus("Election deleted");
+			val.setVerified(true);
+			return val;
 		}
 		catch(SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return false;
+			val.setStatus("SQL Error");
+			val.setVerified(false);
+			return val;
 		}
 	}
 	
@@ -875,7 +904,7 @@ public class DatabaseConnector {
 	 * Edit an election
 	 * @author Steven Frink
 	 */
-	public boolean editElection(ElectionDto elec){
+	public Validator editElection(ElectionDto elec){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val = new Validator();
@@ -887,16 +916,20 @@ public class DatabaseConnector {
 				st.setString(1, elec.getElection_name());
 				st.setInt(2,elec.getElection_id());
 				st.execute();
-				return true;
+				val.setStatus("Election updated successfully");
+				return val;
 			}
 			else{
-				return false;
+				val.setStatus("New election name did not validate");
+				return val;
 			}
 		}
 		catch(SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return false;
+			val.setStatus("SQL Error");
+			val.setVerified(false);
+			return val;
 		}
 	}
 	
@@ -908,7 +941,7 @@ public class DatabaseConnector {
 	 * @author Steven Frink
 	 */
 	
-	public boolean vote(VoteDto v){
+	public Validator vote(VoteDto v){
 		PreparedStatement st=null;
 		InputValidation iv=new InputValidation();
 		Validator val=new Validator();
@@ -929,15 +962,22 @@ public class DatabaseConnector {
 				st.setString(3, v.getVote_encrypted());
 				st.setString(4, v.getVote_signature());
 				st.execute();
-				return true;
+				val.setStatus("Vote successfully cast");
+				val.setVerified(true);
+				return val;
 			}
-			else
-				return false;
+			else{
+				val.setStatus("Information did not validate");
+				val.setVerified(false);
+				return val;
+			}
 		}
 		catch(SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return false;
+			val.setStatus("SQL Error");
+			val.setVerified(false);
+			return val;
 		}
 	}
 	
