@@ -1,11 +1,14 @@
 package dto;
 
 import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.crypto.Cipher;
 
 import database.DatabaseConnector;
 
@@ -50,6 +53,33 @@ public class SecurityValidator {
 		                             + Character.digit(hex.charAt(i+1), 16));
 		    }
 		    return data;
+	}
+	
+	public static String byteArraytoHex(byte[] arr) {
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < arr.length; i++) {
+			sb.append(Integer.toString((arr[i] & 0xff) + 0x100, 16)
+					.substring(1));
+		}
+		return sb.toString();
+	}
+	
+	public String decrypt(String ciph, String sk){
+		byte[] secKey=hexStringtoByteArray(sk);
+		byte[] ct=hexStringtoByteArray(ciph);
+		try{
+			PrivateKey priv=KeyFactory.getInstance("RSA").generatePrivate(new X509EncodedKeySpec(secKey));
+			Cipher dec = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			dec.init(Cipher.DECRYPT_MODE, priv);
+			byte[] plain=dec.doFinal(ct);
+			String plaintext=byteArraytoHex(plain);
+			return plaintext;
+		}
+		catch(Exception ex){
+			Logger lgr = Logger.getLogger(SecurityValidator.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		return null;
 	}
 	
 }
