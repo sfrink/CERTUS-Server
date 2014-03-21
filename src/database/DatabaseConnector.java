@@ -16,6 +16,7 @@ import server.PasswordHasher;
 import dto.CandidateDto;
 import dto.ElectionDto;
 import dto.InputValidation;
+import dto.SecurityValidator;
 import dto.UserDto;
 import dto.Validator;
 import dto.VoteDto;
@@ -777,21 +778,44 @@ public class DatabaseConnector {
 		val=iv.validateInt(v.getElection_id(), "Election ID");
 		valid&=val.isVerified();
 		val=iv.validateString(v.getVote_encrypted(), "Encrypted Vote");
-		
+		SecurityValidator sec=new SecurityValidator();
 		try{
-			
-			String query="INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
-					+ " VALUES (?,?,?,?)";
-			st=this.con.prepareStatement(query);
-			st.setInt(1, v.getUser_id());
-			st.setInt(2, v.getElection_id());
-			st.setString(3, v.getVote_encrypted());
-			st.setString(4, v.getVote_signature());
-			st.execute();
+			if(valid && sec.checkSignature(v.getVote_signature(), v.getUser_id()).isVerified()){
+				String query="INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
+						+ " VALUES (?,?,?,?)";
+				st=this.con.prepareStatement(query);
+				st.setInt(1, v.getUser_id());
+				st.setInt(2, v.getElection_id());
+				st.setString(3, v.getVote_encrypted());
+				st.setString(4, v.getVote_signature());
+				st.execute();
+			}
 		}
 		catch(SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+	}
+	
+	public String getPubKeyByUserID(int user_id){
+		PreparedStatement st = null;
+
+		String query = "SELECT public_key FROM users WHERE user_id = ?";
+		try{
+			st = this.con.prepareStatement(query);
+			st.setInt(1, user_id);
+			ResultSet res=st.executeQuery();
+			if (res.next()) {
+				String pubKey = res.getString(1);
+				return pubKey;
+			}
+			else
+				return null;
+		}
+		catch(SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			return null;
 		}
 	}
 }
