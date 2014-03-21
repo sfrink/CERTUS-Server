@@ -133,19 +133,19 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     // Candidate
     
     @Override
-    public Validator getCandidate(int id) throws RemoteException{
+    public Validator selectCandidate(int id) throws RemoteException{
     	return dbc.selectCandidate(id);
  
     }
     
     @Override
-    public Validator getCandidatesOfElection(int election_id) throws RemoteException{
+    public Validator selectCandidatesOfElection(int election_id) throws RemoteException{
     	
     	return dbc.selectCandidatesOfElection(election_id);
     }
     
     @Override
-    public Validator getCandidatesOfElection(int election_id, Status candidateStatus) throws RemoteException{
+    public Validator selectCandidatesOfElection(int election_id, Status candidateStatus) throws RemoteException{
     	return  dbc.selectCandidatesOfElection(election_id, candidateStatus);
     }
     
