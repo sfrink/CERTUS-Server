@@ -6,6 +6,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -736,12 +737,14 @@ public class DatabaseConnector {
 			if(val.isVerified()){
 				String query = "INSERT INTO election (election_name, status, owner_id) VALUES (?,?,?)";
 				int status=0;
-				st=this.con.prepareStatement(query);
+				st=this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 				st.setString(1, electionDto.getElectionName());
 				st.setInt(2, status);
 				st.setInt(3, electionDto.getOwnerId());
-				st.execute();
+				int id=st.executeUpdate();
 				val.setStatus("Election added to DB");
+				electionDto.setElectionId(id);
+				val.setObject(electionDto);
 				return val;
 			}
 			else{
@@ -776,13 +779,15 @@ public class DatabaseConnector {
 			if(aOK){
 				for(int i=0;i<candidateList.size();i++){
 					String query="INSERT INTO candidates (candidate_name, election_id, status) VALUES (?,?,?)";
-					st=this.con.prepareStatement(query);
+					st=this.con.prepareStatement(query,Statement.RETURN_GENERATED_KEYS);
 					st.setString(1,candidateList.get(i).getCandidateName());
 					st.setInt(2, election_id);
 					st.setInt(3,1);
-					st.execute();
+					int id=st.executeUpdate();
+					candidateList.get(i).setCandidateId(id);
 				}
 				val.setStatus("Candidates added to DB");
+				val.setObject(candidateList);
 			}
 			else{
 				val.setStatus("Candidate names failed to validate");
