@@ -106,16 +106,16 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
-    public Validator selectElectionsOwnedByUser(int election_owner_id) throws RemoteException{
-    	return  dbc.selectElectionsOwnedByUser(election_owner_id);
+    public Validator selectElectionsOwnedByUser(int electionOwnerId) throws RemoteException{
+    	return  dbc.selectElectionsOwnedByUser(electionOwnerId);
     }
     
     @Override
-    public Validator addElection(String name, int owner_id) throws RemoteException{
+    public Validator addElection(String name, int ownerId) throws RemoteException{
     	Validator validator = new Validator();
     	ElectionDto elec=new ElectionDto();
-    	elec.setElection_name(name);
-    	elec.setOwner_id(owner_id);
+    	elec.setElectionName(name);
+    	elec.setOwnerId(ownerId);
     	
     	return dbc.createNewElection(elec);
     }
@@ -124,14 +124,23 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator editElection(ElectionDto election) throws RemoteException{
        	return dbc.editElection(election);
     }
+    @Override
+    public Validator deleteElection(int electionId) throws RemoteException{
+    	//return dbc.deleteElection(election_id);
+    	return dbc.editElectionStatus(electionId, ElectionStatus.DELETED);
+    }
     
-    public Validator deleteElection(int election_id) throws RemoteException{
-    	return dbc.deleteElection(election_id);
-    	
+    @Override
+    public Validator startElection(int electionId) throws RemoteException{   	
+    	return dbc.editElectionStatus(electionId, ElectionStatus.OPEN);
+    }
+    
+    @Override
+    public Validator closeElection(int electionId) throws RemoteException{	
+    	return dbc.editElectionStatus(electionId, ElectionStatus.CLOSED);
     }
     
     // Candidate
-    
     @Override
     public Validator selectCandidate(int id) throws RemoteException{
     	return dbc.selectCandidate(id);
@@ -139,27 +148,27 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
-    public Validator selectCandidatesOfElection(int election_id) throws RemoteException{
+    public Validator selectCandidatesOfElection(int electionId) throws RemoteException{
     	
-    	return dbc.selectCandidatesOfElection(election_id);
+    	return dbc.selectCandidatesOfElection(electionId);
     }
     
     @Override
-    public Validator selectCandidatesOfElection(int election_id, Status candidateStatus) throws RemoteException{
-    	return  dbc.selectCandidatesOfElection(election_id, candidateStatus);
+    public Validator selectCandidatesOfElection(int electionId, Status candidateStatus) throws RemoteException{
+    	return  dbc.selectCandidatesOfElection(electionId, candidateStatus);
     }
     
     @Override
-    public Validator addCandidates(ArrayList<String> names, int election_id) throws RemoteException{
+    public Validator addCandidates(ArrayList<String> names, int electionId) throws RemoteException{
     	
     	ArrayList<CandidateDto> cands=new ArrayList<CandidateDto>();
     	for(int i=0;i<names.size();i++){
     		CandidateDto cand=new CandidateDto();
-    		cand.setCandidate_name(names.get(i));
+    		cand.setCandidateName(names.get(i));
     		cands.add(cand);
     	}
 
-    	return dbc.addCandidatesToElection(cands, election_id);
+    	return dbc.addCandidatesToElection(cands, electionId);
     }
     
     @Override
