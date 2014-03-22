@@ -4,8 +4,8 @@ import java.util.Iterator;
 
 import database.DatabaseConnector;
 import dto.*;
-import enumeration.CandidateStatus;
-import enumeration.ElectionStatus;
+import enumeration.*;
+
 
 public class Main {
 
@@ -22,7 +22,7 @@ public class Main {
 		System.out.println(v.getStatus());
 		
 		// Retrive Elections
-		ElectionDto electionDto = db.selectElection(1);
+		/*ElectionDto electionDto = db.selectElection(1);
 		System.out.println(electionDto.toString());
 		
 		for (ElectionDto e : db.selectElections(ElectionStatus.NEW)) {
@@ -35,7 +35,7 @@ public class Main {
 		
 		for (CandidateDto c : db.selectCandidatesOfElection(1)) {
 			System.out.println(c.toString());
-		}
+		}*/
 	}
 
 }
