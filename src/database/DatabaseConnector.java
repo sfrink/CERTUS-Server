@@ -736,7 +736,7 @@ public class DatabaseConnector {
 			val=iv.validateString(electionDto.getElectionName(), "Election name");
 			if(val.isVerified()){
 				String query = "INSERT INTO election (election_name, status, owner_id) VALUES (?,?,?)";
-				int status=0;
+				int status=ElectionStatus.NEW.getCode();
 				st=this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 				st.setString(1, electionDto.getElectionName());
 				st.setInt(2, status);
@@ -782,7 +782,7 @@ public class DatabaseConnector {
 					st=this.con.prepareStatement(query,Statement.RETURN_GENERATED_KEYS);
 					st.setString(1,candidateList.get(i).getCandidateName());
 					st.setInt(2, election_id);
-					st.setInt(3,1);
+					st.setInt(3, Status.ENABLED.getCode());
 					int id=st.executeUpdate();
 					candidateList.get(i).setCandidateId(id);
 				}
