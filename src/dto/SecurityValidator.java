@@ -17,7 +17,7 @@ public class SecurityValidator {
 
 	public Validator checkSignature(String sig, int user_id){
 		DatabaseConnector dbc=new DatabaseConnector();
-		String pk=dbc.getPubKeyByUserID(user_id);
+		String pk=(String)dbc.getPubKeyByUserID(user_id).getObject();
 		Validator val=new Validator();
 		val.setVerified(false);
 		if(pk==null){

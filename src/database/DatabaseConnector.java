@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -1027,25 +1029,133 @@ public class DatabaseConnector {
 		}
 	}
 	
-	public String getPubKeyByUserID(int userId){
+	public Validator getPubKeyByUserID(int userId){
 		PreparedStatement st = null;
-
+		Validator val=new Validator();
+		InputValidation iv=new InputValidation();
+		val=iv.validateInt(userId, "User ID");
 		String query = "SELECT public_key FROM users WHERE user_id = ?";
 		try{
-			st = this.con.prepareStatement(query);
-			st.setInt(1, userId);
-			ResultSet res=st.executeQuery();
-			if (res.next()) {
-				String pubKey = res.getString(1);
-				return pubKey;
+			if(val.isVerified()){
+				st = this.con.prepareStatement(query);
+				st.setInt(1, userId);
+				ResultSet res=st.executeQuery();
+				if (res.next()) {
+					String pubKey = res.getString(1);
+					val.setObject(pubKey);
+					val.setStatus("Public key retrieved");
+					return val;
+				}
+				else{
+					val.setVerified(false);
+					val.setStatus("No public key for this user id");
+					return val;
+				}
 			}
-			else
-				return null;
+			else{
+				val.setStatus("User ID did not validate");
+				return val;
+			}
 		}
 		catch(SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return null;
+			val.setVerified(false);
+			val.setStatus("SQL Error");
+			return val;
+		}
+	}
+	
+	public Validator selectVotesByElectionId(int election_id){
+		Validator val=new Validator();
+		InputValidation iv=new InputValidation();
+		ArrayList<VoteDto> votes=new ArrayList<VoteDto>();
+		val=iv.validateInt(election_id, "Election ID");
+		PreparedStatement st=null;
+		try{
+			if(val.isVerified()){
+				String query="SELECT user_id, vote_encrypted, vote_signature, timestamp "
+							+ "	FROM vote "
+							+ " WHERE election_id = ?";
+				st = this.con.prepareStatement(query);
+				st.setInt(1, election_id);
+				ResultSet res=st.executeQuery();
+				while (res.next()) {
+					int user_id = res.getInt(1);
+					String vote_encrypted = res.getString(2);
+					String vote_signature = res.getString(3);
+					Timestamp t = res.getTimestamp(4);
+
+					VoteDto vote = new VoteDto();
+					vote.setUser_id(user_id);
+					vote.setVote_encrypted(vote_encrypted);
+					vote.setVote_signature(vote_signature);
+					vote.setElection_id(election_id);
+					vote.setTimestamp(t);
+					
+					votes.add(vote);
+				}
+				val.setStatus("Successfully retrieved votes");
+				val.setObject(votes);
+				return val;
+			}
+			else{
+				val.setStatus("Election ID failed to validate");
+				return val;
+			}
+		}
+		catch(SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("SQL Error");
+			return val;
+		}
+	}
+	
+	public Validator tally(int election_id){
+		Map<CandidateDto, Integer> t= new HashMap<CandidateDto, Integer>();
+		PreparedStatement st=null;
+		Validator val=new Validator();
+		InputValidation iv = new InputValidation();
+		SecurityValidator sec=new SecurityValidator();
+		val=iv.validateInt(election_id, "Election ID");
+		if(val.isVerified()){
+			Validator voteVal=selectVotesByElectionId(election_id);
+			
+			if(voteVal.isVerified()){
+				ArrayList<VoteDto> votes = (ArrayList<VoteDto>)voteVal.getObject();
+				for(int i =0;i<votes.size();i++){
+					String enc=votes.get(i).getVote_encrypted();
+					String sig=votes.get(i).getVote_signature();
+					if(sec.checkSignature(sig, votes.get(i).getUser_id()).isVerified()){
+						int cand_id=Integer.parseInt(sec.decrypt(enc, getTallierSecretKey()), 16);
+						CandidateDto cand=(CandidateDto)selectCandidate(cand_id).getObject();
+						if(t.containsKey(cand)){
+							int total=t.get(cand);
+							total+=1;
+							t.remove(cand);
+							t.put(cand, total);
+						}
+						else{
+							t.put(cand, 1);
+						}
+					}
+					
+				}
+				val.setStatus("Tally computed");
+				val.setObject(t);
+				return val;
+			}
+			else{
+				val.setStatus(voteVal.getStatus());
+				val.setVerified(voteVal.isVerified());
+				return val;
+			}
+		}
+		else{
+			val.setStatus("Election ID failed to verify");
+			return val;
 		}
 	}
 }
