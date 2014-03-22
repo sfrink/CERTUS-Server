@@ -4,11 +4,13 @@ import java.util.Iterator;
 
 import database.DatabaseConnector;
 import dto.*;
-import enumeration.ElectionStatus;
+import enumeration.*;
+
 
 public class Main {
 
 	public static void main(String[] args) {
+		// TODO Auto-generated method stub
 
 		DatabaseConnector db = new DatabaseConnector();
 		
@@ -19,8 +21,8 @@ public class Main {
 		Validator v = db.checkIfUsernamePasswordMatch("user@certus.org", "password");
 		System.out.println(v.getStatus());
 		
-		// Retrieve Elections
-		ElectionDto electionDto = db.selectElection(1);
+		// Retrive Elections
+		/*ElectionDto electionDto = db.selectElection(1);
 		System.out.println(electionDto.toString());
 		
 		for (ElectionDto e : db.selectElections(ElectionStatus.NEW)) {
@@ -33,7 +35,7 @@ public class Main {
 		
 		for (CandidateDto c : db.selectCandidatesOfElection(1)) {
 			System.out.println(c.toString());
-		}
+		}*/
 	}
 
 }
