@@ -727,15 +727,12 @@ public class DatabaseConnector {
 	 * Add new election to db
 	 * @author Steven Frink
 	 */
-	public Validator createNewElection(ElectionDto electionDto){
+	public int createNewElection(ElectionDto electionDto){
 		PreparedStatement st=null;
 		ResultSet rs = null;
-		InputValidation iv=new InputValidation();
-		Validator val=new Validator();
+		int newId = 0;
 		
-		try{
-			val=iv.validateString(electionDto.getElectionName(), "Election name");
-			if(val.isVerified()){
+		try {
 				String query = "INSERT INTO election (election_name, status, owner_id) VALUES (?,?,?)";
 				int status=ElectionStatus.NEW.getCode();
 				st=this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
@@ -748,27 +745,63 @@ public class DatabaseConnector {
 				// get inserted id
 				rs = st.getGeneratedKeys();
 				rs.next();
-				int id = rs.getInt(1);
+				newId = rs.getInt(1);
 								
-				val.setStatus("Election added to DB");
-				electionDto.setElectionId(id);
-				val.setObject(electionDto);
-				
-				System.out.println(val);
-				return val;
-			}
-			else{
-				val.setStatus("Name failed to validate");
-				return val;
-			}
-		}
-		catch (SQLException ex) {
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL error");
-			return val;
 		}
+		
+		return newId;
 	}
+	
+	
+	/**
+	 * @param name - election name
+	 * Add new election to db
+	 * @author Steven Frink
+	 */
+	public Validator addElectiodWithCandidates(ElectionDto electionDto){
+		PreparedStatement st=null;
+		ResultSet rs = null;
+		
+		Validator out = new Validator();
+		Validator vElection = electionDto.Validate();
+		Validator vCandidates = new Validator();
+		
+		if (vElection.isVerified())
+		{
+		    // insert election
+			int electionId = createNewElection(electionDto);
+			
+			if (electionId > 0) {
+				// if insert of elections was successful, insert candidate list
+				vCandidates = addCandidatesToElection(electionDto.getCandidateList(), electionId);
+				
+				if(vCandidates.isVerified()) {
+					// if candidates insert was successful
+					ArrayList<CandidateDto> candidates = (ArrayList<CandidateDto>) vCandidates.getObject();
+					electionDto.setElectionId(electionId);
+					electionDto.setCandidateList(candidates);
+					
+					out.setVerified(true);
+					out.setStatus("Election has been successfully inserted");
+					out.setObject(electionDto);
+				} else {
+					out.setVerified(false);
+					out.setStatus("Candidates insert failed");
+				}
+			} else {
+				out.setVerified(false);
+				out.setStatus("Election insert failed");
+			}
+		} else {
+			out.setVerified(false);
+			out.setStatus(vElection.getStatus());			
+		}
+		
+		return out;
+}
 	
 	/**
 	 * @param candidateList - candidate array list 
@@ -778,42 +811,41 @@ public class DatabaseConnector {
 	 */
 	public Validator addCandidatesToElection(ArrayList<CandidateDto> candidateList, int election_id){
 		PreparedStatement st=null;
-		InputValidation iv=new InputValidation();
+		ResultSet rs = null;
 		Validator val = new Validator();
-		boolean aOK=true;
+		int newCandidateId = 0;
+		
 		try{
-			for(int i=0;i<candidateList.size();i++){
-				val = iv.validateString(candidateList.get(i).getCandidateName(), "Candidate Name");
-				aOK&=val.isVerified();
-			}
-			if(aOK){
-				for(int i=0;i<candidateList.size();i++){
-					String query="INSERT INTO candidate (candidate_name, election_id, status) VALUES (?,?,?)";
-					st=this.con.prepareStatement(query,Statement.RETURN_GENERATED_KEYS);
-					st.setString(1,candidateList.get(i).getCandidateName());
-					st.setInt(2, election_id);
-					st.setInt(3, Status.ENABLED.getCode());
-					int id=st.executeUpdate();
-					candidateList.get(i).setCandidateId(id);
-				}
-				val.setStatus("Candidates added to DB");
-				val.setObject(candidateList);
-			}
-			else{
-				val.setStatus("Candidate names failed to validate");
-			}
-			val.setVerified(aOK);
-			return val;
-			
-		}
-		catch (SQLException ex) {
+
+		  for(int i=0;i<candidateList.size();i++){
+			String query="INSERT INTO candidate (candidate_name, election_id, status) VALUES (?,?,?)";
+			st=this.con.prepareStatement(query,Statement.RETURN_GENERATED_KEYS);
+			st.setString(1,candidateList.get(i).getCandidateName());
+			st.setInt(2, election_id);
+			st.setInt(3, Status.ENABLED.getCode());
+
+			// run the query and get new candidate id
+			st.executeUpdate();
+			rs = st.getGeneratedKeys();
+			rs.next();
+			newCandidateId = rs.getInt(1);
+			candidateList.get(i).setCandidateId(newCandidateId);
+		  }
+		  
+		  val.setVerified(true);
+		  val.setStatus("Candidates added to DB");
+		  val.setObject(candidateList);
+		  
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setVerified(false);
 			val.setStatus("SQL Error");
-			return val;
 		}
+
+		return val;
 	}
+	
 	
 	/**
 	 * @param candidateDto - candidate object
