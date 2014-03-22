@@ -729,6 +729,7 @@ public class DatabaseConnector {
 	 */
 	public Validator createNewElection(ElectionDto electionDto){
 		PreparedStatement st=null;
+		ResultSet rs = null;
 		InputValidation iv=new InputValidation();
 		Validator val=new Validator();
 		
@@ -741,10 +742,19 @@ public class DatabaseConnector {
 				st.setString(1, electionDto.getElectionName());
 				st.setInt(2, status);
 				st.setInt(3, electionDto.getOwnerId());
-				int id=st.executeUpdate();
+
+				// update query
+				st.executeUpdate();
+				// get inserted id
+				rs = st.getGeneratedKeys();
+				rs.next();
+				int id = rs.getInt(1);
+								
 				val.setStatus("Election added to DB");
 				electionDto.setElectionId(id);
 				val.setObject(electionDto);
+				
+				System.out.println(val);
 				return val;
 			}
 			else{
@@ -778,7 +788,7 @@ public class DatabaseConnector {
 			}
 			if(aOK){
 				for(int i=0;i<candidateList.size();i++){
-					String query="INSERT INTO candidates (candidate_name, election_id, status) VALUES (?,?,?)";
+					String query="INSERT INTO candidate (candidate_name, election_id, status) VALUES (?,?,?)";
 					st=this.con.prepareStatement(query,Statement.RETURN_GENERATED_KEYS);
 					st.setString(1,candidateList.get(i).getCandidateName());
 					st.setInt(2, election_id);
@@ -1146,49 +1156,49 @@ public class DatabaseConnector {
 		}
 	}
 	
-	public Validator tally(int election_id){
-		Map<CandidateDto, Integer> t= new HashMap<CandidateDto, Integer>();
-		PreparedStatement st=null;
-		Validator val=new Validator();
-		InputValidation iv = new InputValidation();
-		SecurityValidator sec=new SecurityValidator();
-		val=iv.validateInt(election_id, "Election ID");
-		if(val.isVerified()){
-			Validator voteVal=selectVotesByElectionId(election_id);
-			
-			if(voteVal.isVerified()){
-				ArrayList<VoteDto> votes = (ArrayList<VoteDto>)voteVal.getObject();
-				for(int i =0;i<votes.size();i++){
-					String enc=votes.get(i).getVote_encrypted();
-					String sig=votes.get(i).getVote_signature();
-					if(sec.checkSignature(sig, votes.get(i).getUser_id()).isVerified()){
-						int cand_id=Integer.parseInt(sec.decrypt(enc, getTallierSecretKey()), 16);
-						CandidateDto cand=(CandidateDto)selectCandidate(cand_id).getObject();
-						if(t.containsKey(cand)){
-							int total=t.get(cand);
-							total+=1;
-							t.remove(cand);
-							t.put(cand, total);
-						}
-						else{
-							t.put(cand, 1);
-						}
-					}
-					
-				}
-				val.setStatus("Tally computed");
-				val.setObject(t);
-				return val;
-			}
-			else{
-				val.setStatus(voteVal.getStatus());
-				val.setVerified(voteVal.isVerified());
-				return val;
-			}
-		}
-		else{
-			val.setStatus("Election ID failed to verify");
-			return val;
-		}
-	}
+//	public Validator tally(int election_id){
+//		Map<CandidateDto, Integer> t= new HashMap<CandidateDto, Integer>();
+//		PreparedStatement st=null;
+//		Validator val=new Validator();
+//		InputValidation iv = new InputValidation();
+//		SecurityValidator sec=new SecurityValidator();
+//		val=iv.validateInt(election_id, "Election ID");
+//		if(val.isVerified()){
+//			Validator voteVal=selectVotesByElectionId(election_id);
+//			
+//			if(voteVal.isVerified()){
+//				ArrayList<VoteDto> votes = (ArrayList<VoteDto>)voteVal.getObject();
+//				for(int i =0;i<votes.size();i++){
+//					String enc=votes.get(i).getVote_encrypted();
+//					String sig=votes.get(i).getVote_signature();
+//					if(sec.checkSignature(sig, votes.get(i).getUser_id()).isVerified()){
+//						int cand_id=Integer.parseInt(sec.decrypt(enc, getTallierSecretKey()), 16);
+//						CandidateDto cand=(CandidateDto)selectCandidate(cand_id).getObject();
+//						if(t.containsKey(cand)){
+//							int total=t.get(cand);
+//							total+=1;
+//							t.remove(cand);
+//							t.put(cand, total);
+//						}
+//						else{
+//							t.put(cand, 1);
+//						}
+//					}
+//					
+//				}
+//				val.setStatus("Tally computed");
+//				val.setObject(t);
+//				return val;
+//			}
+//			else{
+//				val.setStatus(voteVal.getStatus());
+//				val.setVerified(voteVal.isVerified());
+//				return val;
+//			}
+//		}
+//		else{
+//			val.setStatus("Election ID failed to verify");
+//			return val;
+//		}
+//	}
 }
