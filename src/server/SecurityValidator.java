@@ -19,7 +19,22 @@ import database.DatabaseConnector;
 import dto.Validator;
 
 public class SecurityValidator {
-
+	
+	private static String securityKeyBasePath;
+	private static String securityKeystoreAlias;
+	private static String securityKeystorePassword;
+	private static String securityKeystoreFile;
+	private static String securityKeystorePrivatekey;
+	
+	public SecurityValidator()
+	{
+		securityKeyBasePath = ConfigurationProperties.securityKeyBasePath();
+		securityKeystoreAlias = ConfigurationProperties.securityKeystoreTallierAllias();
+		securityKeystorePassword = ConfigurationProperties.securityKeystoreTallierPassword();
+		securityKeystoreFile = securityKeyBasePath + ConfigurationProperties.securityKeystoreTallierFile();
+		securityKeystorePrivatekey = securityKeyBasePath + ConfigurationProperties.securityKeystoreTallierPrivatekey();
+		
+	}
 	public Validator checkSignature(String sig, int user_id) {
 		DatabaseConnector dbc = new DatabaseConnector();
 		String pk = (String) dbc.getPubKeyByUserID(user_id).getObject();
