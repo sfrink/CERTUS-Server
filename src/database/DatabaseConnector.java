@@ -335,7 +335,7 @@ public class DatabaseConnector
 			}
 			validator.setVerified(true);
 			validator.setObject(electionDto);
-
+			validator.setStatus("Select Sucessfull");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -395,9 +395,11 @@ public class DatabaseConnector
 
 				elections.add(electionDto);
 				
-				validator.setVerified(true);
-				validator.setObject(elections);
+				
 			}
+			validator.setVerified(true);
+			validator.setObject(elections);
+			validator.setStatus("Select Sucessfull");
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -460,11 +462,11 @@ public class DatabaseConnector
 				electionDto.setOwnerId(ownerId);
 
 				elections.add(electionDto);
-
-				validator.setVerified(true);
-				validator.setObject(elections);
+				
 			}
-
+			validator.setVerified(true);
+			validator.setObject(elections);
+			validator.setStatus("Select Sucessfull");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -518,10 +520,13 @@ public class DatabaseConnector
 
 				elections.add(electionDto);
 
-				validator.setVerified(true);
-				validator.setObject(elections);
+				
 			}
 
+			validator.setVerified(true);
+			validator.setObject(elections);
+			validator.setStatus("Select Sucessfull");
+			
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -580,10 +585,11 @@ public class DatabaseConnector
 
 				elections.add(electionDto);
 
-				validator.setVerified(true);
-				validator.setObject(elections);
+				
 			}
-
+			validator.setVerified(true);
+			validator.setObject(elections);
+			validator.setStatus("Select Sucessfull");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -631,7 +637,7 @@ public class DatabaseConnector
 
 				validator.setVerified(true);
 				validator.setObject(candidateDto);
-				
+				validator.setStatus("Select Sucessfull");
 			}
 
 
@@ -682,10 +688,12 @@ public class DatabaseConnector
 
 				candidates.add(candidateDto);
 				
-				validator.setVerified(true);
-				validator.setObject(candidates);
+				
 			}
-
+			validator.setVerified(true);
+			validator.setObject(candidates);
+			validator.setStatus("Select Sucessfull");
+			
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -739,10 +747,11 @@ public class DatabaseConnector
 
 				candidates.add(candidateDto);
 
-				validator.setVerified(true);
-				validator.setObject(candidateDto);
+				
 			}
-
+			validator.setVerified(true);
+			validator.setObject(candidates);
+			validator.setStatus("Select Sucessfull");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
