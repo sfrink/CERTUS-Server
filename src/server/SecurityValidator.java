@@ -19,7 +19,26 @@ import database.DatabaseConnector;
 import dto.Validator;
 
 public class SecurityValidator {
-
+	
+	private static String securityKeyBasePath;
+	private static String securityKeystoreAlias;
+	private static String securityKeystorePassword;
+	private static String securityKeystoreFile;
+	private static String securityKeystorePrivatekey;
+	
+	public SecurityValidator()
+	{
+		securityKeyBasePath = ConfigurationProperties.securityKeyBasePath();
+		securityKeystoreAlias = ConfigurationProperties.securityKeystoreTallierAllias();
+		securityKeystorePassword = ConfigurationProperties.securityKeystoreTallierPassword();
+		securityKeystoreFile = securityKeyBasePath + ConfigurationProperties.securityKeystoreTallierFile();
+		securityKeystorePrivatekey = securityKeyBasePath + ConfigurationProperties.securityKeystoreTallierPrivatekey();
+		
+		System.out.println(securityKeystoreFile);
+		System.out.println(securityKeystorePrivatekey);
+		System.out.println(securityKeystorePassword);
+		System.out.println(securityKeystoreAlias);
+	}
 	public Validator checkSignature(String sig, int user_id) {
 		DatabaseConnector dbc = new DatabaseConnector();
 		String pk = (String) dbc.getPubKeyByUserID(user_id).getObject();
@@ -91,13 +110,11 @@ public class SecurityValidator {
 			ks = KeyStore.getInstance("PKCS12");
 
 			// get user password and file input stream
-			char[] password = "t@l1i3r".toCharArray();
+			char[] password = securityKeystorePassword.toCharArray();
 
 			java.io.FileInputStream fis = null;
 			try {
-				fis = new java.io.FileInputStream(
-						"/Users/Steven/School Work/Grad School/"
-								+ "Research/Du-Vote/CERTUS-Server/resources/keys/pkcs12.p12");
+				fis = new java.io.FileInputStream(securityKeystorePrivatekey);
 				ks.load(fis, password);
 			} finally {
 				if (fis != null) {
@@ -109,7 +126,7 @@ public class SecurityValidator {
 
 			// get my private key
 			KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) ks
-					.getEntry("tallier", protParam);
+					.getEntry(securityKeystoreAlias, protParam);
 			PrivateKey myPrivateKey = pkEntry.getPrivateKey();
 			return myPrivateKey;
 
@@ -123,18 +140,17 @@ public class SecurityValidator {
 	public Validator getTallierPublicKey(){
 		Validator val=new Validator();
     	try{
-	    	FileInputStream is = new FileInputStream("/Users/Steven/School Work/Grad School/"
-	    			+ "Research/Du-Vote/CERTUS-Server/resources/keys/Tallier-Keys");
+	    	FileInputStream is = new FileInputStream(securityKeystoreFile);
 	
 	        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        keystore.load(is, "t@l1i3r".toCharArray());
+	        keystore.load(is, securityKeystorePassword.toCharArray());
 	
-	        String alias = "tallier";
 	
-	        Key key = keystore.getKey(alias, "t@l1i3r".toCharArray());
+	
+	        Key key = keystore.getKey(securityKeystoreAlias, securityKeystorePassword.toCharArray());
 	        if (key instanceof PrivateKey) {
 	          // Get certificate of public key
-	          Certificate cert = keystore.getCertificate(alias);
+	          Certificate cert = keystore.getCertificate(securityKeystoreAlias);
 	
 	          // Get public key
 	          PublicKey publicKey = cert.getPublicKey();
@@ -142,6 +158,7 @@ public class SecurityValidator {
 	          val.setStatus("Retrieved public key");
 	          val.setObject(publicKey);
 	          return val;
+	          
 	        }
 	        else{
 	        	val.setVerified(false);
