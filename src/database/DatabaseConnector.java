@@ -533,8 +533,7 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param election_owner_id
-	 *            (int) - user_id of the user who owns elections
+	 * @param election_owner_id (int) - user_id of the user who owns elections
 	 * @return Validator : ArrayList<ElectionDto> - List of all the elections
 	 *         owned by the specific user (regardless of status)
 	 * @author Hirosh Wickramasuriya
@@ -593,11 +592,50 @@ public class DatabaseConnector
 		return validator;
 
 	}
+	
+	public Validator selectAllElectionsForVoter(int user_id){
+		Validator val = new Validator();
+		CandidateDto candidateDto = new CandidateDto();
+		ArrayList<ElectionDto> elecs=new ArrayList<ElectionDto>();
+		PreparedStatement st = null;
+
+		String query = "SELECT election_id, election_name, owner_id "
+				+ "start_datetime, close_datetime FROM election "
+				+ "WHERE election_status = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, ElectionStatus.OPEN.getCode());
+			ResultSet res=st.executeQuery();
+			
+			while(res.next()){
+				ElectionDto e=new ElectionDto();
+				e.setElectionId(res.getInt(1));
+				e.setCandidateList((ArrayList<CandidateDto>)selectCandidatesOfElection(
+						e.getElectionId()).getObject());
+				e.setElectionName(res.getString(2));
+				e.setOwnerId(res.getInt(3));
+				e.setStartDatetime(res.getTimestamp(4));
+				e.setCloseDatetime(res.getTimestamp(5));
+				elecs.add(e);
+			}
+			val.setStatus("Retrieved Elections");
+			val.setVerified(true);
+			val.setObject(elecs);
+			return val;
+		}
+		catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("Select failed");
+			val.setVerified(false);
+			return val;
+		}
+	}
 
 	// Candidates
 	/**
-	 * @param id
-	 *            - candidate identification number (primary key)
+	 * @param id - candidate identification number (primary key)
 	 * @return Validator :CandidateDto - Details of a particular candidate
 	 * @author Hirosh Wickramasuriya
 	 */
@@ -645,8 +683,7 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param electionIdKey
-	 *            - election identification number
+	 * @param electionIdKey - election identification number
 	 * @return Validator : ArrayList<CandidateDto>- list of all the candidates
 	 *         under specified election
 	 * @author Hirosh Wickramasuriya
@@ -697,10 +734,8 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param electionIdKey
-	 *            - election identification number
-	 * @param candidateStatus
-	 *            - desired status of candidate which required to be returned
+	 * @param electionIdKey - election identification number
+	 * @param candidateStatus - desired status of candidate which required to be returned
 	 *            for given election
 	 * @return Validator :ArrayList<CandidateDto> - list of all the candidates
 	 *         that matches the status under specified election
@@ -753,8 +788,7 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param name
-	 *            - election name Add new election to db
+	 * @param name - election name Add new election to db
 	 * @author Steven Frink
 	 */
 	private int addElection(ElectionDto electionDto) {
@@ -786,8 +820,7 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param name
-	 *            - election name Add new election to db
+	 * @param name - election name Add new election to db
 	 * @author Steven Frink
 	 */
 	public Validator addElectionWithCandidates(ElectionDto electionDto) {
@@ -831,11 +864,8 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param candidateList
-	 *            - candidate array list
-	 * @param election_id
-	 *            - the election to add candidates to Add candidates to an
-	 *            election
+	 * @param candidateList - candidate array list
+	 * @param election_id - the election to add candidates to Add candidates to an election
 	 * @author Steven Frink
 	 */
 	private Validator addCandidatesToElection(ArrayList<CandidateDto> candidateList, int election_id) {
@@ -876,10 +906,8 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param candidateDto
-	 *            - candidate object
-	 * @param election_id
-	 *            - id of the election which the candidate should be associated
+	 * @param candidateDto - candidate object
+	 * @param election_id - id of the election which the candidate should be associated
 	 * @return Validator - status of the candidate insert operation
 	 * @author Hirosh Wickramasuriya
 	 */
@@ -922,8 +950,7 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param electionDto
-	 *            - election data object
+	 * @param electionDto - election data object
 	 * @return validator - status of election update operation
 	 * @author Hirosh / Dmitry
 	 */
@@ -971,8 +998,7 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param candidateDto
-	 *            - candidate object
+	 * @param candidateDto - candidate object
 	 * @author Steven Frink
 	 */
 	private Validator editCandidate(CandidateDto candidateDto) {
@@ -1039,8 +1065,8 @@ public class DatabaseConnector
 	}
 
 /*	*//**
-	 * @param electionId
-	 *            - the election to open Add candidates to an election
+	 * @param electionId - the election to open 
+	 * Add candidates to an election
 	 * @author Steven Frink
 	 *//*
 	public Validator openElection(int electionId) {
@@ -1067,8 +1093,8 @@ public class DatabaseConnector
 	}
 
 	*//**
-	 * @param electionId
-	 *            - the election to close Close an election
+	 * @param electionId - the election to close 
+	 * Close an election
 	 * @author Steven Frink
 	 *//*
 	public Validator closeElection(int electionId) {
@@ -1092,8 +1118,8 @@ public class DatabaseConnector
 	}
 
 	*//**
-	 * @param electionId
-	 *            - the election to delete Delete an election
+	 * @param electionId - the election to delete 
+	 * Delete an election
 	 * @author Steven Frink
 	 *//*
 	public Validator deleteElection(int electionId) {
@@ -1178,8 +1204,8 @@ public class DatabaseConnector
 	// Vote
 
 	/**
-	 * @param voteDto
-	 *            - the vote to submit Submit a vote
+	 * @param voteDto - the vote to submit 
+	 * Submit a vote
 	 * @author Steven Frink
 	 */
 

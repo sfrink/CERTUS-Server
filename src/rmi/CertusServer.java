@@ -191,12 +191,21 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
 
     //Vote
+    @Override
     public Validator vote(VoteDto v) throws RemoteException{
     	return dbc.vote(v);
     }
     
+    @Override
     public Validator getTallierPublicKey() throws RemoteException{
+    	sec=new SecurityValidator();
     	return sec.getTallierPublicKey();
     }
+    
+    @Override
+    public Validator selectAllElectionsForVoter(int user_id) throws RemoteException{
+    	return dbc.selectAllElectionsForVoter(user_id);
+    }
+    
     
 }
