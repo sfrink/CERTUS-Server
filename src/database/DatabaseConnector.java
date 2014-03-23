@@ -1308,50 +1308,56 @@ public class DatabaseConnector
 		}
 	}
 
-	// public Validator tally(int election_id){
-	// Map<CandidateDto, Integer> t= new HashMap<CandidateDto, Integer>();
-	// PreparedStatement st=null;
-	// Validator val=new Validator();
-	// InputValidation iv = new InputValidation();
-	// SecurityValidator sec=new SecurityValidator();
-	// val=iv.validateInt(election_id, "Election ID");
-	// if(val.isVerified()){
-	// Validator voteVal=selectVotesByElectionId(election_id);
-	//
-	// if(voteVal.isVerified()){
-	// ArrayList<VoteDto> votes = (ArrayList<VoteDto>)voteVal.getObject();
-	// for(int i =0;i<votes.size();i++){
-	// String enc=votes.get(i).getVote_encrypted();
-	// String sig=votes.get(i).getVote_signature();
-	// if(sec.checkSignature(sig, votes.get(i).getUser_id()).isVerified()){
-	// int cand_id=Integer.parseInt(sec.decrypt(enc, getTallierSecretKey()),
-	// 16);
-	// CandidateDto cand=(CandidateDto)selectCandidate(cand_id).getObject();
-	// if(t.containsKey(cand)){
-	// int total=t.get(cand);
-	// total+=1;
-	// t.remove(cand);
-	// t.put(cand, total);
-	// }
-	// else{
-	// t.put(cand, 1);
-	// }
-	// }
-	//
-	// }
-	// val.setStatus("Tally computed");
-	// val.setObject(t);
-	// return val;
-	// }
-	// else{
-	// val.setStatus(voteVal.getStatus());
-	// val.setVerified(voteVal.isVerified());
-	// return val;
-	// }
-	// }
-	// else{
-	// val.setStatus("Election ID failed to verify");
-	// return val;
-	// }
-	// }
+	public Validator tally(int election_id) {
+		Map<CandidateDto, Integer> t = new HashMap<CandidateDto, Integer>();
+		PreparedStatement st = null;
+		Validator val = new Validator();
+		InputValidation iv = new InputValidation();
+		SecurityValidator sec = new SecurityValidator();
+		val = iv.validateInt(election_id, "Election ID");
+		ArrayList<CandidateDto>cands=(ArrayList<CandidateDto>)selectCandidatesOfElection(election_id, Status.ENABLED).getObject();
+		if (val.isVerified()) {
+			Validator voteVal = selectVotesByElectionId(election_id);
+
+			if (voteVal.isVerified()) {
+				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();
+				for (int i = 0; i < votes.size(); i++) {
+					String enc = votes.get(i).getVote_encrypted();
+					String sig = votes.get(i).getVote_signature();
+					if (sec.checkSignature(sig, votes.get(i).getUser_id())
+							.isVerified()) {
+						int cand_id = Integer.parseInt(sec.decrypt(enc), 16);
+						boolean validCand=false;
+						for(int j=0;j<cands.size();j++){
+							if(cands.get(j).getCandidateId()==cand_id)
+								validCand=true;
+						}
+						if(validCand){
+							CandidateDto cand = (CandidateDto) selectCandidate(
+									cand_id).getObject();
+							if (t.containsKey(cand)) {
+								int total = t.get(cand);
+								total += 1;
+								t.remove(cand);
+								t.put(cand, total);
+							} else {
+								t.put(cand, 1);
+							}
+						}
+					}
+
+				}
+				val.setStatus("Tally computed");
+				val.setObject(t);
+				return val;
+			} else {
+				val.setStatus(voteVal.getStatus());
+				val.setVerified(voteVal.isVerified());
+				return val;
+			}
+		} else {
+			val.setStatus("Election ID failed to verify");
+			return val;
+		}
+	}
 }
