@@ -598,7 +598,6 @@ public class DatabaseConnector
 	
 	public Validator selectAllElectionsForVoter(int user_id){
 		Validator val = new Validator();
-		CandidateDto candidateDto = new CandidateDto();
 		ArrayList<ElectionDto> elecs=new ArrayList<ElectionDto>();
 		PreparedStatement st = null;
 
