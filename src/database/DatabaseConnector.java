@@ -326,17 +326,18 @@ public class DatabaseConnector {
 				electionDto.setStatusCode(statusCode);
 				electionDto.setStatusDescription(statusDescription);
 				electionDto.setOwnerId(ownerId);
-				
-			} else {
-
 			}
+			
+			validator.setVerified(true);
+			validator.setObject(electionDto);
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select failed");
+			validator.setVerified(false);
 		}
 		
-		validator.setObject(electionDto);
 		return validator;
 	}
 	
@@ -712,12 +713,15 @@ public class DatabaseConnector {
 				
 			} 
 
+			validator.setVerified(true);
+			validator.setObject(candidates);	
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setVerified(true);
+			validator.setVerified(false);
 		}
 		
-		validator.setObject(candidates);
 		return validator;
 	}
 	
