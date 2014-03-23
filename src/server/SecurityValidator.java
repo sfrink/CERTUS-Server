@@ -34,6 +34,10 @@ public class SecurityValidator {
 		securityKeystoreFile = securityKeyBasePath + ConfigurationProperties.securityKeystoreTallierFile();
 		securityKeystorePrivatekey = securityKeyBasePath + ConfigurationProperties.securityKeystoreTallierPrivatekey();
 		
+		System.out.println(securityKeystoreFile);
+		System.out.println(securityKeystorePrivatekey);
+		System.out.println(securityKeystorePassword);
+		System.out.println(securityKeystoreAlias);
 	}
 	public Validator checkSignature(String sig, int user_id) {
 		DatabaseConnector dbc = new DatabaseConnector();
