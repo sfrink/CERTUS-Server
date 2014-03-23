@@ -1,14 +1,23 @@
 package rmi;
 
 
+import java.io.FileInputStream;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.cert.Certificate;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import server.ConfigurationProperties;
+import server.SecurityValidator;
 import database.DatabaseConnector;
 import dto.CandidateDto;
 import dto.ElectionDto;
@@ -22,6 +31,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
     private static int PORT;
     private static DatabaseConnector dbc;
+    private static SecurityValidator sec;
 
     
     public CertusServer() throws Exception {
@@ -183,6 +193,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     //Vote
     public Validator vote(VoteDto v) throws RemoteException{
     	return dbc.vote(v);
+    }
+    
+    public Validator getTallierPublicKey() throws RemoteException{
+    	return sec.getTallierPublicKey();
     }
     
 }
