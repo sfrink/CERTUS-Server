@@ -106,11 +106,13 @@ public class SecurityValidator {
 			ks = KeyStore.getInstance("PKCS12");
 
 			// get user password and file input stream
-			char[] password = securityKeystorePassword.toCharArray();
+			char[] password = "t@l1i3r".toCharArray();
 
 			java.io.FileInputStream fis = null;
 			try {
-				fis = new java.io.FileInputStream(securityKeystorePrivatekey);
+				fis = new java.io.FileInputStream(
+						"/Users/Steven/School Work/Grad School/"
+								+ "Research/Du-Vote/CERTUS-Server/resources/keys/pkcs12.p12");
 				ks.load(fis, password);
 			} finally {
 				if (fis != null) {
@@ -122,7 +124,7 @@ public class SecurityValidator {
 
 			// get my private key
 			KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) ks
-					.getEntry(securityKeystoreAlias, protParam);
+					.getEntry("tallier", protParam);
 			PrivateKey myPrivateKey = pkEntry.getPrivateKey();
 			return myPrivateKey;
 
@@ -136,15 +138,18 @@ public class SecurityValidator {
 	public Validator getTallierPublicKey(){
 		Validator val=new Validator();
     	try{
-	    	FileInputStream is = new FileInputStream(securityKeystoreFile);
+	    	FileInputStream is = new FileInputStream("/Users/Steven/School Work/Grad School/"
+	    			+ "Research/Du-Vote/CERTUS-Server/resources/keys/Tallier-Keys");
 	
 	        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        keystore.load(is, securityKeystorePassword.toCharArray());
+	        keystore.load(is, "t@l1i3r".toCharArray());
 	
-	        Key key = keystore.getKey(securityKeystoreAlias, securityKeystorePassword.toCharArray());
+	        String alias = "tallier";
+	
+	        Key key = keystore.getKey(alias, "t@l1i3r".toCharArray());
 	        if (key instanceof PrivateKey) {
 	          // Get certificate of public key
-	          Certificate cert = keystore.getCertificate(securityKeystoreAlias);
+	          Certificate cert = keystore.getCertificate(alias);
 	
 	          // Get public key
 	          PublicKey publicKey = cert.getPublicKey();
@@ -152,6 +157,7 @@ public class SecurityValidator {
 	          val.setStatus("Retrieved public key");
 	          val.setObject(publicKey);
 	          return val;
+	          
 	        }
 	        else{
 	        	val.setVerified(false);
