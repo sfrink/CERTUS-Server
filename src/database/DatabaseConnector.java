@@ -394,15 +394,18 @@ public class DatabaseConnector
 				electionDto.setOwnerId(ownerId);
 
 				elections.add(electionDto);
-
+				
+				validator.setVerified(true);
+				validator.setObject(elections);
 			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select Failed.");
 		}
 
-		validator.setObject(elections);
+		
 		return validator;
 
 	}
@@ -458,14 +461,17 @@ public class DatabaseConnector
 
 				elections.add(electionDto);
 
+				validator.setVerified(true);
+				validator.setObject(elections);
 			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select failed");
 		}
 
-		validator.setObject(elections);
+		
 		return validator;
 
 	}
@@ -512,13 +518,16 @@ public class DatabaseConnector
 
 				elections.add(electionDto);
 
+				validator.setVerified(true);
+				validator.setObject(elections);
 			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select failed");
 		}
-		validator.setObject(elections);
+		
 		return validator;
 
 	}
@@ -571,13 +580,16 @@ public class DatabaseConnector
 
 				elections.add(electionDto);
 
+				validator.setVerified(true);
+				validator.setObject(elections);
 			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select failed");
 		}
-		validator.setObject(elections);
+		
 		return validator;
 
 	}
@@ -617,15 +629,18 @@ public class DatabaseConnector
 				candidateDto.setDisplayOrder(displayOrder);
 				candidateDto.setStatus(statusId);
 
-			} else {
-
+				validator.setVerified(true);
+				validator.setObject(candidateDto);
+				
 			}
+
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select failed");
 		}
-		validator.setObject(candidateDto);
+		
 		return validator;
 	}
 
@@ -666,15 +681,18 @@ public class DatabaseConnector
 				candidateDto.setStatus(statusId);
 
 				candidates.add(candidateDto);
-
+				
+				validator.setVerified(true);
+				validator.setObject(candidates);
 			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("select failed");
 		}
 
-		validator.setObject(candidates);
+		
 		return validator;
 	}
 
