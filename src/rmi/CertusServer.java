@@ -111,21 +111,24 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
-    public Validator addElectiodWithCandidates(ElectionDto electionDto)throws RemoteException {
-   // public Validator addElection(String name, int ownerId) throws RemoteException{
-    	Validator validator = new Validator();
-    	return dbc.addElectiodWithCandidates(electionDto);
+    public Validator addElectionWithCandidates(ElectionDto electionDto)throws RemoteException {
+    	return dbc.addElectionWithCandidates(electionDto);
     }
     
     @Override
+    public Validator editElectionWithCandidates(ElectionDto electionDto) throws RemoteException{
+    	return dbc.editElectionWithCandidates(electionDto);
+    }
+    /*@Override
     public Validator editElection(ElectionDto election) throws RemoteException{
        	return dbc.editElection(election);
-    }
+    }*/
 
     @Override
     public Validator editElectionStatus(int electionId, ElectionStatus electionStatus) throws RemoteException{   	
     	return dbc.editElectionStatus(electionId, electionStatus);
     }
+    
     
     // Candidate
     @Override
@@ -145,7 +148,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	return  dbc.selectCandidatesOfElection(electionId, candidateStatus);
     }
     
-    @Override
+
+    /*@Override
     public Validator addCandidatesNamesToElection(ArrayList<String> names, int electionId) throws RemoteException{
     	
     	ArrayList<CandidateDto> cands=new ArrayList<CandidateDto>();
@@ -166,7 +170,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator editCandidate(CandidateDto candidate) throws RemoteException{
     	return dbc.editCandidate(candidate);
-    }
+    }*/
     
     @Override
     public Validator editCandidateStatus(int candidateId, Status status) throws RemoteException{
