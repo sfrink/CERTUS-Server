@@ -94,7 +94,7 @@ public class ConfigurationProperties {
 	}
 			
 	public static String securityKeystoreTallierAllias(){
-		return properties.getProperty("security_keystore_tallier_allias");
+		return properties.getProperty("security_keystore_tallier_alias");
 	}
 	
 	public static String securityKeystoreTallierPassword(){
