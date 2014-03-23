@@ -27,47 +27,49 @@ import dto.VoteDto;
 import enumeration.Status;
 import enumeration.ElectionStatus;
 
-public class DatabaseConnector {
-	private static String dbHost;
-	private static String dbPort;
-	private static String dbUser;
-	private static String dbPassword;
-	private static String dbName;
-	private Connection con;
-	
-	public DatabaseConnector() {
+/**
+ * @author sulo
+ *
+ */
+public class DatabaseConnector
+{
+	private static String	dbHost;
+	private static String	dbPort;
+	private static String	dbUser;
+	private static String	dbPassword;
+	private static String	dbName;
+	private Connection		con;
+
+	public DatabaseConnector()
+	{
 		Connection con = null;
-		
-		//System.out.println(ConfigurationProperties.dbHost());
+
+		// System.out.println(ConfigurationProperties.dbHost());
 
 		dbHost = ConfigurationProperties.dbHost();
 		dbPort = ConfigurationProperties.dbPort();
 		dbName = ConfigurationProperties.dbSchema();
 		dbUser = ConfigurationProperties.dbUser();
 		dbPassword = ConfigurationProperties.dbPassword();
-		
-		
+
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			String url = "jdbc:mysql://" + dbHost + ":" + dbPort + "/" + dbName;
-			con = DriverManager.getConnection(url, dbUser,
-					dbPassword);
+			con = DriverManager.getConnection(url, dbUser, dbPassword);
 			this.con = con;
 		} catch (Exception e) {
 			System.out.println("Db connection failed");
 			e.printStackTrace();
 		}
 
-		
 	}
-		
-	
+
 	public UserDto selectUserById(int userId) {
 		UserDto u = new UserDto();
-		
+
 		PreparedStatement st = null;
 		String query = "SELECT * FROM users WHERE user_id = ?";
-		
+
 		try {
 			st = con.prepareStatement(query);
 			st.setInt(1, userId);
@@ -85,16 +87,16 @@ public class DatabaseConnector {
 				u.setActivation_code(res.getString(9));
 				u.setPublic_key(res.getString(10));
 				u.setAdministrator_flag(res.getInt(11));
-				u.setStatus(res.getInt(12));				
+				u.setStatus(res.getInt(12));
 			}
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
-		
+
 		return u;
 	}
-	
+
 	public Validator checkIfUsernamePasswordMatch(String email, String plainPass) {
 		// 1. validate input
 		Validator result = validateEmailAndPlainInput(email, plainPass);
@@ -117,70 +119,71 @@ public class DatabaseConnector {
 		String dbHash = userDto.getPassword();
 		String dbSalt = userDto.getSalt();
 		int statusId = userDto.getStatus();
-		//int falseLogins = user.getFalseLogins();
+		// int falseLogins = user.getFalseLogins();
 		int id = userDto.getUser_id();
 
 		// 3. check if this user is active
-//		if (statusId != Enumeration.User.USER_STATUSID_ACTIVE) {
-//			result.setVerified(false);
-//			result.setStatus("Error, cannot login, this user account has been locked");
-//			return result;
-//		}
+		// if (statusId != Enumeration.User.USER_STATUSID_ACTIVE) {
+		// result.setVerified(false);
+		// result.setStatus("Error, cannot login, this user account has been locked");
+		// return result;
+		// }
 
 		String plainHash = hasher.sha512(plainPass, dbSalt);
 
 		// 4. if entered password is correct, return true with welcome message
 		if (plainHash.equals(dbHash)) {
 
-			//updateDatabaseIntField("USERS", "ID", "FALSELOGINS", id, 0);
-			//unsetActivationCodeAndTempPassword(id);
+			// updateDatabaseIntField("USERS", "ID", "FALSELOGINS", id, 0);
+			// unsetActivationCodeAndTempPassword(id);
 			result.setObject(userDto);
 			result.setVerified(true);
 			result.setStatus("Welcome to Certus");
 
-			//LoggerCustom.logLoginActivity(email, "Login Successful");
+			// LoggerCustom.logLoginActivity(email, "Login Successful");
 
 			return result;
 		} else {
 			// 5. else record the failed login attempt
-//			int newFalseLogins = falseLogins + 1;
-//			updateDatabaseIntField("USERS", "ID", "FALSELOGINS", id,
-//					newFalseLogins);
-//
-//			// if we reached the max of failed logins, lock the account, sent an
-//			// email
-//			if (newFalseLogins == Enumeration.User.USER_MAX_LOGIN_ATTEMPTS) {
-//				// lock
-//				updateDatabaseIntField("USERS", "ID", "STATUSID", id,
-//						Enumeration.User.USER_STATUSID_LOCKED);
-//
-//				// generate activation code
-//				String activationCode = setActivationCode(id);
-//
-//				// send email with activation code
-//				SendEmail.sendEmailNotification(email,
-//						Enumeration.Strings.ACCOUNT_LOCKED_SUBJECT,
-//						Enumeration.Strings.ACCOUNT_LOCKED_MESSAGE
-//								+ activationCode);
-//
-//				LoggerCustom.logLoginActivity(email, "Account locked");
-//
-//				result.setVerified(false);
-//				result.setStatus("Error, exceeded the maximum number of login attempts, this user account has been locked");
-//				return result;
-//			} else {
-//				result.setVerified(false);
-//				result.setStatus("Error, the system could not resolve the provided combination of username and password.");
-//				return result;
-//			}
-			
+			// int newFalseLogins = falseLogins + 1;
+			// updateDatabaseIntField("USERS", "ID", "FALSELOGINS", id,
+			// newFalseLogins);
+			//
+			// // if we reached the max of failed logins, lock the account, sent
+			// an
+			// // email
+			// if (newFalseLogins == Enumeration.User.USER_MAX_LOGIN_ATTEMPTS) {
+			// // lock
+			// updateDatabaseIntField("USERS", "ID", "STATUSID", id,
+			// Enumeration.User.USER_STATUSID_LOCKED);
+			//
+			// // generate activation code
+			// String activationCode = setActivationCode(id);
+			//
+			// // send email with activation code
+			// SendEmail.sendEmailNotification(email,
+			// Enumeration.Strings.ACCOUNT_LOCKED_SUBJECT,
+			// Enumeration.Strings.ACCOUNT_LOCKED_MESSAGE
+			// + activationCode);
+			//
+			// LoggerCustom.logLoginActivity(email, "Account locked");
+			//
+			// result.setVerified(false);
+			// result.setStatus("Error, exceeded the maximum number of login attempts, this user account has been locked");
+			// return result;
+			// } else {
+			// result.setVerified(false);
+			// result.setStatus("Error, the system could not resolve the provided combination of username and password.");
+			// return result;
+			// }
+
 			result.setVerified(false);
 			result.setStatus("Error, the system could not resolve the provided combination of username and password.");
 			return result;
 		}
 
 	}
-	
+
 	public Validator validateEmailAndPlainInput(String email, String plainPass) {
 		InputValidator iv = new InputValidator();
 		Validator vResult = new Validator();
@@ -203,7 +206,7 @@ public class DatabaseConnector {
 
 		return vResult;
 	}
-	
+
 	public Validator verifyUserEmail(String emailToSelect) {
 		Validator v = new Validator();
 		v.setVerified(false);
@@ -250,19 +253,19 @@ public class DatabaseConnector {
 				String last_name = res.getString(3);
 				String password = res.getString(4);
 				String salt = res.getString(5);
-				
+
 				int statusId = res.getInt(6);
-				
-//				String salt = res.getString(2);
-//				
-//				int falseLogins = res.getInt(4);
-//				int id = res.getInt(5);
-//				int roleId = res.getInt(6);
-//				String acticationCode = res.getString(7);
-//				String activationCodeSalt = res.getString(8);
-//				String tempPassword = res.getString(9);
-//				String tempPasswordSalt = res.getString(10);
-//				int firmId = res.getInt(11);
+
+				// String salt = res.getString(2);
+				//
+				// int falseLogins = res.getInt(4);
+				// int id = res.getInt(5);
+				// int roleId = res.getInt(6);
+				// String acticationCode = res.getString(7);
+				// String activationCodeSalt = res.getString(8);
+				// String tempPassword = res.getString(9);
+				// String tempPasswordSalt = res.getString(10);
+				// int firmId = res.getInt(11);
 
 				userDto.setUser_id(user_id);
 				userDto.setFirst_name(first_name);
@@ -270,7 +273,7 @@ public class DatabaseConnector {
 				userDto.setPassword(password);
 				userDto.setSalt(salt);
 				userDto.setStatus(statusId);
-				
+
 			} else {
 
 			}
@@ -282,18 +285,18 @@ public class DatabaseConnector {
 
 		return userDto;
 	}
-	
+
 	// Election
 	/**
-	 * @param id(int) - Election identification number (primary key)
+	 * @param id
+	 *            (int) - Election identification number (primary key)
 	 * @return Validator : ElectionDto - Details of a particular election
 	 * @author Hirosh Wickramasuriya
 	 */
-	public Validator selectElection(int id)
-	{
+	public Validator selectElection(int id) {
 		Validator validator = new Validator();
 		ElectionDto electionDto = new ElectionDto();
-		
+
 		PreparedStatement st = null;
 
 		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status, s.code, s.description, owner_id "
@@ -326,37 +329,41 @@ public class DatabaseConnector {
 				electionDto.setStatusCode(statusCode);
 				electionDto.setStatusDescription(statusDescription);
 				electionDto.setOwnerId(ownerId);
-			}
+
 			
+
+			}
 			validator.setVerified(true);
 			validator.setObject(electionDto);
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select failed");
 			validator.setVerified(false);
+			validator.setStatus("Select failed");
 		}
+
 		
 		return validator;
 	}
-	
+
 	/**
-	 * @param status(ElectionStatus) - specific status to be searched
-	 * @return Validator : ArrayList<ElectionDto> - List of elections that matches a specific status
+	 * @param status
+	 *            (ElectionStatus) - specific status to be searched
+	 * @return Validator : ArrayList<ElectionDto> - List of elections that
+	 *         matches a specific status
 	 * @author Hirosh Wickramasuriya
 	 */
-	public Validator selectElections(ElectionStatus electionStatus)
-	{
+	public Validator selectElections(ElectionStatus electionStatus) {
 		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
-		
+
 		PreparedStatement st = null;
 
 		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status, s.code, s.description, owner_id"
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
-				+ " ON (e.status = s.status_id) " 
+				+ " ON (e.status = s.status_id) "
 				+ " WHERE status = ?";
 
 		try {
@@ -375,7 +382,7 @@ public class DatabaseConnector {
 				String statusCode = res.getString(6);
 				String statusDescription = res.getString(7);
 				int ownerId = res.getInt(8);
-				
+
 				ElectionDto electionDto = new ElectionDto();
 				electionDto.setElectionId(electionId);
 				electionDto.setElectionName(electionName);
@@ -385,40 +392,41 @@ public class DatabaseConnector {
 				electionDto.setStatusCode(statusCode);
 				electionDto.setStatusDescription(statusDescription);
 				electionDto.setOwnerId(ownerId);
-				
+
 				elections.add(electionDto);
-				
-			} 
+
+			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
-		
+
 		validator.setObject(elections);
 		return validator;
-		
+
 	}
-	
+
 	/**
-	 * @param electionOwnerId(int) - user_id of the user who owns this election
-	 * @param status(ElectionStatus) - specific status to be searched
-	 * @return Validator : ArrayList<ElectionDto> - List of elections owned by the specific user, that matches a specific status
+	 * @param electionOwnerId
+	 *            (int) - user_id of the user who owns this election
+	 * @param status
+	 *            (ElectionStatus) - specific status to be searched
+	 * @return Validator : ArrayList<ElectionDto> - List of elections owned by
+	 *         the specific user, that matches a specific status
 	 * @author Hirosh Wickramasuriya
 	 */
-	public Validator selectElectionsOwnedByUser(int electionOwnerId, ElectionStatus electionStatus)
-	{
+	public Validator selectElectionsOwnedByUser(int electionOwnerId, ElectionStatus electionStatus) {
 		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
-		
+
 		PreparedStatement st = null;
 
 		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status, s.code, s.description, owner_id"
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
-				+ " ON (e.status = s.status_id) " 
-				+ " WHERE owner_id = ?"
-				+ " AND status = ?";
+				+ " ON (e.status = s.status_id) "
+				+ " WHERE owner_id = ?" + " AND status = ?";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -437,7 +445,7 @@ public class DatabaseConnector {
 				String statusCode = res.getString(6);
 				String statusDescription = res.getString(7);
 				int ownerId = res.getInt(8);
-				
+
 				ElectionDto electionDto = new ElectionDto();
 				electionDto.setElectionId(electionId);
 				electionDto.setElectionName(electionName);
@@ -447,36 +455,34 @@ public class DatabaseConnector {
 				electionDto.setStatusCode(statusCode);
 				electionDto.setStatusDescription(statusDescription);
 				electionDto.setOwnerId(ownerId);
-				
+
 				elections.add(electionDto);
-				
-			} 
+
+			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
-		
+
 		validator.setObject(elections);
 		return validator;
-		
+
 	}
-	
+
 	/**
-	 * @return Validator : ArrayList<ElectionDto>  - List of all the elections (regardless of status)
+	 * @return Validator : ArrayList<ElectionDto> - List of all the elections
+	 *         (regardless of status)
 	 * @author Hirosh Wickramasuriya
 	 */
-	public Validator selectElections()
-	{
+	public Validator selectElections() {
 		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
-		
+
 		PreparedStatement st = null;
 
 		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status, s.code, s.description, owner_id"
-				+ " FROM election e"
-				+ " INNER JOIN status_election s "
-				+ " ON (e.status = s.status_id) " ;
+				+ " FROM election e" + " INNER JOIN status_election s " + " ON (e.status = s.status_id) ";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -493,7 +499,7 @@ public class DatabaseConnector {
 				String statusCode = res.getString(6);
 				String statusDescription = res.getString(7);
 				int ownerId = res.getInt(8);
-				
+
 				ElectionDto electionDto = new ElectionDto();
 				electionDto.setElectionId(electionId);
 				electionDto.setElectionName(electionName);
@@ -503,10 +509,10 @@ public class DatabaseConnector {
 				electionDto.setStatusCode(statusCode);
 				electionDto.setStatusDescription(statusDescription);
 				electionDto.setOwnerId(ownerId);
-				
+
 				elections.add(electionDto);
-				
-			} 
+
+			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -514,26 +520,27 @@ public class DatabaseConnector {
 		}
 		validator.setObject(elections);
 		return validator;
-		
+
 	}
-	
+
 	/**
-	 * @param election_owner_id(int) - user_id of the user who owns elections
-	 * @return Validator : ArrayList<ElectionDto> - List of all the elections owned by the specific user (regardless of status)
+	 * @param election_owner_id
+	 *            (int) - user_id of the user who owns elections
+	 * @return Validator : ArrayList<ElectionDto> - List of all the elections
+	 *         owned by the specific user (regardless of status)
 	 * @author Hirosh Wickramasuriya
 	 */
-	public Validator selectElectionsOwnedByUser(int electionOwnerId)
-	{
+	public Validator selectElectionsOwnedByUser(int electionOwnerId) {
 		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
-		
+
 		PreparedStatement st = null;
 
 		String query = "SELECT election_id, election_name, start_datetime, close_datetime, status, s.code, s.description, owner_id"
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
-				+ " WHERE owner_id = ?" ;
+				+ " WHERE owner_id = ?";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -551,7 +558,7 @@ public class DatabaseConnector {
 				String statusCode = res.getString(6);
 				String statusDescription = res.getString(7);
 				int ownerId = res.getInt(8);
-				
+
 				ElectionDto electionDto = new ElectionDto();
 				electionDto.setElectionId(electionId);
 				electionDto.setElectionName(electionName);
@@ -561,10 +568,10 @@ public class DatabaseConnector {
 				electionDto.setStatusCode(statusCode);
 				electionDto.setStatusDescription(statusDescription);
 				electionDto.setOwnerId(ownerId);
-				
+
 				elections.add(electionDto);
-				
-			} 
+
+			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -572,19 +579,20 @@ public class DatabaseConnector {
 		}
 		validator.setObject(elections);
 		return validator;
-		
+
 	}
+
 	// Candidates
 	/**
-	 * @param id - candidate identification number (primary key)
+	 * @param id
+	 *            - candidate identification number (primary key)
 	 * @return Validator :CandidateDto - Details of a particular candidate
 	 * @author Hirosh Wickramasuriya
 	 */
-	public Validator selectCandidate(int id)
-	{
+	public Validator selectCandidate(int id) {
 		Validator validator = new Validator();
 		CandidateDto candidateDto = new CandidateDto();
-		
+
 		PreparedStatement st = null;
 
 		String query = "SELECT candidate_id, candidate_name, election_id, display_order, status FROM candidate WHERE candidate_id = ?";
@@ -596,7 +604,7 @@ public class DatabaseConnector {
 			ResultSet res = st.executeQuery();
 
 			if (res.next()) {
-				
+
 				int candidateId = res.getInt(1);
 				String candidate_name = res.getString(2);
 				int electionId = res.getInt(3);
@@ -608,7 +616,7 @@ public class DatabaseConnector {
 				candidateDto.setElectionId(electionId);
 				candidateDto.setDisplayOrder(displayOrder);
 				candidateDto.setStatus(statusId);
-				
+
 			} else {
 
 			}
@@ -620,17 +628,18 @@ public class DatabaseConnector {
 		validator.setObject(candidateDto);
 		return validator;
 	}
-	
+
 	/**
-	 * @param electionIdKey - election identification number
-	 * @return Validator : ArrayList<CandidateDto>- list of all the candidates under specified election
+	 * @param electionIdKey
+	 *            - election identification number
+	 * @return Validator : ArrayList<CandidateDto>- list of all the candidates
+	 *         under specified election
 	 * @author Hirosh Wickramasuriya
 	 */
-	public Validator selectCandidatesOfElection(int electionIdKey)
-	{
+	public Validator selectCandidatesOfElection(int electionIdKey) {
 		Validator validator = new Validator();
 		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
-		
+
 		PreparedStatement st = null;
 
 		String query = "SELECT candidate_id, candidate_name, election_id, display_order, status FROM candidate WHERE election_id = ?";
@@ -655,43 +664,44 @@ public class DatabaseConnector {
 				candidateDto.setElectionId(electionId);
 				candidateDto.setDisplayOrder(displayOrder);
 				candidateDto.setStatus(statusId);
-				
+
 				candidates.add(candidateDto);
-				
-			} 
+
+			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
-		
+
 		validator.setObject(candidates);
 		return validator;
 	}
-	
+
 	/**
-	 * @param electionIdKey - election identification number
-	 * @param candidateStatus - desired status of candidate which required to be returned for given election
-	 * @return Validator :ArrayList<CandidateDto> - list of all the candidates that matches the status under specified election
+	 * @param electionIdKey
+	 *            - election identification number
+	 * @param candidateStatus
+	 *            - desired status of candidate which required to be returned
+	 *            for given election
+	 * @return Validator :ArrayList<CandidateDto> - list of all the candidates
+	 *         that matches the status under specified election
 	 * @author Hirosh Wickramasuriya
 	 */
-	public Validator selectCandidatesOfElection(int electionIdKey, Status candidateStatus)
-	{
+	public Validator selectCandidatesOfElection(int electionIdKey, Status candidateStatus) {
 		Validator validator = new Validator();
 		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
-		
+
 		PreparedStatement st = null;
 
-		String query = "SELECT candidate_id, candidate_name, election_id, display_order, status "
-						+ "	FROM candidate "
-						+ " WHERE election_id = ?"
-						+ " AND status = ?";
+		String query = "SELECT candidate_id, candidate_name, election_id, display_order, status " + "	FROM candidate "
+				+ " WHERE election_id = ?" + " AND status = ?";
 
 		try {
 			st = this.con.prepareStatement(query);
 			st.setInt(1, electionIdKey);
 			st.setInt(2, candidateStatus.getCode());
-			
+
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
@@ -708,86 +718,81 @@ public class DatabaseConnector {
 				candidateDto.setElectionId(electionId);
 				candidateDto.setDisplayOrder(displayOrder);
 				candidateDto.setStatus(statusId);
-				
-				candidates.add(candidateDto);
-				
-			} 
 
-			validator.setVerified(true);
-			validator.setObject(candidates);	
+				candidates.add(candidateDto);
+
+				validator.setVerified(true);
+				validator.setObject(candidateDto);
+			}
+
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setVerified(true);
 			validator.setVerified(false);
+			validator.setStatus("Select failed");
 		}
-		
 		return validator;
 	}
-	
-	
+
 	/**
-	 * @param name - election name
-	 * Add new election to db
+	 * @param name
+	 *            - election name Add new election to db
 	 * @author Steven Frink
 	 */
-	public int createNewElection(ElectionDto electionDto){
-		PreparedStatement st=null;
+	private int addElection(ElectionDto electionDto) {
+		PreparedStatement st = null;
 		ResultSet rs = null;
 		int newId = 0;
-		
-		try {
-				String query = "INSERT INTO election (election_name, status, owner_id) VALUES (?,?,?)";
-				int status=ElectionStatus.NEW.getCode();
-				st=this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-				st.setString(1, electionDto.getElectionName());
-				st.setInt(2, status);
-				st.setInt(3, electionDto.getOwnerId());
 
-				// update query
-				st.executeUpdate();
-				// get inserted id
-				rs = st.getGeneratedKeys();
-				rs.next();
-				newId = rs.getInt(1);
-								
+		try {
+			String query = "INSERT INTO election (election_name, status, owner_id) VALUES (?,?,?)";
+			int status = ElectionStatus.NEW.getCode();
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, electionDto.getElectionName());
+			st.setInt(2, status);
+			st.setInt(3, electionDto.getOwnerId());
+
+			// update query
+			st.executeUpdate();
+			// get inserted id
+			rs = st.getGeneratedKeys();
+			rs.next();
+			newId = rs.getInt(1);
+
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
-		
+
 		return newId;
 	}
-	
-	
+
 	/**
-	 * @param name - election name
-	 * Add new election to db
+	 * @param name
+	 *            - election name Add new election to db
 	 * @author Steven Frink
 	 */
-	public Validator addElectiodWithCandidates(ElectionDto electionDto){
-		PreparedStatement st=null;
-		ResultSet rs = null;
-		
+	public Validator addElectionWithCandidates(ElectionDto electionDto) {
+
 		Validator out = new Validator();
+		// Validate the election 
 		Validator vElection = electionDto.Validate();
 		Validator vCandidates = new Validator();
-		
-		if (vElection.isVerified())
-		{
-		    // insert election
-			int electionId = createNewElection(electionDto);
-			
+
+		if (vElection.isVerified()) {
+			// insert election
+			int electionId = addElection(electionDto);
+
 			if (electionId > 0) {
 				// if insert of elections was successful, insert candidate list
 				vCandidates = addCandidatesToElection(electionDto.getCandidateList(), electionId);
-				
-				if(vCandidates.isVerified()) {
+
+				if (vCandidates.isVerified()) {
 					// if candidates insert was successful
 					ArrayList<CandidateDto> candidates = (ArrayList<CandidateDto>) vCandidates.getObject();
 					electionDto.setElectionId(electionId);
 					electionDto.setCandidateList(candidates);
-					
+
 					out.setVerified(true);
 					out.setStatus("Election has been successfully inserted");
 					out.setObject(electionDto);
@@ -801,45 +806,47 @@ public class DatabaseConnector {
 			}
 		} else {
 			out.setVerified(false);
-			out.setStatus(vElection.getStatus());			
+			out.setStatus(vElection.getStatus());
 		}
-		
+
 		return out;
-}
-	
+	}
+
 	/**
-	 * @param candidateList - candidate array list 
-	 * @param election_id - the election to add candidates to
-	 * Add candidates to an election
+	 * @param candidateList
+	 *            - candidate array list
+	 * @param election_id
+	 *            - the election to add candidates to Add candidates to an
+	 *            election
 	 * @author Steven Frink
 	 */
-	public Validator addCandidatesToElection(ArrayList<CandidateDto> candidateList, int election_id){
-		PreparedStatement st=null;
+	private Validator addCandidatesToElection(ArrayList<CandidateDto> candidateList, int election_id) {
+		PreparedStatement st = null;
 		ResultSet rs = null;
 		Validator val = new Validator();
 		int newCandidateId = 0;
-		
-		try{
 
-		  for(int i=0;i<candidateList.size();i++){
-			String query="INSERT INTO candidate (candidate_name, election_id, status) VALUES (?,?,?)";
-			st=this.con.prepareStatement(query,Statement.RETURN_GENERATED_KEYS);
-			st.setString(1,candidateList.get(i).getCandidateName());
-			st.setInt(2, election_id);
-			st.setInt(3, Status.ENABLED.getCode());
+		try {
 
-			// run the query and get new candidate id
-			st.executeUpdate();
-			rs = st.getGeneratedKeys();
-			rs.next();
-			newCandidateId = rs.getInt(1);
-			candidateList.get(i).setCandidateId(newCandidateId);
-		  }
-		  
-		  val.setVerified(true);
-		  val.setStatus("Candidates added to DB");
-		  val.setObject(candidateList);
-		  
+			for (int i = 0; i < candidateList.size(); i++) {
+				String query = "INSERT INTO candidate (candidate_name, election_id, status) VALUES (?,?,?)";
+				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+				st.setString(1, candidateList.get(i).getCandidateName());
+				st.setInt(2, election_id);
+				st.setInt(3, Status.ENABLED.getCode());
+
+				// run the query and get new candidate id
+				st.executeUpdate();
+				rs = st.getGeneratedKeys();
+				rs.next();
+				newCandidateId = rs.getInt(1);
+				candidateList.get(i).setCandidateId(newCandidateId);
+			}
+
+			val.setVerified(true);
+			val.setStatus("Candidates inserted successfully");
+			val.setObject(candidateList);
+
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -849,68 +856,162 @@ public class DatabaseConnector {
 
 		return val;
 	}
-	
-	
+
 	/**
-	 * @param candidateDto - candidate object
+	 * @param candidateDto
+	 *            - candidate object
+	 * @param election_id
+	 *            - id of the election which the candidate should be associated
+	 * @return Validator - status of the candidate insert operation
+	 * @author Hirosh Wickramasuriya
+	 */
+	private Validator addCandidateToElection(CandidateDto candidateDto, int election_id) {
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		Validator val = new Validator();
+		int newCandidateId = 0;
+
+		try {
+
+			String query = "INSERT INTO candidate (candidate_name, election_id, status) VALUES (?,?,?)";
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, candidateDto.getCandidateName());
+			st.setInt(2, election_id);
+			st.setInt(3, Status.ENABLED.getCode());
+
+			// run the query and get new candidate id
+			st.executeUpdate();
+			rs = st.getGeneratedKeys();
+			rs.next();
+			newCandidateId = rs.getInt(1);
+			if (newCandidateId > 0) {
+				candidateDto.setCandidateId(newCandidateId);
+				val.setVerified(true);
+				val.setStatus("Candidates inserted successfully");
+				val.setObject(candidateDto);
+			} else {
+				val.setStatus("Failed to insert candidate");
+			}
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("SQL Error");
+		}
+
+		return val;
+	}
+
+	/**
+	 * @param electionDto
+	 *            - election data object
+	 * @return validator - status of election update operation
+	 * @author Hirosh / Dmitry
+	 */
+	public Validator editElectionWithCandidates(ElectionDto electionDto) {
+
+		Validator out = new Validator();
+
+		String delimiter = "\n";
+
+		// 1. Validate e
+		Validator vElection = electionDto.Validate();
+		if (vElection.isVerified()) {
+			// 2. Update the election details
+			Validator vElectionUpdated = editElection(electionDto);
+
+			if (vElectionUpdated.isVerified()) {
+				// election updated, then update the candidates
+				out = vElectionUpdated;
+				for (CandidateDto candidateDto : electionDto.getCandidateList()) {
+					if (candidateDto.getCandidateId() > 0) {
+						// candidate exists => update the candidate
+						Validator vCandidateUpdated = editCandidate(candidateDto);
+
+						out.setStatus(out.getStatus() + delimiter + vCandidateUpdated.getStatus());
+						out.setVerified(out.isVerified() && vCandidateUpdated.isVerified());
+					} else {
+						// candidate does not exist => insert the candidate
+						Validator vCandiateInserted = addCandidateToElection(candidateDto, electionDto.getElectionId());
+
+						out.setStatus(out.getStatus() + delimiter + vCandiateInserted.getStatus());
+						out.setVerified(out.isVerified() && vCandiateInserted.isVerified());
+					}
+				}
+
+			} else {
+				out = vElectionUpdated;
+			}
+
+		} else {
+			out.setVerified(false);
+			out.setStatus(vElection.getStatus());
+		}
+
+		return out;
+	}
+
+	/**
+	 * @param candidateDto
+	 *            - candidate object
 	 * @author Steven Frink
 	 */
-	public Validator editCandidate(CandidateDto candidateDto){
-		PreparedStatement st=null;
-		InputValidation iv=new InputValidation();
+	private Validator editCandidate(CandidateDto candidateDto) {
+		PreparedStatement st = null;
 		Validator val = new Validator();
-		try{
-			val = iv.validateString(candidateDto.getCandidateName(), "Candidate Name");
-			boolean valid=true;
-			valid&=val.isVerified();
-			val=iv.validateInt(candidateDto.getDisplayOrder(), "Display Order");
-			valid&=val.isVerified();
-			if(valid){
-				String query="UPDATE candidate SET (candidate_name, display_order)=(?,?) WHERE candidate_id=?";
-				st=this.con.prepareStatement(query);
+		try {
+
+			Validator vCandidate = candidateDto.Validate();
+			if (vCandidate.isVerified()) {
+
+				//String query = "UPDATE candidate SET (candidate_name, display_order)=(?,?) WHERE candidate_id=?";
+				String query = "UPDATE candidate "
+						+ " SET candidate_name = ?, "
+						+ " display_order = ? "
+						+ " WHERE candidate_id = ?";
+				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+
 				st.setString(1, candidateDto.getCandidateName());
 				st.setInt(2, candidateDto.getDisplayOrder());
-				st.setInt(3,candidateDto.getCandidateId());
-				st.execute();
-				val.setStatus("Candidate information updated");
-				return val;
+				st.setInt(3, candidateDto.getCandidateId());
+				int updateCount = st.executeUpdate();
+				if (updateCount > 0) {
+					val.setStatus("Candidate updated successfully");
+					val.setVerified(true);
+				} else {
+					val.setStatus("Failed to update candidate");
+				}
+			} else {
+				val = vCandidate;
 			}
-			else{
-				val.setStatus("Candidate information did not validate");
-				val.setVerified(false);
-				return val;
-			}
-		}
-		catch(SQLException ex) {
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
 			val.setVerified(false);
-			return val;
 		}
-		
+		return val;
 	}
-	
-	public Validator editCandidateStatus(CandidateDto cand){
-		PreparedStatement st=null;
-		InputValidation iv=new InputValidation();
+
+	public Validator editCandidateStatus(CandidateDto cand) {
+		PreparedStatement st = null;
+		InputValidation iv = new InputValidation();
 		Validator val = new Validator();
-		try{
+		try {
 			val = iv.validateInt(cand.getStatus(), "Candidate Status");
-			if(val.isVerified()){
-				String query="UPDATE candidate SET status=? WHERE candidate_id=?";
-				st=this.con.prepareStatement(query);
+			if (val.isVerified()) {
+				String query = "UPDATE candidate SET status=? WHERE candidate_id=?";
+				st = this.con.prepareStatement(query);
 				st.setInt(1, cand.getCandidateId());
 				st.execute();
 				val.setStatus("Candidate status updated");
 				return val;
-			}
-			else{
+			} else {
 				val.setStatus("Status failed to verify");
 				return val;
 			}
-		}
-		catch(SQLException ex) {
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
@@ -918,27 +1019,27 @@ public class DatabaseConnector {
 			return val;
 		}
 	}
-	
-	/**
-	 * @param electionId - the election to open
-	 * Add candidates to an election
+
+/*	*//**
+	 * @param electionId
+	 *            - the election to open Add candidates to an election
 	 * @author Steven Frink
-	 */
-	public Validator openElection(int electionId){
-		PreparedStatement st=null;
-		Validator val=new Validator();
-		
-		try{
-			String query="UPDATE election"
-					+ " SET status="+ElectionStatus.NEW.getCode()
-					+ " WHERE election_id="+electionId;
-			st=this.con.prepareStatement(query);
+	 *//*
+	public Validator openElection(int electionId) {
+		PreparedStatement st = null;
+		Validator val = new Validator();
+
+		try {
+			String query = "UPDATE election"
+					+ " SET status=" + ElectionStatus.NEW.getCode()
+					+ " WHERE election_id="
+					+ electionId;
+			st = this.con.prepareStatement(query);
 			st.execute();
 			val.setVerified(true);
 			val.setStatus("Election opened");
 			return val;
-		}
-		catch (SQLException ex) {
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
@@ -946,26 +1047,24 @@ public class DatabaseConnector {
 			return val;
 		}
 	}
-	
-	/**
-	 * @param electionId - the election to close
-	 * Close an election
+
+	*//**
+	 * @param electionId
+	 *            - the election to close Close an election
 	 * @author Steven Frink
-	 */
-	public Validator closeElection(int electionId){
-		PreparedStatement st=null;
-		Validator val=new Validator();
-		try{
-			String query="UPDATE election"
-					+ " SET status="+ ElectionStatus.CLOSED.getCode()
-					+ " WHERE election_id="+electionId;
-			st=this.con.prepareStatement(query);
+	 *//*
+	public Validator closeElection(int electionId) {
+		PreparedStatement st = null;
+		Validator val = new Validator();
+		try {
+			String query = "UPDATE election" + " SET status=" + ElectionStatus.CLOSED.getCode() + " WHERE election_id="
+					+ electionId;
+			st = this.con.prepareStatement(query);
 			st.execute();
 			val.setVerified(true);
 			val.setStatus("Election closed");
 			return val;
-		}
-		catch (SQLException ex) {
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setVerified(false);
@@ -973,24 +1072,23 @@ public class DatabaseConnector {
 			return val;
 		}
 	}
-	
-	/**
-	 * @param electionId - the election to delete
-	 * Delete an election
+
+	*//**
+	 * @param electionId
+	 *            - the election to delete Delete an election
 	 * @author Steven Frink
-	 */
-	public Validator deleteElection(int electionId){
-		PreparedStatement st=null;
-		Validator val=new Validator();
-		try{
-			String query="UPDATE election SET status=7 WHERE election_id="+electionId;
-			st=this.con.prepareStatement(query);
+	 *//*
+	public Validator deleteElection(int electionId) {
+		PreparedStatement st = null;
+		Validator val = new Validator();
+		try {
+			String query = "UPDATE election SET status=7 WHERE election_id=" + electionId;
+			st = this.con.prepareStatement(query);
 			st.execute();
 			val.setStatus("Election deleted");
 			val.setVerified(true);
 			return val;
-		}
-		catch(SQLException ex){
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
@@ -998,26 +1096,26 @@ public class DatabaseConnector {
 			return val;
 		}
 	}
-	
+*/
+
 	/**
-	 * @param electionId - the election id to update the status
-	 * Delete an election
+	 * @param electionId		- the election id to update the status Delete an election
+	 * @param electionStatus	- new status of the election 
+	 * @return validator 		- validator object with response of update operation
 	 * @author Steven Frink
 	 */
-	public Validator editElectionStatus(int electionId, ElectionStatus electionStatus){
-		PreparedStatement st=null;
-		Validator val=new Validator();
-		try{
-			String query="UPDATE election"
-					+ " SET status="+electionStatus.getCode()
-					+ " WHERE election_id="+electionId;
-			st=this.con.prepareStatement(query);
+	public Validator editElectionStatus(int electionId, ElectionStatus electionStatus) {
+		PreparedStatement st = null;
+		Validator val = new Validator();
+		try {
+			String query = "UPDATE election" + " SET status=" + electionStatus.getCode() + " WHERE election_id="
+					+ electionId;
+			st = this.con.prepareStatement(query);
 			st.execute();
 			val.setStatus("Election status updated");
 			val.setVerified(true);
 			return val;
-		}
-		catch(SQLException ex){
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
@@ -1025,65 +1123,64 @@ public class DatabaseConnector {
 			return val;
 		}
 	}
-	
+
 	/**
-	 * @param electionDto - the election to edit
-	 * Edit an election
+	 * @param electionDto
+	 *            - the election to edit Edit an election
 	 * @author Steven Frink
 	 */
-	public Validator editElection(ElectionDto electionDto){
-		PreparedStatement st=null;
-		InputValidation iv=new InputValidation();
+	private Validator editElection(ElectionDto electionDto) {
+		PreparedStatement st = null;
+
 		Validator val = new Validator();
-		try{
-			val = iv.validateString(electionDto.getElectionName(), "Election Name");
-			if(val.isVerified()){
-				String query="UPDATE election SET election_name=? WHERE election_id=?";
-				st=this.con.prepareStatement(query);
-				st.setString(1, electionDto.getElectionName());
-				st.setInt(2,electionDto.getElectionId());
-				st.execute();
+		try {
+			String query = "UPDATE election SET election_name=? WHERE election_id=?";
+
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, electionDto.getElectionName());
+			st.setInt(2, electionDto.getElectionId());
+			st.executeUpdate();
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
 				val.setStatus("Election updated successfully");
-				return val;
+				val.setVerified(true);
+			} else {
+				val.setStatus("Failed to update the election");
 			}
-			else{
-				val.setStatus("New election name did not validate");
-				return val;
-			}
-		}
-		catch(SQLException ex) {
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
 			val.setVerified(false);
-			return val;
 		}
+
+		return val;
 	}
-	
-	//Vote
-	
+
+	// Vote
+
 	/**
-	 * @param voteDto - the vote to submit
-	 * Submit a vote
+	 * @param voteDto
+	 *            - the vote to submit Submit a vote
 	 * @author Steven Frink
 	 */
-	
-	public Validator vote(VoteDto voteDto){
-		PreparedStatement st=null;
-		InputValidation iv=new InputValidation();
-		Validator val=new Validator();
-		boolean valid=true;
-		val=iv.validateInt(voteDto.getUser_id(), "User ID");
-		valid&=val.isVerified();
-		val=iv.validateInt(voteDto.getElection_id(), "Election ID");
-		valid&=val.isVerified();
-		val=iv.validateString(voteDto.getVote_encrypted(), "Encrypted Vote");
-		SecurityValidator sec=new SecurityValidator();
-		try{
-			if(valid && sec.checkSignature(voteDto.getVote_signature(), voteDto.getUser_id()).isVerified()){
-				String query="INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
+
+	public Validator vote(VoteDto voteDto) {
+		PreparedStatement st = null;
+		InputValidation iv = new InputValidation();
+		Validator val = new Validator();
+		boolean valid = true;
+		val = iv.validateInt(voteDto.getUser_id(), "User ID");
+		valid &= val.isVerified();
+		val = iv.validateInt(voteDto.getElection_id(), "Election ID");
+		valid &= val.isVerified();
+		val = iv.validateString(voteDto.getVote_encrypted(), "Encrypted Vote");
+		SecurityValidator sec = new SecurityValidator();
+		try {
+			if (valid && sec.checkSignature(voteDto.getVote_signature(), voteDto.getUser_id()).isVerified()) {
+				String query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
 						+ " VALUES (?,?,?,?)";
-				st=this.con.prepareStatement(query);
+				st = this.con.prepareStatement(query);
 				st.setInt(1, voteDto.getUser_id());
 				st.setInt(2, voteDto.getElection_id());
 				st.setString(3, voteDto.getVote_encrypted());
@@ -1092,14 +1189,12 @@ public class DatabaseConnector {
 				val.setStatus("Vote successfully cast");
 				val.setVerified(true);
 				return val;
-			}
-			else{
+			} else {
 				val.setStatus("Information did not validate");
 				val.setVerified(false);
 				return val;
 			}
-		}
-		catch(SQLException ex) {
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
@@ -1107,36 +1202,33 @@ public class DatabaseConnector {
 			return val;
 		}
 	}
-	
-	public Validator getPubKeyByUserID(int userId){
+
+	public Validator getPubKeyByUserID(int userId) {
 		PreparedStatement st = null;
-		Validator val=new Validator();
-		InputValidation iv=new InputValidation();
-		val=iv.validateInt(userId, "User ID");
+		Validator val = new Validator();
+		InputValidation iv = new InputValidation();
+		val = iv.validateInt(userId, "User ID");
 		String query = "SELECT public_key FROM users WHERE user_id = ?";
-		try{
-			if(val.isVerified()){
+		try {
+			if (val.isVerified()) {
 				st = this.con.prepareStatement(query);
 				st.setInt(1, userId);
-				ResultSet res=st.executeQuery();
+				ResultSet res = st.executeQuery();
 				if (res.next()) {
 					String pubKey = res.getString(1);
 					val.setObject(pubKey);
 					val.setStatus("Public key retrieved");
 					return val;
-				}
-				else{
+				} else {
 					val.setVerified(false);
 					val.setStatus("No public key for this user id");
 					return val;
 				}
-			}
-			else{
+			} else {
 				val.setStatus("User ID did not validate");
 				return val;
 			}
-		}
-		catch(SQLException ex) {
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setVerified(false);
@@ -1144,21 +1236,20 @@ public class DatabaseConnector {
 			return val;
 		}
 	}
-	
-	public Validator selectVotesByElectionId(int election_id){
-		Validator val=new Validator();
-		InputValidation iv=new InputValidation();
-		ArrayList<VoteDto> votes=new ArrayList<VoteDto>();
-		val=iv.validateInt(election_id, "Election ID");
-		PreparedStatement st=null;
-		try{
-			if(val.isVerified()){
-				String query="SELECT user_id, vote_encrypted, vote_signature, timestamp "
-							+ "	FROM vote "
-							+ " WHERE election_id = ?";
+
+	public Validator selectVotesByElectionId(int election_id) {
+		Validator val = new Validator();
+		InputValidation iv = new InputValidation();
+		ArrayList<VoteDto> votes = new ArrayList<VoteDto>();
+		val = iv.validateInt(election_id, "Election ID");
+		PreparedStatement st = null;
+		try {
+			if (val.isVerified()) {
+				String query = "SELECT user_id, vote_encrypted, vote_signature, timestamp " + "	FROM vote "
+						+ " WHERE election_id = ?";
 				st = this.con.prepareStatement(query);
 				st.setInt(1, election_id);
-				ResultSet res=st.executeQuery();
+				ResultSet res = st.executeQuery();
 				while (res.next()) {
 					int user_id = res.getInt(1);
 					String vote_encrypted = res.getString(2);
@@ -1171,19 +1262,17 @@ public class DatabaseConnector {
 					vote.setVote_signature(vote_signature);
 					vote.setElection_id(election_id);
 					vote.setTimestamp(t);
-					
+
 					votes.add(vote);
 				}
 				val.setStatus("Successfully retrieved votes");
 				val.setObject(votes);
 				return val;
-			}
-			else{
+			} else {
 				val.setStatus("Election ID failed to validate");
 				return val;
 			}
-		}
-		catch(SQLException ex) {
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setVerified(false);
@@ -1191,50 +1280,51 @@ public class DatabaseConnector {
 			return val;
 		}
 	}
-	
-//	public Validator tally(int election_id){
-//		Map<CandidateDto, Integer> t= new HashMap<CandidateDto, Integer>();
-//		PreparedStatement st=null;
-//		Validator val=new Validator();
-//		InputValidation iv = new InputValidation();
-//		SecurityValidator sec=new SecurityValidator();
-//		val=iv.validateInt(election_id, "Election ID");
-//		if(val.isVerified()){
-//			Validator voteVal=selectVotesByElectionId(election_id);
-//			
-//			if(voteVal.isVerified()){
-//				ArrayList<VoteDto> votes = (ArrayList<VoteDto>)voteVal.getObject();
-//				for(int i =0;i<votes.size();i++){
-//					String enc=votes.get(i).getVote_encrypted();
-//					String sig=votes.get(i).getVote_signature();
-//					if(sec.checkSignature(sig, votes.get(i).getUser_id()).isVerified()){
-//						int cand_id=Integer.parseInt(sec.decrypt(enc, getTallierSecretKey()), 16);
-//						CandidateDto cand=(CandidateDto)selectCandidate(cand_id).getObject();
-//						if(t.containsKey(cand)){
-//							int total=t.get(cand);
-//							total+=1;
-//							t.remove(cand);
-//							t.put(cand, total);
-//						}
-//						else{
-//							t.put(cand, 1);
-//						}
-//					}
-//					
-//				}
-//				val.setStatus("Tally computed");
-//				val.setObject(t);
-//				return val;
-//			}
-//			else{
-//				val.setStatus(voteVal.getStatus());
-//				val.setVerified(voteVal.isVerified());
-//				return val;
-//			}
-//		}
-//		else{
-//			val.setStatus("Election ID failed to verify");
-//			return val;
-//		}
-//	}
+
+	// public Validator tally(int election_id){
+	// Map<CandidateDto, Integer> t= new HashMap<CandidateDto, Integer>();
+	// PreparedStatement st=null;
+	// Validator val=new Validator();
+	// InputValidation iv = new InputValidation();
+	// SecurityValidator sec=new SecurityValidator();
+	// val=iv.validateInt(election_id, "Election ID");
+	// if(val.isVerified()){
+	// Validator voteVal=selectVotesByElectionId(election_id);
+	//
+	// if(voteVal.isVerified()){
+	// ArrayList<VoteDto> votes = (ArrayList<VoteDto>)voteVal.getObject();
+	// for(int i =0;i<votes.size();i++){
+	// String enc=votes.get(i).getVote_encrypted();
+	// String sig=votes.get(i).getVote_signature();
+	// if(sec.checkSignature(sig, votes.get(i).getUser_id()).isVerified()){
+	// int cand_id=Integer.parseInt(sec.decrypt(enc, getTallierSecretKey()),
+	// 16);
+	// CandidateDto cand=(CandidateDto)selectCandidate(cand_id).getObject();
+	// if(t.containsKey(cand)){
+	// int total=t.get(cand);
+	// total+=1;
+	// t.remove(cand);
+	// t.put(cand, total);
+	// }
+	// else{
+	// t.put(cand, 1);
+	// }
+	// }
+	//
+	// }
+	// val.setStatus("Tally computed");
+	// val.setObject(t);
+	// return val;
+	// }
+	// else{
+	// val.setStatus(voteVal.getStatus());
+	// val.setVerified(voteVal.isVerified());
+	// return val;
+	// }
+	// }
+	// else{
+	// val.setStatus("Election ID failed to verify");
+	// return val;
+	// }
+	// }
 }
