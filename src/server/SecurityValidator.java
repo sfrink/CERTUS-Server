@@ -46,7 +46,7 @@ public class SecurityValidator {
 		DatabaseConnector dbc = new DatabaseConnector();
 		
 		UserDto userDto = new UserDto();
-		userDto.setUserId(userId);
+		userDto.setUser_id(userId);
 		
 		String pk = (String) dbc.selectUserPublicKey(userDto).getObject();
 		Validator val = new Validator();
