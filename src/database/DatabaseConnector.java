@@ -595,7 +595,7 @@ public class DatabaseConnector
 		ArrayList<ElectionDto> elecs = new ArrayList<ElectionDto>();
 		PreparedStatement st = null;
 
-		String query = "SELECT election_id, election_name, owner_id "
+		String query = "SELECT election_id, election_name, owner_id, "
 				+ "start_datetime, close_datetime FROM election "
 				+ "WHERE status = ?";
 
