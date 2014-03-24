@@ -597,7 +597,7 @@ public class DatabaseConnector
 
 		String query = "SELECT election_id, election_name, owner_id "
 				+ "start_datetime, close_datetime FROM election "
-				+ "WHERE election_status = ?";
+				+ "WHERE status = ?";
 
 		try {
 			st = this.con.prepareStatement(query);
