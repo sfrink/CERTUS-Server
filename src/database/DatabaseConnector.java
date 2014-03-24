@@ -76,17 +76,17 @@ public class DatabaseConnector
 			ResultSet res = st.executeQuery();
 
 			if (res.next()) {
-				u.setUser_id(res.getInt(1));
-				u.setFirst_name(res.getString(2));
-				u.setLast_name(res.getString(3));
+				u.setUserId(res.getInt(1));
+				u.setFirstName(res.getString(2));
+				u.setLastName(res.getString(3));
 				u.setEmail(res.getString(4));
 				u.setPassword(res.getString(5));
 				u.setSalt(res.getString(6));
-				u.setTemp_password(res.getString(7));
-				u.setTemp_salt(res.getString(8));
-				u.setActivation_code(res.getString(9));
-				u.setPublic_key(res.getString(10));
-				u.setAdministrator_flag(res.getInt(11));
+				u.setTempPassword(res.getString(7));
+				u.setTempSalt(res.getString(8));
+				u.setActivationCode(res.getString(9));
+				u.setPublicKey(res.getString(10));
+				u.setAdministratorFlag(res.getInt(11));
 				u.setStatus(res.getInt(12));
 			}
 		} catch (SQLException ex) {
@@ -120,7 +120,7 @@ public class DatabaseConnector
 		String dbSalt = userDto.getSalt();
 		int statusId = userDto.getStatus();
 		// int falseLogins = user.getFalseLogins();
-		int id = userDto.getUser_id();
+		int id = userDto.getUserId();
 
 		// 3. check if this user is active
 		// if (statusId != Enumeration.User.USER_STATUSID_ACTIVE) {
@@ -267,9 +267,9 @@ public class DatabaseConnector
 				// String tempPasswordSalt = res.getString(10);
 				// int firmId = res.getInt(11);
 
-				userDto.setUser_id(user_id);
-				userDto.setFirst_name(first_name);
-				userDto.setLast_name(last_name);
+				userDto.setUserId(user_id);
+				userDto.setFirstName(first_name);
+				userDto.setLastName(last_name);
 				userDto.setPassword(password);
 				userDto.setSalt(salt);
 				userDto.setStatus(statusId);
@@ -529,7 +529,8 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param election_owner_id (int) - user_id of the user who owns elections
+	 * @param election_owner_id
+	 *            (int) - user_id of the user who owns elections
 	 * @return Validator : ArrayList<ElectionDto> - List of all the elections
 	 *         owned by the specific user (regardless of status)
 	 * @author Hirosh Wickramasuriya
@@ -591,7 +592,7 @@ public class DatabaseConnector
 
 	public Validator selectAllElectionsForVoter(int user_id) {
 		Validator val = new Validator();
-		ArrayList<ElectionDto> elecs=new ArrayList<ElectionDto>();
+		ArrayList<ElectionDto> elecs = new ArrayList<ElectionDto>();
 		PreparedStatement st = null;
 
 		String query = "SELECT election_id, election_name, owner_id "
@@ -629,7 +630,8 @@ public class DatabaseConnector
 
 	// Candidates
 	/**
-	 * @param id - candidate identification number (primary key)
+	 * @param id
+	 *            - candidate identification number (primary key)
 	 * @return Validator :CandidateDto - Details of a particular candidate
 	 * @author Hirosh Wickramasuriya
 	 */
@@ -676,7 +678,8 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param electionIdKey - election identification number
+	 * @param electionIdKey
+	 *            - election identification number
 	 * @return Validator : ArrayList<CandidateDto>- list of all the candidates
 	 *         under specified election
 	 * @author Hirosh Wickramasuriya
@@ -726,8 +729,10 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param electionIdKey - election identification number
-	 * @param candidateStatus - desired status of candidate which required to be returned
+	 * @param electionIdKey
+	 *            - election identification number
+	 * @param candidateStatus
+	 *            - desired status of candidate which required to be returned
 	 *            for given election
 	 * @return Validator :ArrayList<CandidateDto> - list of all the candidates
 	 *         that matches the status under specified election
@@ -780,7 +785,8 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param name - election name Add new election to db
+	 * @param name
+	 *            - election name Add new election to db
 	 * @author Steven Frink
 	 */
 	private int addElection(ElectionDto electionDto) {
@@ -812,7 +818,8 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param name - election name Add new election to db
+	 * @param name
+	 *            - election name Add new election to db
 	 * @author Steven Frink
 	 */
 	public Validator addElectionWithCandidates(ElectionDto electionDto) {
@@ -856,8 +863,11 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param candidateList - candidate array list
-	 * @param election_id - the election to add candidates to Add candidates to an election
+	 * @param candidateList
+	 *            - candidate array list
+	 * @param election_id
+	 *            - the election to add candidates to Add candidates to an
+	 *            election
 	 * @author Steven Frink
 	 */
 	private Validator addCandidatesToElection(ArrayList<CandidateDto> candidateList, int election_id) {
@@ -898,8 +908,10 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param candidateDto - candidate object
-	 * @param election_id - id of the election which the candidate should be associated
+	 * @param candidateDto
+	 *            - candidate object
+	 * @param election_id
+	 *            - id of the election which the candidate should be associated
 	 * @return Validator - status of the candidate insert operation
 	 * @author Hirosh Wickramasuriya
 	 */
@@ -942,7 +954,8 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param electionDto - election data object
+	 * @param electionDto
+	 *            - election data object
 	 * @return validator - status of election update operation
 	 * @author Hirosh / Dmitry
 	 */
@@ -1000,7 +1013,8 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param candidateDto - candidate object
+	 * @param candidateDto
+	 *            - candidate object
 	 * @author Steven Frink
 	 */
 	private Validator editCandidate(CandidateDto candidateDto) {
@@ -1067,88 +1081,60 @@ public class DatabaseConnector
 		}
 	}
 
-/*	*//**
-	 * @param electionId - the election to open 
-	 * Add candidates to an election
+	/*	*//**
+	 * @param electionId
+	 *            - the election to open Add candidates to an election
 	 * @author Steven Frink
-	 *//*
-	public Validator openElection(int electionId) {
-		PreparedStatement st = null;
-		Validator val = new Validator();
-
-		try {
-			String query = "UPDATE election"
-					+ " SET status=" + ElectionStatus.NEW.getCode()
-					+ " WHERE election_id="
-					+ electionId;
-			st = this.con.prepareStatement(query);
-			st.execute();
-			val.setVerified(true);
-			val.setStatus("Election opened");
-			return val;
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
-			val.setVerified(false);
-			return val;
-		}
-	}
-
-	*//**
-	 * @param electionId - the election to close 
-	 * Close an election
+	 */
+	/*
+	 * public Validator openElection(int electionId) { PreparedStatement st =
+	 * null; Validator val = new Validator();
+	 * 
+	 * try { String query = "UPDATE election" + " SET status=" +
+	 * ElectionStatus.NEW.getCode() + " WHERE election_id=" + electionId; st =
+	 * this.con.prepareStatement(query); st.execute(); val.setVerified(true);
+	 * val.setStatus("Election opened"); return val; } catch (SQLException ex) {
+	 * Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+	 * lgr.log(Level.WARNING, ex.getMessage(), ex); val.setStatus("SQL Error");
+	 * val.setVerified(false); return val; } }
+	 *//**
+	 * @param electionId
+	 *            - the election to close Close an election
 	 * @author Steven Frink
-	 *//*
-	public Validator closeElection(int electionId) {
-		PreparedStatement st = null;
-		Validator val = new Validator();
-		try {
-			String query = "UPDATE election" + " SET status=" + ElectionStatus.CLOSED.getCode() + " WHERE election_id="
-					+ electionId;
-			st = this.con.prepareStatement(query);
-			st.execute();
-			val.setVerified(true);
-			val.setStatus("Election closed");
-			return val;
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setVerified(false);
-			val.setStatus("SQL Error");
-			return val;
-		}
-	}
-
-	*//**
-	 * @param electionId - the election to delete 
-	 * Delete an election
+	 */
+	/*
+	 * public Validator closeElection(int electionId) { PreparedStatement st =
+	 * null; Validator val = new Validator(); try { String query =
+	 * "UPDATE election" + " SET status=" + ElectionStatus.CLOSED.getCode() +
+	 * " WHERE election_id=" + electionId; st =
+	 * this.con.prepareStatement(query); st.execute(); val.setVerified(true);
+	 * val.setStatus("Election closed"); return val; } catch (SQLException ex) {
+	 * Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+	 * lgr.log(Level.WARNING, ex.getMessage(), ex); val.setVerified(false);
+	 * val.setStatus("SQL Error"); return val; } }
+	 *//**
+	 * @param electionId
+	 *            - the election to delete Delete an election
 	 * @author Steven Frink
-	 *//*
-	public Validator deleteElection(int electionId) {
-		PreparedStatement st = null;
-		Validator val = new Validator();
-		try {
-			String query = "UPDATE election SET status=7 WHERE election_id=" + electionId;
-			st = this.con.prepareStatement(query);
-			st.execute();
-			val.setStatus("Election deleted");
-			val.setVerified(true);
-			return val;
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
-			val.setVerified(false);
-			return val;
-		}
-	}
-*/
+	 */
+	/*
+	 * public Validator deleteElection(int electionId) { PreparedStatement st =
+	 * null; Validator val = new Validator(); try { String query =
+	 * "UPDATE election SET status=7 WHERE election_id=" + electionId; st =
+	 * this.con.prepareStatement(query); st.execute();
+	 * val.setStatus("Election deleted"); val.setVerified(true); return val; }
+	 * catch (SQLException ex) { Logger lgr =
+	 * Logger.getLogger(DatabaseConnector.class.getName());
+	 * lgr.log(Level.WARNING, ex.getMessage(), ex); val.setStatus("SQL Error");
+	 * val.setVerified(false); return val; } }
+	 */
 
 	/**
-	 * @param electionId		- the election id to update the status Delete an election
-	 * @param electionStatus	- new status of the election 
-	 * @return validator 		- validator object with response of update operation
+	 * @param electionId
+	 *            - the election id to update the status Delete an election
+	 * @param electionStatus
+	 *            - new status of the election
+	 * @return validator - validator object with response of update operation
 	 * @author Steven Frink
 	 */
 	public Validator editElectionStatus(int electionId, ElectionStatus electionStatus) {
@@ -1207,20 +1193,20 @@ public class DatabaseConnector
 	// Vote
 
 	/**
-	 * @param voteDto - the vote to submit 
-	 * Submit a vote
+	 * @param voteDto
+	 *            - the vote to submit Submit a vote
 	 * @author Steven Frink
 	 */
 
 	public Validator vote(VoteDto voteDto) {
 		PreparedStatement st = null;
 		Validator val = new Validator();
-		
+
 		if (voteDto.Validate().isVerified())
 		{
 			SecurityValidator sec = new SecurityValidator();
 			try {
-				if ( sec.checkSignature(voteDto.getVoteSignature(), voteDto.getUserId()).isVerified()) {
+				if (sec.checkSignature(voteDto.getVoteSignature(), voteDto.getUserId()).isVerified()) {
 					String query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
 							+ " VALUES (?,?,?,?)";
 					st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
@@ -1228,7 +1214,7 @@ public class DatabaseConnector
 					st.setInt(2, voteDto.getElectionId());
 					st.setString(3, voteDto.getVoteEncrypted());
 					st.setString(4, voteDto.getVoteSignature());
-					
+
 					int updateCount = st.executeUpdate();
 					if (updateCount > 0) {
 						val.setStatus("Vote successfully cast");
@@ -1236,7 +1222,7 @@ public class DatabaseConnector
 					} else {
 						val.setStatus("Failed to cast vote");
 					}
-					
+
 				} else {
 					val.setStatus("invalid signature for this vote");
 				}
@@ -1245,47 +1231,92 @@ public class DatabaseConnector
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
 				val.setStatus("SQL Error");
 			}
-		
+
 		} else {
 			val.setStatus("Vote information did not validate");
 		}
-			
+
 		return val;
-		
+
 	}
 
-	public Validator getPubKeyByUserID(int userId) {
+	/** 
+	 * @param userDto - userDetails with public key
+	 * @return Validator - status of the public key update operation
+	 * @author Hirosh Wickramasuriya
+	 * 
+	 */
+	public Validator editUserPublicKey(UserDto userDto) {
 		PreparedStatement st = null;
 		Validator val = new Validator();
-		InputValidation iv = new InputValidation();
-		val = iv.validateInt(userId, "User ID");
-		String query = "SELECT public_key FROM users WHERE user_id = ?";
-		try {
-			if (val.isVerified()) {
+
+		String query = "UPDATE users SET public_key = ? WHERE user_id = ?";
+
+		Validator vUserDto = userDto.Validate();
+
+		if (vUserDto.isVerified()) {
+			try {
+				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+				st.setString(1, userDto.getPublicKey());
+				st.setInt(2, userDto.getUserId());
+				int updateCount = st.executeUpdate();
+				if (updateCount > 0) {
+					val.setStatus("User's public key updated successfully");
+					val.setVerified(true);
+				} else {
+					val.setStatus("Failed to update the user's public key");
+				}
+
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				val.setStatus("SQL Error");
+			}
+
+		} else {
+			val = vUserDto;
+		}
+		return val;
+	}
+
+	/**
+	 * @param userDto - userDto with the userId
+	 * @return Validator - with user's public key  
+	 * @author Steven Frink
+	 */
+	public Validator selectUserPublicKey(UserDto userDto) {
+		PreparedStatement st = null;
+		Validator val = new Validator();
+
+		Validator vUserDto = userDto.Validate();
+		if (vUserDto.isVerified()) {
+			String query = "SELECT public_key FROM users WHERE user_id = ?";
+
+			try {
 				st = this.con.prepareStatement(query);
-				st.setInt(1, userId);
+				st.setInt(1, userDto.getUserId());
 				ResultSet res = st.executeQuery();
 				if (res.next()) {
 					String pubKey = res.getString(1);
+
 					val.setObject(pubKey);
+					val.setVerified(true);
 					val.setStatus("Public key retrieved");
-					return val;
+
 				} else {
-					val.setVerified(false);
 					val.setStatus("No public key for this user id");
-					return val;
 				}
-			} else {
-				val.setStatus("User ID did not validate");
-				return val;
+
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				val.setStatus("SQL Error");
 			}
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setVerified(false);
-			val.setStatus("SQL Error");
-			return val;
+		} else {
+			val = vUserDto;
 		}
+
+		return val;
 	}
 
 	public Validator selectVotesByElectionId(int election_id) {

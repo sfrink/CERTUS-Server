@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import javax.crypto.Cipher;
 
 import database.DatabaseConnector;
+import dto.UserDto;
 import dto.Validator;
 
 public class SecurityValidator {
@@ -39,9 +40,15 @@ public class SecurityValidator {
 		System.out.println(securityKeystorePassword);
 		System.out.println(securityKeystoreAlias);
 	}
-	public Validator checkSignature(String sig, int user_id) {
+	public Validator checkSignature(String sig, int userId) {
+		//TODO remove the DatabaseConnector from here
+		
 		DatabaseConnector dbc = new DatabaseConnector();
-		String pk = (String) dbc.getPubKeyByUserID(user_id).getObject();
+		
+		UserDto userDto = new UserDto();
+		userDto.setUserId(userId);
+		
+		String pk = (String) dbc.selectUserPublicKey(userDto).getObject();
 		Validator val = new Validator();
 		val.setVerified(false);
 		if (pk == null) {
