@@ -595,13 +595,16 @@ public class DatabaseConnector
 		ArrayList<ElectionDto> elecs = new ArrayList<ElectionDto>();
 		PreparedStatement st = null;
 
-		String query = "SELECT election_id, election_name, owner_id, "
-				+ "start_datetime, close_datetime FROM election "
-				+ "WHERE status = ?";
+		String query = "SELECT e.election_id, e.election_name, e.owner_id, "
+				+ "e.start_datetime, e.close_datetime FROM election as e "
+				+ "LEFT JOIN vote as v ON e.election_id = v.election_id "
+				+ "WHERE v.user_id is null  OR v.user_id != ? AND e.status = ? "
+				+ "GROUP BY e.election_id";
 
 		try {
 			st = this.con.prepareStatement(query);
-			st.setInt(1, ElectionStatus.OPEN.getCode());
+			st.setInt(1,user_id);
+			st.setInt(2, ElectionStatus.OPEN.getCode());
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
