@@ -207,13 +207,4 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	return dbc.selectAllElectionsForVoter(user_id);
     }
     
-    @Override
-    public Validator byteArraytoHex(byte[] arr) throws RemoteException{
-    	sec=new SecurityValidator();
-    	Validator v=new Validator();
-    	v.setVerified(true);
-    	v.setObject(sec.byteArraytoHex(arr));
-    	v.setStatus("Retrieved hex");
-    	return v;
-    }
 }
