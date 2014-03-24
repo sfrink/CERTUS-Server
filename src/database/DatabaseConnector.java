@@ -333,7 +333,7 @@ public class DatabaseConnector
 			}
 			validator.setVerified(true);
 			validator.setObject(electionDto);
-			validator.setStatus("Select successfull");
+			validator.setStatus("Select successful");
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -395,7 +395,7 @@ public class DatabaseConnector
 			}
 			validator.setVerified(true);
 			validator.setObject(elections);
-			validator.setStatus("Select successfull");
+			validator.setStatus("Successfully selected");
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -460,7 +460,7 @@ public class DatabaseConnector
 			}
 			validator.setVerified(true);
 			validator.setObject(elections);
-			validator.setStatus("Select successfull");
+			validator.setStatus("Successfully selected");
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -516,7 +516,7 @@ public class DatabaseConnector
 			}
 			validator.setVerified(true);
 			validator.setObject(elections);
-			validator.setStatus("Select successfull");
+			validator.setStatus("Successfully selected");
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -577,7 +577,7 @@ public class DatabaseConnector
 			}
 			validator.setVerified(true);
 			validator.setObject(elections);
-			validator.setStatus("Select successfull");
+			validator.setStatus("Successfully selected");
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -663,7 +663,7 @@ public class DatabaseConnector
 
 				validator.setVerified(true);
 				validator.setObject(candidateDto);
-				validator.setStatus("Select successfull");
+				validator.setStatus("Successfully selected");
 			}
 
 		} catch (SQLException ex) {
@@ -714,7 +714,7 @@ public class DatabaseConnector
 			}
 			validator.setVerified(true);
 			validator.setObject(candidates);
-			validator.setStatus("Select successfull");
+			validator.setStatus("Successfully selected");
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -768,7 +768,7 @@ public class DatabaseConnector
 			}
 			validator.setVerified(true);
 			validator.setObject(candidates);
-			validator.setStatus("Select successfull");
+			validator.setStatus("Successfully selected");
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -1214,45 +1214,44 @@ public class DatabaseConnector
 
 	public Validator vote(VoteDto voteDto) {
 		PreparedStatement st = null;
-		InputValidation iv = new InputValidation();
 		Validator val = new Validator();
-		boolean valid = true;
-		val = iv.validateInt(voteDto.getUserId(), "User ID");
-		valid &= val.isVerified();
-		val = iv.validateInt(voteDto.getElectionId(), "Election ID");
-		valid &= val.isVerified();
-		val = iv.validateString(voteDto.getVoteEncrypted(), "Encrypted Vote");
 		
 		if (voteDto.Validate().isVerified())
 		{
-		
-		}
-		SecurityValidator sec = new SecurityValidator();
-		try {
-			if (valid && sec.checkSignature(voteDto.getVoteSignature(), voteDto.getUserId()).isVerified()) {
-				String query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
-						+ " VALUES (?,?,?,?)";
-				st = this.con.prepareStatement(query);
-				st.setInt(1, voteDto.getUserId());
-				st.setInt(2, voteDto.getElectionId());
-				st.setString(3, voteDto.getVoteEncrypted());
-				st.setString(4, voteDto.getVoteSignature());
-				st.execute();
-				val.setStatus("Vote successfully cast");
-				val.setVerified(true);
-				return val;
-			} else {
-				val.setStatus("Information did not validate");
-				val.setVerified(false);
-				return val;
+			SecurityValidator sec = new SecurityValidator();
+			try {
+				if ( sec.checkSignature(voteDto.getVoteSignature(), voteDto.getUserId()).isVerified()) {
+					String query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
+							+ " VALUES (?,?,?,?)";
+					st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+					st.setInt(1, voteDto.getUserId());
+					st.setInt(2, voteDto.getElectionId());
+					st.setString(3, voteDto.getVoteEncrypted());
+					st.setString(4, voteDto.getVoteSignature());
+					
+					int updateCount = st.executeUpdate();
+					if (updateCount > 0) {
+						val.setStatus("Vote successfully cast");
+						val.setVerified(true);
+					} else {
+						val.setStatus("Failed to cast vote");
+					}
+					
+				} else {
+					val.setStatus("invalid signature for this vote");
+				}
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				val.setStatus("SQL Error");
 			}
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
-			val.setVerified(false);
-			return val;
+		
+		} else {
+			val.setStatus("Vote information did not validate");
 		}
+			
+		return val;
+		
 	}
 
 	public Validator getPubKeyByUserID(int userId) {
