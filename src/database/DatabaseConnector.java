@@ -1217,21 +1217,26 @@ public class DatabaseConnector
 		InputValidation iv = new InputValidation();
 		Validator val = new Validator();
 		boolean valid = true;
-		val = iv.validateInt(voteDto.getUser_id(), "User ID");
+		val = iv.validateInt(voteDto.getUserId(), "User ID");
 		valid &= val.isVerified();
-		val = iv.validateInt(voteDto.getElection_id(), "Election ID");
+		val = iv.validateInt(voteDto.getElectionId(), "Election ID");
 		valid &= val.isVerified();
-		val = iv.validateString(voteDto.getVote_encrypted(), "Encrypted Vote");
+		val = iv.validateString(voteDto.getVoteEncrypted(), "Encrypted Vote");
+		
+		if (voteDto.Validate().isVerified())
+		{
+		
+		}
 		SecurityValidator sec = new SecurityValidator();
 		try {
-			if (valid && sec.checkSignature(voteDto.getVote_signature(), voteDto.getUser_id()).isVerified()) {
+			if (valid && sec.checkSignature(voteDto.getVoteSignature(), voteDto.getUserId()).isVerified()) {
 				String query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
 						+ " VALUES (?,?,?,?)";
 				st = this.con.prepareStatement(query);
-				st.setInt(1, voteDto.getUser_id());
-				st.setInt(2, voteDto.getElection_id());
-				st.setString(3, voteDto.getVote_encrypted());
-				st.setString(4, voteDto.getVote_signature());
+				st.setInt(1, voteDto.getUserId());
+				st.setInt(2, voteDto.getElectionId());
+				st.setString(3, voteDto.getVoteEncrypted());
+				st.setString(4, voteDto.getVoteSignature());
 				st.execute();
 				val.setStatus("Vote successfully cast");
 				val.setVerified(true);
@@ -1304,10 +1309,10 @@ public class DatabaseConnector
 					Timestamp t = res.getTimestamp(4);
 
 					VoteDto vote = new VoteDto();
-					vote.setUser_id(user_id);
-					vote.setVote_encrypted(vote_encrypted);
-					vote.setVote_signature(vote_signature);
-					vote.setElection_id(election_id);
+					vote.setUserId(user_id);
+					vote.setVoteEncrypted(vote_encrypted);
+					vote.setVoteSignature(vote_signature);
+					vote.setElectionId(election_id);
 					vote.setTimestamp(t);
 
 					votes.add(vote);
@@ -1343,9 +1348,9 @@ public class DatabaseConnector
 			if (voteVal.isVerified()) {
 				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();
 				for (int i = 0; i < votes.size(); i++) {
-					String enc = votes.get(i).getVote_encrypted();
-					String sig = votes.get(i).getVote_signature();
-					if (sec.checkSignature(sig, votes.get(i).getUser_id())
+					String enc = votes.get(i).getVoteEncrypted();
+					String sig = votes.get(i).getVoteSignature();
+					if (sec.checkSignature(sig, votes.get(i).getUserId())
 							.isVerified()) {
 						int cand_id = Integer.parseInt(sec.decrypt(enc), 16);
 						boolean validCand = false;
