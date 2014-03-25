@@ -1297,7 +1297,10 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 		Validator val = new Validator();
 
-		Validator vUserDto = userDto.Validate();
+		InputValidation iv = new InputValidation();
+		Validator vUserDto = iv.validateInt(userDto.getUserId(), "User ID");
+		
+		//Validator vUserDto = userDto.Validate();
 		if (vUserDto.isVerified()) {
 			String query = "SELECT public_key FROM users WHERE user_id = ?";
 
@@ -1322,7 +1325,7 @@ public class DatabaseConnector
 				val.setStatus("SQL Error");
 			}
 		} else {
-			val = vUserDto;
+			val = vUserDto;		// Failed to validate the user id
 		}
 
 		return val;
@@ -1332,10 +1335,10 @@ public class DatabaseConnector
 		Validator val = new Validator();
 		InputValidation iv = new InputValidation();
 		ArrayList<VoteDto> votes = new ArrayList<VoteDto>();
-		val = iv.validateInt(election_id, "Election ID");
+		Validator vElection = iv.validateInt(election_id, "Election ID");
 		PreparedStatement st = null;
 		try {
-			if (val.isVerified()) {
+			if (vElection.isVerified()) {
 				String query = "SELECT user_id, vote_encrypted, vote_signature, timestamp " + "	FROM vote "
 						+ " WHERE election_id = ?";
 				st = this.con.prepareStatement(query);
@@ -1358,18 +1361,16 @@ public class DatabaseConnector
 				}
 				val.setStatus("Successfully retrieved votes");
 				val.setObject(votes);
-				return val;
+				val.setVerified(true);
 			} else {
-				val.setStatus("Election ID failed to validate");
-				return val;
+				val = vElection; // Failed to validate the election id
 			}
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setVerified(false);
 			val.setStatus("SQL Error");
-			return val;
 		}
+		return val;
 	}
 
 	public Validator tally(int election_id) {
@@ -1378,10 +1379,10 @@ public class DatabaseConnector
 		Validator val = new Validator();
 		InputValidation iv = new InputValidation();
 		SecurityValidator sec = new SecurityValidator();
-		val = iv.validateInt(election_id, "Election ID");
+		Validator vElection = iv.validateInt(election_id, "Election ID");
 		ArrayList<CandidateDto> cands = (ArrayList<CandidateDto>) selectCandidatesOfElection(election_id,
 				Status.ENABLED).getObject();
-		if (val.isVerified()) {
+		if (vElection.isVerified()) {
 			Validator voteVal = selectVotesByElectionId(election_id);
 
 			if (voteVal.isVerified()) {
@@ -1414,15 +1415,16 @@ public class DatabaseConnector
 				}
 				val.setStatus("Tally computed");
 				val.setObject(t);
-				return val;
+				val.setVerified(true);
+				
 			} else {
 				val.setStatus(voteVal.getStatus());
 				val.setVerified(voteVal.isVerified());
-				return val;
+				
 			}
 		} else {
-			val.setStatus("Election ID failed to verify");
-			return val;
+			val= vElection;
 		}
+		return val;
 	}
 }
