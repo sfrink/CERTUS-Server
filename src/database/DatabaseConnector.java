@@ -1565,4 +1565,121 @@ public class DatabaseConnector
 		
 		return val;
 	}
+	
+	public Validator computeElectionResults(int electionId) {
+		Validator val = new Validator();
+		
+		if (electionId > 0) {
+			Validator vElection = selectElection(electionId);
+			if (vElection.isVerified()) {
+				// check the election status
+				ElectionDto electionDto =  (ElectionDto)vElection.getObject() ;
+				if ( electionDto.getStatus() == ElectionStatus.CLOSED.getCode() ) {
+					
+					// get the tallying results
+					Validator vElectionTally = tally2(electionId);
+					
+					if (vElectionTally.isVerified()) {
+						// Get the results for each candidates
+						ArrayList<CandidateDto> candidates = electionDto.getCandidateList();
+						boolean valid = true;
+						for(CandidateDto candidate : candidates) {
+							
+							if (addResult(candidate) > 0 ) {
+								// result has been added
+								valid &= true;
+							} else {
+								// Failed to add the result
+								
+								// delete existing results if any
+								deleteResults(electionDto.getElectionId());
+								
+								// set the validator 
+								val.setStatus("Failed to add results");
+								valid &= false;
+								break;
+							}
+						}
+						
+						val.setVerified(valid);
+						if (valid) {
+							val.setStatus("Results added successfully");
+							
+						} else {
+							val.setStatus("Failed to add resulsts");
+						}
+					} else {
+						val = vElectionTally;
+					}
+					
+				} else {
+					val.setStatus("Election is not closed to tally the results");
+				}
+					
+			} else {
+				val = vElection;
+			}
+		} else {
+			val.setStatus("Invalid Election Id");
+		}
+		
+		return val;
+	}
+	
+	private int addResult(CandidateDto candidateDto){
+		
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		int newId = 0;
+
+		try {
+			String query = "INSERT INTO results (election_id, candidate_id, vote_count) VALUES (?,?,?)";
+			
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setInt(1, candidateDto.getElectionId());
+			st.setInt(2, candidateDto.getCandidateId());
+			st.setInt(3, candidateDto.getVoteCount());
+
+			// update query
+			st.executeUpdate();
+			// get inserted id
+			rs = st.getGeneratedKeys();
+			rs.next();
+			newId = rs.getInt(1);
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+
+		return newId;
+	}
+	
+	private boolean deleteResults(int electionId) {
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		boolean status = false;
+
+		try {
+			String query = "DELETE FROM results WHERE election_id = ?";
+			
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setInt(1, electionId);
+
+			// update query
+			if (st.executeUpdate() < 0) {
+				// delete failed
+				
+			} else {
+				// delete= sucessful
+				status = true;
+			}
+			
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		return status;
+	}
 }
