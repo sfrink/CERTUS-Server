@@ -1207,11 +1207,16 @@ public class DatabaseConnector
 
 		if (voteDto.Validate().isVerified())
 		{
-			SecurityValidator sec = new SecurityValidator();
 			try {
-//				if (sec.checkSignature(voteDto.getVoteSignature(), voteDto.getUserId()).isVerified()) {
+				String query="SELECT (user_id, election_id) FROM vote WHERE user_id=? AND election_id=?";
+				st=this.con.prepareStatement(query);
+				st.setInt(1, voteDto.getUserId());
+				st.setInt(2, voteDto.getElectionId());
+				ResultSet rs=st.executeQuery();
+				SecurityValidator sec = new SecurityValidator();
+//				if (!rs.next() && sec.checkSignature(voteDto.getVoteSignature(), voteDto.getUserId()).isVerified()) {
 				if (true) {
-					String query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
+					query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
 							+ " VALUES (?,?,?,?)";
 					st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 					st.setInt(1, voteDto.getUserId());
