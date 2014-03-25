@@ -1706,4 +1706,73 @@ public class DatabaseConnector
 		}
 		return status;
 	}
+	
+	public Validator selectResults(int electionId) {
+		Validator val = new Validator();
+		
+		ElectionDto  electionDto = new ElectionDto();
+		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
+
+		PreparedStatement st = null;
+
+		
+		
+		if (electionId > 0) {
+			// valid election
+			
+			// Get the election details
+			electionDto = (ElectionDto)selectElection(electionId).getObject(); 
+			try {
+				
+				// get the results
+				String query = "SELECT r.election_id, r.candidate_id, vote_count, candidate_name, display_order, status"
+						+ " FROM results r"
+						+ " INNER JOIN candidate c"
+						+ " ON (r.candidate_id = c.candidate_id)"
+						+ " WHERE r.election_id = ?";
+				
+				st = this.con.prepareStatement(query);
+				st.setInt(1, electionId);
+				
+				ResultSet res = st.executeQuery();
+
+				while (res.next()) {
+
+					int resElectionId = res.getInt(1);
+					int resCandidateId = res.getInt(2);
+					int resVoteCount = res.getInt(3);
+					String resCandiateName = res.getString(4);
+					int resDisplayOrder = res.getInt(5);
+					int resStatus = res.getInt(6);
+					
+					// populate candidates list
+					CandidateDto candidateDto = new CandidateDto();
+					candidateDto.setCandidateId(resCandidateId);
+					candidateDto.setCandidateName(resCandiateName);
+					candidateDto.setElectionId(resElectionId);
+					candidateDto.setDisplayOrder(resDisplayOrder);
+					candidateDto.setVoteCount(resVoteCount);
+					candidateDto.setStatus(resStatus);
+					
+					candidates.add(candidateDto); 
+				}
+				
+				electionDto.setCandidateList(candidates); // attache candidates list to the election
+				
+				// set the validator 
+				val.setVerified(true);
+				val.setObject(electionDto);
+				val.setStatus("Results selected successfully");
+
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				val.setStatus("Select failed");
+			}
+		} else {
+			val.setStatus("Invalid Election Id");
+		}
+
+		return val;
+	}
 }
