@@ -1220,26 +1220,24 @@ public class DatabaseConnector
 				ResultSet rs=st.executeQuery();
 				SecurityValidator sec = new SecurityValidator();
 				if (!rs.next() && sec.checkSignature(voteDto.getVoteSignature(), voteDto.getVoteEncrypted(), voteDto.getUserId()).isVerified()) {
-					if (true) {
-						query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
-								+ " VALUES (?,?,?,?)";
-						st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-						st.setInt(1, voteDto.getUserId());
-						st.setInt(2, voteDto.getElectionId());
-						st.setString(3, voteDto.getVoteEncrypted());
-						st.setString(4, voteDto.getVoteSignature());
-	
-						int updateCount = st.executeUpdate();
-						if (updateCount > 0) {
-							val.setStatus("Vote successfully cast");
-							val.setVerified(true);
-						} else {
-							val.setStatus("Failed to cast vote");
-						}
-	
+					query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
+							+ " VALUES (?,?,?,?)";
+					st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+					st.setInt(1, voteDto.getUserId());
+					st.setInt(2, voteDto.getElectionId());
+					st.setString(3, voteDto.getVoteEncrypted());
+					st.setString(4, voteDto.getVoteSignature());
+
+					int updateCount = st.executeUpdate();
+					if (updateCount > 0) {
+						val.setStatus("Vote successfully cast");
+						val.setVerified(true);
 					} else {
-						val.setStatus("invalid signature for this vote");
+						val.setStatus("Failed to cast vote");
 					}
+
+				} else {
+					val.setStatus("invalid signature for this vote");
 				}
 			} catch (SQLException ex) {
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
