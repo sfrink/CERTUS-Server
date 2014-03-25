@@ -1535,6 +1535,7 @@ public class DatabaseConnector
 			
 			if (valVote.isVerified()) {
 				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) valVote.getObject();
+				electionProgressDto.setTotalVotes(votes.size());
 				
 				for (VoteDto voteDto : votes) {
 					
