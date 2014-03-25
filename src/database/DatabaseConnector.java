@@ -1568,7 +1568,31 @@ public class DatabaseConnector
 		return val;
 	}
 	
-	public Validator computeElectionResults(int electionId) {
+	public Validator closeElectionAndPublishResults(int electionId) {
+		Validator val = new Validator();
+		Validator vElectionStatus = editElectionStatus(electionId, ElectionStatus.CLOSED);
+		if (vElectionStatus.isVerified()) {
+			Validator vResult = computeElectionResults(electionId);
+			if (vResult.isVerified()) {
+				vElectionStatus = editElectionStatus(electionId, ElectionStatus.PUBLISHED);
+				if (vElectionStatus.isVerified()) {
+					val.setStatus("Election results has been published");
+					val.setVerified(true);
+				} else {
+					val = vElectionStatus;
+				}
+				
+			} else {
+				val = vResult;
+			}
+		} else {
+			val = vElectionStatus;
+		}
+		 
+		return val;
+	}
+	
+	private Validator computeElectionResults(int electionId) {
 		Validator val = new Validator();
 		
 		if (electionId > 0) {
