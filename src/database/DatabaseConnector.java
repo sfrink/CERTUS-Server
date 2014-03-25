@@ -1200,8 +1200,8 @@ public class DatabaseConnector
 	// Vote
 
 	/**
-	 * @param voteDto
-	 *            - the vote to submit Submit a vote
+	 * @param voteDto - the vote to submit 
+	 * Submit a vote
 	 * @author Steven Frink
 	 */
 
