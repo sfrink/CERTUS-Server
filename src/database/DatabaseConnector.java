@@ -1,6 +1,7 @@
 package database;
 
 import java.security.acl.Owner;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -1313,9 +1314,9 @@ public class DatabaseConnector
 				st.setInt(1, userDto.getUserId());
 				ResultSet res = st.executeQuery();
 				if (res.next()) {
-					String pubKey = res.getString(1);
-
-					val.setObject(pubKey);
+					Blob pubKey = res.getBlob(1);
+					byte[] pk=pubKey.getBytes(1, (int) pubKey.length());
+					val.setObject(pk);
 					val.setVerified(true);
 					val.setStatus("Public key retrieved");
 
@@ -1394,7 +1395,7 @@ public class DatabaseConnector
 				for (int i = 0; i < votes.size(); i++) {
 					String enc = votes.get(i).getVoteEncrypted();
 					String sig = votes.get(i).getVoteSignature();
-					if (sec.checkSignature(sig, votes.get(i).getUserId())
+					if (sec.checkSignature(sig, enc, votes.get(i).getUserId())
 							.isVerified()) {
 						int cand_id = Integer.parseInt(sec.decrypt(enc), 16);
 						boolean validCand = false;
@@ -1458,7 +1459,7 @@ public class DatabaseConnector
 				for (int i = 0; i < votes.size(); i++) {
 					String enc = votes.get(i).getVoteEncrypted();
 					String sig = votes.get(i).getVoteSignature();
-					if (sec.checkSignature(sig, votes.get(i).getUserId())
+					if (sec.checkSignature(sig, enc, votes.get(i).getUserId())
 							.isVerified()) {
 						int cand_id = Integer.parseInt(sec.decrypt(enc), 16);
 						boolean validCand = false;

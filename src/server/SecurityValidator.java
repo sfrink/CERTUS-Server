@@ -9,6 +9,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.security.spec.EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,7 +37,7 @@ public class SecurityValidator {
 		securityKeystoreFile = securityKeyBasePath + ConfigurationProperties.securityKeystoreTallierFile();
 		securityKeystorePrivatekey = securityKeyBasePath + ConfigurationProperties.securityKeystoreTallierPrivatekey();
 	}
-	public Validator checkSignature(String sig, int userId) {
+	public Validator checkSignature(String sig, String encVote, int userId) {
 		//TODO remove the DatabaseConnector from here
 		
 		DatabaseConnector dbc = new DatabaseConnector();
@@ -44,21 +45,21 @@ public class SecurityValidator {
 		UserDto userDto = new UserDto();
 		userDto.setUserId(userId);
 		
-		String pk = (String) dbc.selectUserPublicKey(userDto).getObject();
+		byte[] pk = (byte[]) dbc.selectUserPublicKey(userDto).getObject();
 		Validator val = new Validator();
 		val.setVerified(false);
 		if (pk == null) {
 			val.setStatus("No public key available");
 			return val;
 		}
-		byte[] pubKey = hexStringtoByteArray(pk);
 		byte[] signature = hexStringtoByteArray(sig);
+		byte[] encVoteBytes=hexStringtoByteArray(encVote);
 		try {
-			PublicKey PK = KeyFactory.getInstance("RSA").generatePublic(
-					new X509EncodedKeySpec(pubKey));
+			EncodedKeySpec pubKeySpec=new X509EncodedKeySpec(pk);
+			PublicKey PK = KeyFactory.getInstance("RSA").generatePublic(pubKeySpec);
 			Signature ver = Signature.getInstance("SHA256WITHRSA");
 			ver.initVerify(PK);
-			ver.update(signature);
+			ver.update(encVoteBytes);
 			val.setVerified(ver.verify(signature));
 			if (val.isVerified())
 				val.setStatus("Signature verified");
@@ -73,7 +74,7 @@ public class SecurityValidator {
 	}
 
 	public Validator checkSignature(VoteDto voteDto) {
-		return checkSignature(voteDto.getVoteSignature() , voteDto.getUserId());
+		return checkSignature(voteDto.getVoteSignature() , voteDto.getVoteEncrypted(), voteDto.getUserId());
 	}
 
 	public byte[] hexStringtoByteArray(String hex) {
