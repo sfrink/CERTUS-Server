@@ -18,6 +18,7 @@ import javax.crypto.Cipher;
 import database.DatabaseConnector;
 import dto.UserDto;
 import dto.Validator;
+import dto.VoteDto;
 
 public class SecurityValidator {
 	
@@ -74,6 +75,10 @@ public class SecurityValidator {
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 		return val;
+	}
+
+	public Validator checkSignature(VoteDto voteDto) {
+		return checkSignature(voteDto.getVoteSignature() , voteDto.getUserId());
 	}
 
 	public byte[] hexStringtoByteArray(String hex) {
