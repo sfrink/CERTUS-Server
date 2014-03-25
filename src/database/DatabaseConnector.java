@@ -10,7 +10,10 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,6 +23,7 @@ import server.PasswordHasher;
 import server.SecurityValidator;
 import dto.CandidateDto;
 import dto.ElectionDto;
+import dto.ElectionProgressDto;
 import dto.InputValidation;
 import dto.UserDto;
 import dto.Validator;
@@ -1418,13 +1422,146 @@ public class DatabaseConnector
 				val.setVerified(true);
 				
 			} else {
-				val.setStatus(voteVal.getStatus());
-				val.setVerified(voteVal.isVerified());
-				
+				//val.setStatus(voteVal.getStatus());
+				//val.setVerified(voteVal.isVerified());
+				val = voteVal;
 			}
 		} else {
 			val= vElection;
 		}
+		return val;
+	}
+	
+	/**
+	 * @param electionId
+	 * @return Validator with ElectionDto that has results
+	 * @author Hirosh Wickramasuriya
+	 */
+	public Validator tally2(int electionId) {
+		Map<Integer, CandidateDto> map = new HashMap<Integer, CandidateDto>();
+
+		Validator val = new Validator();
+
+		SecurityValidator sec = new SecurityValidator();
+		ElectionDto electionDto = new ElectionDto();
+		
+
+		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>) 
+				selectCandidatesOfElection(electionId, Status.ENABLED).getObject();
+		if (electionId > 0) {
+			
+			electionDto.setElectionId(electionId);
+			Validator voteVal = selectVotesByElectionId(electionId);
+			
+			if (voteVal.isVerified()) {
+				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();
+				for (int i = 0; i < votes.size(); i++) {
+					String enc = votes.get(i).getVoteEncrypted();
+					String sig = votes.get(i).getVoteSignature();
+					if (sec.checkSignature(sig, votes.get(i).getUserId())
+							.isVerified()) {
+						int cand_id = Integer.parseInt(sec.decrypt(enc), 16);
+						boolean validCand = false;
+						for (int j = 0; j < candidatesOfElection.size(); j++) {
+							if (candidatesOfElection.get(j).getCandidateId() == cand_id){
+								validCand = true;
+								break;
+							}
+						}
+						if (validCand) {
+							if (map.containsKey(cand_id)) {
+								//candidateDto is in the Hashmap
+								CandidateDto candidateDto = map.get(cand_id);
+								int voteCount = candidateDto.getVoteCount() + 1;
+								candidateDto.setVoteCount(voteCount);
+								
+								// replace the candidateDto in the Hashmap
+								map.remove(cand_id);
+								map.put(cand_id, candidateDto);  //TODO: not sure without these twolines, 
+																// value is udpated by reference
+								
+								
+							} else {
+								// this is a new candidateDto to the Hashmap
+								CandidateDto candidateDto = (CandidateDto) selectCandidate(cand_id).getObject();
+								candidateDto.setVoteCount(1); 		// First vote counted
+								map.put(cand_id, candidateDto);
+							}
+						}
+					}
+
+				}
+				
+				// attach the candidates list with results to the ElectionDto
+				ArrayList<CandidateDto> candidateResultList = new ArrayList<CandidateDto>();
+				Iterator<Integer> iterator = map.keySet().iterator();
+				
+				while(iterator.hasNext()){
+					Integer key = iterator.next();
+					CandidateDto candidateResult = map.get(key);
+					candidateResultList.add(candidateResult);
+				}
+				
+				electionDto.setCandidateList(candidateResultList);
+				
+				val.setStatus("Tally computed");
+				val.setObject(electionDto);
+				val.setVerified(true);
+				
+			} else {
+				val = voteVal;
+			}
+		} else {
+			val.setStatus("Invalid Election Id");
+		}
+		return val;
+	}
+	
+	/**
+	 * @param electionId
+	 * @return Validator with ElectionProgressDto
+	 * @author Hirosh Wickramasuriya
+	 */
+	public Validator voteProgressStatusForElection(int electionId)
+	{
+		Validator val = new Validator();
+		
+		SecurityValidator sec = new SecurityValidator();
+		ElectionProgressDto electionProgressDto = new ElectionProgressDto();
+		
+		if (electionId > 0) {
+			electionProgressDto.setElectionId(electionId);
+			Validator valVote = selectVotesByElectionId(electionId);
+			
+			if (valVote.isVerified()) {
+				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) valVote.getObject();
+				
+				for (VoteDto voteDto : votes) {
+					
+					// check for the validity 
+					if (sec.checkSignature(voteDto).isVerified() ){
+						// valid vote
+						electionProgressDto.addValidVotes(1);
+						
+					} else {
+						// rejected vote
+						electionProgressDto.addRejectedVotes(1);
+					}
+				}
+				
+				// bind the final result to the validator
+				val.setObject(electionProgressDto);
+				val.setStatus("Election progress computed");
+				val.setVerified(true);
+				
+			} else {
+				val = valVote;
+			}
+			
+		} else {
+			val.setStatus("Invalid Election Id");
+		}
+		
 		return val;
 	}
 }
