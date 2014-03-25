@@ -129,10 +129,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator editElectionWithCandidates(ElectionDto electionDto) throws RemoteException{
     	return dbc.editElectionWithCandidates(electionDto);
     }
-    /*@Override
-    public Validator editElection(ElectionDto election) throws RemoteException{
-       	return dbc.editElection(election);
-    }*/
 
     @Override
     public Validator editElectionStatus(int electionId, ElectionStatus electionStatus) throws RemoteException{   	
@@ -158,30 +154,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	return  dbc.selectCandidatesOfElection(electionId, candidateStatus);
     }
     
-
-    /*@Override
-    public Validator addCandidatesNamesToElection(ArrayList<String> names, int electionId) throws RemoteException{
-    	
-    	ArrayList<CandidateDto> cands=new ArrayList<CandidateDto>();
-    	for(int i=0;i<names.size();i++){
-    		CandidateDto cand=new CandidateDto();
-    		cand.setCandidateName(names.get(i));
-    		cands.add(cand);
-    	}
-
-    	return dbc.addCandidatesToElection(cands, electionId);
-    }
-    
-    @Override
-    public Validator addCandidatesToElection(ArrayList<CandidateDto> candidateList, int electionId) throws RemoteException{
-    	return dbc.addCandidatesToElection(candidateList, electionId);
-    }
-    
-    @Override
-    public Validator editCandidate(CandidateDto candidate) throws RemoteException{
-    	return dbc.editCandidate(candidate);
-    }*/
-    
     @Override
     public Validator editCandidateStatus(int candidateId, Status status) throws RemoteException{
     	CandidateDto candidate = new CandidateDto();
@@ -205,6 +177,16 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator selectAllElectionsForVoter(int user_id) throws RemoteException{
     	return dbc.selectAllElectionsForVoter(user_id);
+    }
+    
+    @Override
+    public Validator tally(int electionId) throws RemoteException {
+    	return dbc.tally2(electionId);
+    }
+    
+    @Override
+    public Validator voteProgressStatusForElection(int electionId) throws RemoteException {
+    	return dbc.voteProgressStatusForElection(electionId);
     }
     
 }
