@@ -65,7 +65,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 			registry.bind(ConfigurationProperties.rmiRegistry(), obj);
 
 			dbc = new DatabaseConnector();
-			
+			sec = new SecurityValidator();
 			
 			System.out.println("Certus Service bound in registry");
 		} catch (Exception e) {
@@ -170,7 +170,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     
     @Override
     public Validator getTallierPublicKey() throws RemoteException{
-    	sec=new SecurityValidator();
     	return sec.getTallierPublicKey();
     }
     
