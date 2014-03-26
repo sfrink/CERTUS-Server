@@ -1439,7 +1439,7 @@ public class DatabaseConnector
 	/**
 	 * @param electionId
 	 * @return Validator with ElectionDto that has results
-	 * @author Hirosh Wickramasuriya
+	 * @author Steven Frink/Hirosh Wickramasuriya
 	 */
 	public Validator tally2(int electionId) {
 		Map<Integer, CandidateDto> map = new HashMap<Integer, CandidateDto>();
@@ -1449,76 +1449,90 @@ public class DatabaseConnector
 		SecurityValidator sec = new SecurityValidator();
 		ElectionDto electionDto = new ElectionDto();
 
-		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
-				selectCandidatesOfElection(electionId, Status.ENABLED).getObject();
+		
 		if (electionId > 0) {
 
-			electionDto.setElectionId(electionId);
-			Validator voteVal = selectVotesByElectionId(electionId);
+			Validator vElection = selectElection(electionId);
+			if (vElection.isVerified() ) {
+				// get the election details
+				electionDto = (ElectionDto) vElection.getObject();
+				if (electionDto.getStatus() == ElectionStatus.CLOSED.getCode()) {
+					// get the votes for this election 
+					Validator voteVal = selectVotesByElectionId(electionId);
 
-			if (voteVal.isVerified()) {
-				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();
-				for (int i = 0; i < votes.size(); i++) {
-					String enc = votes.get(i).getVoteEncrypted();
-					String sig = votes.get(i).getVoteSignature();
-					if (sec.checkSignature(sig, enc, votes.get(i).getUserId())
-							.isVerified()) {
-						int cand_id = Integer.parseInt(sec.decrypt(enc), 16);
-						boolean validCand = false;
-						for (int j = 0; j < candidatesOfElection.size(); j++) {
-							if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
-								validCand = true;
-								break;
+					if (voteVal.isVerified()) {
+						
+						ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
+								selectCandidatesOfElection(electionId, Status.ENABLED).getObject();		// all the candidates of the election
+						ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();			// all the votes for the election
+						
+						// check the validity of each vote, decrypt and count the vote
+						for (int i = 0; i < votes.size(); i++) {
+							String enc = votes.get(i).getVoteEncrypted();
+							String sig = votes.get(i).getVoteSignature();
+							// check the signature of vote
+							if (sec.checkSignature(sig, enc, votes.get(i).getUserId())
+									.isVerified()) {
+								int cand_id = Integer.parseInt(sec.decrypt(enc), 16);
+								boolean validCand = false;
+								for (int j = 0; j < candidatesOfElection.size(); j++) {
+									if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
+										validCand = true;
+										break;
+									}
+								}
+								
+								if (validCand) {
+									if (map.containsKey(cand_id)) {
+										// candidateDto is in the Hashmap
+										CandidateDto candidateDto = map.get(cand_id);
+										int voteCount = candidateDto.getVoteCount() + 1;
+										candidateDto.setVoteCount(voteCount);
+
+										// replace the candidateDto in the Hashmap
+										map.remove(cand_id);
+										map.put(cand_id, candidateDto); // TODO: not sure without these twolines,
+																		// value is udpated by reference
+
+									} else {
+										// this is a new candidateDto to the Hashmap
+										CandidateDto candidateDto = (CandidateDto) selectCandidate(cand_id).getObject();
+										candidateDto.setVoteCount(1); // First voted counted
+										map.put(cand_id, candidateDto);
+									}
+								}
 							}
 						}
-						if (validCand) {
-							if (map.containsKey(cand_id)) {
-								// candidateDto is in the Hashmap
-								CandidateDto candidateDto = map.get(cand_id);
-								int voteCount = candidateDto.getVoteCount() + 1;
-								candidateDto.setVoteCount(voteCount);
 
-								// replace the candidateDto in the Hashmap
-								map.remove(cand_id);
-								map.put(cand_id, candidateDto); // TODO: not
-																// sure without
-																// these
-																// twolines,
-																// value is
-																// udpated by
-																// reference
+						// attach the candidates list with results to the ElectionDto
+						ArrayList<CandidateDto> candidateResultList = new ArrayList<CandidateDto>();
+						Iterator<Integer> iterator = map.keySet().iterator();
 
-							} else {
-								// this is a new candidateDto to the Hashmap
-								CandidateDto candidateDto = (CandidateDto) selectCandidate(cand_id).getObject();
-								candidateDto.setVoteCount(1); // First vote
-																// counted
-								map.put(cand_id, candidateDto);
-							}
+						while (iterator.hasNext()) {
+							Integer key = iterator.next();
+							CandidateDto candidateResult = map.get(key);
+							candidateResultList.add(candidateResult);
 						}
+
+						electionDto.setCandidateList(candidateResultList);
+
+						val.setStatus("Tally computed");
+						val.setObject(electionDto);
+						val.setVerified(true);
+
+					} else {
+						val = voteVal;
 					}
-
+				} else {
+					val.setStatus("Election is not closed to tally the results");
 				}
-
-				// attach the candidates list with results to the ElectionDto
-				ArrayList<CandidateDto> candidateResultList = new ArrayList<CandidateDto>();
-				Iterator<Integer> iterator = map.keySet().iterator();
-
-				while (iterator.hasNext()) {
-					Integer key = iterator.next();
-					CandidateDto candidateResult = map.get(key);
-					candidateResultList.add(candidateResult);
-				}
-
-				electionDto.setCandidateList(candidateResultList);
-
-				val.setStatus("Tally computed");
-				val.setObject(electionDto);
-				val.setVerified(true);
-
+				
 			} else {
-				val = voteVal;
+				val = vElection;
 			}
+				
+			
+			
 		} else {
 			val.setStatus("Invalid Election Id");
 		}
