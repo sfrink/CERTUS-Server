@@ -608,7 +608,7 @@ public class DatabaseConnector
 
 		try {
 			st = this.con.prepareStatement(query);
-			st.setInt(1,user_id);
+			st.setInt(1, user_id);
 			st.setInt(2, ElectionStatus.OPEN.getCode());
 			ResultSet res = st.executeQuery();
 
@@ -1201,8 +1201,8 @@ public class DatabaseConnector
 	// Vote
 
 	/**
-	 * @param voteDto - the vote to submit 
-	 * Submit a vote
+	 * @param voteDto
+	 *            - the vote to submit Submit a vote
 	 * @author Steven Frink
 	 */
 
@@ -1213,13 +1213,15 @@ public class DatabaseConnector
 		if (voteDto.Validate().isVerified())
 		{
 			try {
-				String query="SELECT (user_id, election_id) FROM vote WHERE user_id=? AND election_id=?";
-				st=this.con.prepareStatement(query);
+				String query = "SELECT (user_id, election_id) FROM vote WHERE user_id=? AND election_id=?";
+				st = this.con.prepareStatement(query);
 				st.setInt(1, voteDto.getUserId());
 				st.setInt(2, voteDto.getElectionId());
-				ResultSet rs=st.executeQuery();
+				ResultSet rs = st.executeQuery();
 				SecurityValidator sec = new SecurityValidator();
-				if (!rs.next() && sec.checkSignature(voteDto.getVoteSignature(), voteDto.getVoteEncrypted(), voteDto.getUserId()).isVerified()) {
+				if (!rs.next()
+						&& sec.checkSignature(voteDto.getVoteSignature(), voteDto.getVoteEncrypted(),
+								voteDto.getUserId()).isVerified()) {
 					query = "INSERT INTO vote (user_id, election_id, vote_encrypted, vote_signature)"
 							+ " VALUES (?,?,?,?)";
 					st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
@@ -1253,8 +1255,9 @@ public class DatabaseConnector
 
 	}
 
-	/** 
-	 * @param userDto - userDetails with public key
+	/**
+	 * @param userDto
+	 *            - userDetails with public key
 	 * @return Validator - status of the public key update operation
 	 * @author Hirosh Wickramasuriya
 	 * 
@@ -1293,8 +1296,9 @@ public class DatabaseConnector
 	}
 
 	/**
-	 * @param userDto - userDto with the userId
-	 * @return Validator - with user's public key  
+	 * @param userDto
+	 *            - userDto with the userId
+	 * @return Validator - with user's public key
 	 * @author Steven Frink
 	 */
 	public Validator selectUserPublicKey(UserDto userDto) {
@@ -1303,8 +1307,8 @@ public class DatabaseConnector
 
 		InputValidation iv = new InputValidation();
 		Validator vUserDto = iv.validateInt(userDto.getUserId(), "User ID");
-		
-		//Validator vUserDto = userDto.Validate();
+
+		// Validator vUserDto = userDto.Validate();
 		if (vUserDto.isVerified()) {
 			String query = "SELECT public_key FROM users WHERE user_id = ?";
 
@@ -1314,7 +1318,7 @@ public class DatabaseConnector
 				ResultSet res = st.executeQuery();
 				if (res.next()) {
 					Blob pubKey = res.getBlob(1);
-					byte[] pk=pubKey.getBytes(1, (int) pubKey.length());
+					byte[] pk = pubKey.getBytes(1, (int) pubKey.length());
 					val.setObject(pk);
 					val.setVerified(true);
 					val.setStatus("Public key retrieved");
@@ -1329,7 +1333,7 @@ public class DatabaseConnector
 				val.setStatus("SQL Error");
 			}
 		} else {
-			val = vUserDto;		// Failed to validate the user id
+			val = vUserDto; // Failed to validate the user id
 		}
 
 		return val;
@@ -1420,18 +1424,18 @@ public class DatabaseConnector
 				val.setStatus("Tally computed");
 				val.setObject(t);
 				val.setVerified(true);
-				
+
 			} else {
-				//val.setStatus(voteVal.getStatus());
-				//val.setVerified(voteVal.isVerified());
+				// val.setStatus(voteVal.getStatus());
+				// val.setVerified(voteVal.isVerified());
 				val = voteVal;
 			}
 		} else {
-			val= vElection;
+			val = vElection;
 		}
 		return val;
 	}
-	
+
 	/**
 	 * @param electionId
 	 * @return Validator with ElectionDto that has results
@@ -1444,15 +1448,14 @@ public class DatabaseConnector
 
 		SecurityValidator sec = new SecurityValidator();
 		ElectionDto electionDto = new ElectionDto();
-		
 
-		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>) 
+		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
 				selectCandidatesOfElection(electionId, Status.ENABLED).getObject();
 		if (electionId > 0) {
-			
+
 			electionDto.setElectionId(electionId);
 			Validator voteVal = selectVotesByElectionId(electionId);
-			
+
 			if (voteVal.isVerified()) {
 				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();
 				for (int i = 0; i < votes.size(); i++) {
@@ -1463,51 +1466,56 @@ public class DatabaseConnector
 						int cand_id = Integer.parseInt(sec.decrypt(enc), 16);
 						boolean validCand = false;
 						for (int j = 0; j < candidatesOfElection.size(); j++) {
-							if (candidatesOfElection.get(j).getCandidateId() == cand_id){
+							if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
 								validCand = true;
 								break;
 							}
 						}
 						if (validCand) {
 							if (map.containsKey(cand_id)) {
-								//candidateDto is in the Hashmap
+								// candidateDto is in the Hashmap
 								CandidateDto candidateDto = map.get(cand_id);
 								int voteCount = candidateDto.getVoteCount() + 1;
 								candidateDto.setVoteCount(voteCount);
-								
+
 								// replace the candidateDto in the Hashmap
 								map.remove(cand_id);
-								map.put(cand_id, candidateDto);  //TODO: not sure without these twolines, 
-																// value is udpated by reference
-								
-								
+								map.put(cand_id, candidateDto); // TODO: not
+																// sure without
+																// these
+																// twolines,
+																// value is
+																// udpated by
+																// reference
+
 							} else {
 								// this is a new candidateDto to the Hashmap
 								CandidateDto candidateDto = (CandidateDto) selectCandidate(cand_id).getObject();
-								candidateDto.setVoteCount(1); 		// First vote counted
+								candidateDto.setVoteCount(1); // First vote
+																// counted
 								map.put(cand_id, candidateDto);
 							}
 						}
 					}
 
 				}
-				
+
 				// attach the candidates list with results to the ElectionDto
 				ArrayList<CandidateDto> candidateResultList = new ArrayList<CandidateDto>();
 				Iterator<Integer> iterator = map.keySet().iterator();
-				
-				while(iterator.hasNext()){
+
+				while (iterator.hasNext()) {
 					Integer key = iterator.next();
 					CandidateDto candidateResult = map.get(key);
 					candidateResultList.add(candidateResult);
 				}
-				
+
 				electionDto.setCandidateList(candidateResultList);
-				
+
 				val.setStatus("Tally computed");
 				val.setObject(electionDto);
 				val.setVerified(true);
-				
+
 			} else {
 				val = voteVal;
 			}
@@ -1516,7 +1524,7 @@ public class DatabaseConnector
 		}
 		return val;
 	}
-	
+
 	/**
 	 * @param electionId
 	 * @return Validator with ElectionProgressDto
@@ -1525,47 +1533,47 @@ public class DatabaseConnector
 	public Validator voteProgressStatusForElection(int electionId)
 	{
 		Validator val = new Validator();
-		
+
 		SecurityValidator sec = new SecurityValidator();
 		ElectionProgressDto electionProgressDto = new ElectionProgressDto();
-		
+
 		if (electionId > 0) {
 			electionProgressDto.setElectionId(electionId);
 			Validator valVote = selectVotesByElectionId(electionId);
-			
+
 			if (valVote.isVerified()) {
 				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) valVote.getObject();
 				electionProgressDto.setTotalVotes(votes.size());
-				
+
 				for (VoteDto voteDto : votes) {
-					
-					// check for the validity 
-					if (sec.checkSignature(voteDto).isVerified() ){
+
+					// check for the validity
+					if (sec.checkSignature(voteDto).isVerified()) {
 						// valid vote
 						electionProgressDto.addValidVotes(1);
-						
+
 					} else {
 						// rejected vote
 						electionProgressDto.addRejectedVotes(1);
 					}
 				}
-				
+
 				// bind the final result to the validator
 				val.setObject(electionProgressDto);
 				val.setStatus("Election progress computed");
 				val.setVerified(true);
-				
+
 			} else {
 				val = valVote;
 			}
-			
+
 		} else {
 			val.setStatus("Invalid Election Id");
 		}
-		
+
 		return val;
 	}
-	
+
 	public Validator closeElectionAndPublishResults(int electionId) {
 		Validator val = new Validator();
 		Validator vElectionStatus = editElectionStatus(electionId, ElectionStatus.CLOSED);
@@ -1579,86 +1587,86 @@ public class DatabaseConnector
 				} else {
 					val = vElectionStatus;
 				}
-				
+
 			} else {
 				val = vResult;
 			}
 		} else {
 			val = vElectionStatus;
 		}
-		 
+
 		return val;
 	}
-	
+
 	private Validator computeElectionResults(int electionId) {
 		Validator val = new Validator();
-		
+
 		if (electionId > 0) {
 			Validator vElection = selectElection(electionId);
 			if (vElection.isVerified()) {
 				// check the election status
-				ElectionDto electionDto =  (ElectionDto)vElection.getObject() ;
-				if ( electionDto.getStatus() == ElectionStatus.CLOSED.getCode() ) {
-					
+				ElectionDto electionDto = (ElectionDto) vElection.getObject();
+				if (electionDto.getStatus() == ElectionStatus.CLOSED.getCode()) {
+
 					// get the tallying results
 					Validator vElectionTally = tally2(electionId);
-					
+
 					if (vElectionTally.isVerified()) {
 						// Get the results for each candidates
 						ArrayList<CandidateDto> candidates = electionDto.getCandidateList();
 						boolean valid = true;
-						for(CandidateDto candidate : candidates) {
-							
-							if (addResult(candidate) > 0 ) {
+						for (CandidateDto candidate : candidates) {
+
+							if (addResult(candidate) > 0) {
 								// result has been added
 								valid &= true;
 							} else {
 								// Failed to add the result
-								
+
 								// delete existing results if any
 								deleteResults(electionDto.getElectionId());
-								
-								// set the validator 
+
+								// set the validator
 								val.setStatus("Failed to add results");
 								valid &= false;
 								break;
 							}
 						}
-						
+
 						val.setVerified(valid);
 						if (valid) {
 							val.setStatus("Results added successfully");
-							
+
 						} else {
 							val.setStatus("Failed to add resulsts");
 						}
 					} else {
 						val = vElectionTally;
 					}
-					
+
 				} else {
 					val.setStatus("Election is not closed to tally the results");
 				}
-					
+
 			} else {
 				val = vElection;
 			}
 		} else {
 			val.setStatus("Invalid Election Id");
 		}
-		
+
 		return val;
 	}
-	
-	private int addResult(CandidateDto candidateDto){
-		
+
+	private int addResult(CandidateDto candidateDto) {
+
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		int newId = 0;
 
 		try {
 			String query = "INSERT INTO results (election_id, candidate_id, vote_count) VALUES (?,?,?)";
-			
+
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setInt(1, candidateDto.getElectionId());
 			st.setInt(2, candidateDto.getCandidateId());
@@ -1678,7 +1686,7 @@ public class DatabaseConnector
 
 		return newId;
 	}
-	
+
 	private boolean deleteResults(int electionId) {
 		PreparedStatement st = null;
 		ResultSet rs = null;
@@ -1686,19 +1694,18 @@ public class DatabaseConnector
 
 		try {
 			String query = "DELETE FROM results WHERE election_id = ?";
-			
+
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setInt(1, electionId);
 
 			// update query
 			if (st.executeUpdate() < 0) {
 				// delete failed
-				
+
 			} else {
 				// delete= sucessful
 				status = true;
 			}
-			
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -1706,69 +1713,76 @@ public class DatabaseConnector
 		}
 		return status;
 	}
-	
+
 	public Validator selectResults(int electionId) {
 		Validator val = new Validator();
-		
-		ElectionDto  electionDto = new ElectionDto();
+
+		ElectionDto electionDto = new ElectionDto();
 		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
 
 		PreparedStatement st = null;
 
-		
-		
 		if (electionId > 0) {
 			// valid election
-			
+
 			// Get the election details
-			electionDto = (ElectionDto)selectElection(electionId).getObject(); 
-			try {
-				
-				// get the results
-				String query = "SELECT r.election_id, r.candidate_id, vote_count, candidate_name, display_order, status"
-						+ " FROM results r"
-						+ " INNER JOIN candidate c"
-						+ " ON (r.candidate_id = c.candidate_id)"
-						+ " WHERE r.election_id = ?";
-				
-				st = this.con.prepareStatement(query);
-				st.setInt(1, electionId);
-				
-				ResultSet res = st.executeQuery();
+			electionDto = (ElectionDto) selectElection(electionId).getObject();
+			if (electionDto.getStatus() == ElectionStatus.PUBLISHED.getCode())
+			{
+				try {
 
-				while (res.next()) {
+					// get the results
+					String query = "SELECT r.election_id, r.candidate_id, vote_count, candidate_name, display_order, status"
+							+ " FROM results r"
+							+ " INNER JOIN candidate c"
+							+ " ON (r.candidate_id = c.candidate_id)"
+							+ " WHERE r.election_id = ?";
 
-					int resElectionId = res.getInt(1);
-					int resCandidateId = res.getInt(2);
-					int resVoteCount = res.getInt(3);
-					String resCandiateName = res.getString(4);
-					int resDisplayOrder = res.getInt(5);
-					int resStatus = res.getInt(6);
-					
-					// populate candidates list
-					CandidateDto candidateDto = new CandidateDto();
-					candidateDto.setCandidateId(resCandidateId);
-					candidateDto.setCandidateName(resCandiateName);
-					candidateDto.setElectionId(resElectionId);
-					candidateDto.setDisplayOrder(resDisplayOrder);
-					candidateDto.setVoteCount(resVoteCount);
-					candidateDto.setStatus(resStatus);
-					
-					candidates.add(candidateDto); 
+					st = this.con.prepareStatement(query);
+					st.setInt(1, electionId);
+
+					ResultSet res = st.executeQuery();
+
+					while (res.next()) {
+
+						int resElectionId = res.getInt(1);
+						int resCandidateId = res.getInt(2);
+						int resVoteCount = res.getInt(3);
+						String resCandiateName = res.getString(4);
+						int resDisplayOrder = res.getInt(5);
+						int resStatus = res.getInt(6);
+
+						// populate candidates list
+						CandidateDto candidateDto = new CandidateDto();
+						candidateDto.setCandidateId(resCandidateId);
+						candidateDto.setCandidateName(resCandiateName);
+						candidateDto.setElectionId(resElectionId);
+						candidateDto.setDisplayOrder(resDisplayOrder);
+						candidateDto.setVoteCount(resVoteCount);
+						candidateDto.setStatus(resStatus);
+
+						candidates.add(candidateDto);
+					}
+
+					electionDto.setCandidateList(candidates); // attache
+																// candidates
+																// list to the
+																// election
+
+					// set the validator
+					val.setVerified(true);
+					val.setObject(electionDto);
+					val.setStatus("Results selected successfully");
+
+				} catch (SQLException ex) {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					val.setStatus("Select failed");
 				}
-				
-				electionDto.setCandidateList(candidates); // attache candidates list to the election
-				
-				// set the validator 
-				val.setVerified(true);
-				val.setObject(electionDto);
-				val.setStatus("Results selected successfully");
-
-			} catch (SQLException ex) {
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-				val.setStatus("Select failed");
+			} else {
+				val.setStatus("Election results has not been published");
 			}
+
 		} else {
 			val.setStatus("Invalid Election Id");
 		}
