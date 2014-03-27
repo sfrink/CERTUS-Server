@@ -1039,13 +1039,15 @@ public class DatabaseConnector
 				// "UPDATE candidate SET (candidate_name, display_order)=(?,?) WHERE candidate_id=?";
 				String query = "UPDATE candidate "
 						+ " SET candidate_name = ?, "
-						+ " display_order = ? "
+						+ " display_order = ?, "
+						+ " status = ?"
 						+ " WHERE candidate_id = ?";
 				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 
 				st.setString(1, candidateDto.getCandidateName());
 				st.setInt(2, candidateDto.getDisplayOrder());
-				st.setInt(3, candidateDto.getCandidateId());
+				st.setInt(3, candidateDto.getStatus());
+				st.setInt(4, candidateDto.getCandidateId());
 				int updateCount = st.executeUpdate();
 				if (updateCount > 0) {
 					val.setStatus("Candidate updated successfully");
