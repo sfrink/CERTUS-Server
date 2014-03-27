@@ -1488,6 +1488,20 @@ public class DatabaseConnector
 		return map;
 	}
 	
+	public ElectionDto putResultsInElection(Map<Integer, CandidateDto> map, ElectionDto e){
+		ArrayList<CandidateDto> candidateResultList = new ArrayList<CandidateDto>();
+		Iterator<Integer> iterator = map.keySet().iterator();
+
+		while (iterator.hasNext()) {
+			Integer key = iterator.next();
+			CandidateDto candidateResult = map.get(key);
+			candidateResultList.add(candidateResult);
+		}
+		e.setCandidateList(candidateResultList);
+		return e;
+		
+	}
+	
 	/**
 	 * @param electionId
 	 * @return Validator with ElectionDto that has results
@@ -1533,16 +1547,7 @@ public class DatabaseConnector
 							}
 						}
 						// attach the candidates list with results to the ElectionDto
-						ArrayList<CandidateDto> candidateResultList = new ArrayList<CandidateDto>();
-						Iterator<Integer> iterator = map.keySet().iterator();
-
-						while (iterator.hasNext()) {
-							Integer key = iterator.next();
-							CandidateDto candidateResult = map.get(key);
-							candidateResultList.add(candidateResult);
-						}
-
-						electionDto.setCandidateList(candidateResultList);
+						electionDto=putResultsInElection(map, electionDto);
 
 						val.setStatus("Tally computed");
 						val.setObject(electionDto);
