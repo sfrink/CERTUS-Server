@@ -1606,6 +1606,7 @@ public class DatabaseConnector
 		Validator vElectionStatus = editElectionStatus(electionId, ElectionStatus.CLOSED);
 		if (vElectionStatus.isVerified()) {
 			Validator vResult = computeElectionResults(electionId);
+			
 			if (vResult.isVerified()) {
 				vElectionStatus = editElectionStatus(electionId, ElectionStatus.PUBLISHED);
 				if (vElectionStatus.isVerified()) {
