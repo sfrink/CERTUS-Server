@@ -605,7 +605,7 @@ public class DatabaseConnector
 		String query = "SELECT e.election_id, e.election_name, e.owner_id, "
 				+ "e.start_datetime, e.close_datetime FROM election as e "
 				+ "LEFT JOIN vote as v ON e.election_id = v.election_id "
-				+ "WHERE v.user_id is null  OR v.user_id != ? AND e.status = ? "
+				+ "WHERE (v.user_id is null  OR v.user_id != ?) AND e.status = ? "
 				+ "GROUP BY e.election_id";
 
 		try {
