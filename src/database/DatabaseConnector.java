@@ -1466,6 +1466,12 @@ public class DatabaseConnector
 						
 						ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
 								selectCandidatesOfElection(electionId, Status.ENABLED).getObject();		// all the candidates of the election
+						
+						// initialize the hashmap to have all the candidates
+						for (CandidateDto candidate : candidatesOfElection) {
+							map.put(candidate.getCandidateId(), candidate);
+						}
+						
 						ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();			// all the votes for the election
 						
 						// check the validity of each vote, decrypt and count the vote
@@ -1473,21 +1479,13 @@ public class DatabaseConnector
 							String enc = votes.get(i).getVoteEncrypted();
 							String sig = votes.get(i).getVoteSignature();
 							
-							System.out.println("Encrypted vote : " + enc);
-							System.out.println("Signature vote : " + sig);
-							
 							// check the signature of vote
 							if (sec.checkSignature(sig, enc, votes.get(i).getUserId())
 									.isVerified()) {
 								
-								System.out.println("valid Vote by user : " + votes.get(i).getUserId());
-								
 								byte[] plain=sec.hexStringtoByteArray(sec.decrypt(enc));
 								String id=new String(plain);
 								int cand_id = Integer.parseInt(id);
-								
-								System.out.println("decrypted candidate id : " + sec.decrypt(enc));
-								System.out.println("decrypted candidate id : " + cand_id);
 								boolean validCand = false;
 								for (int j = 0; j < candidatesOfElection.size(); j++) {
 									if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
@@ -1497,7 +1495,6 @@ public class DatabaseConnector
 								}
 								
 								if (validCand) {
-									System.out.println("valid candidate :" + votes.get(i).getUserId());
 									if (map.containsKey(cand_id)) {
 										// candidateDto is in the Hashmap
 										CandidateDto candidateDto = map.get(cand_id);
@@ -1517,9 +1514,7 @@ public class DatabaseConnector
 									}
 								}
 							}
-							else {
-								System.out.println("Invalid Vote by user : " + votes.get(i).getUserId());
-							}
+						
 						}
 
 						// attach the candidates list with results to the ElectionDto
@@ -1645,6 +1640,7 @@ public class DatabaseConnector
 
 					if (vElectionTally.isVerified()) {
 						// Get the results for each candidates
+						electionDto = (ElectionDto)vElectionTally.getObject();
 						ArrayList<CandidateDto> candidates = electionDto.getCandidateList();
 						boolean valid = true;
 						for (CandidateDto candidate : candidates) {
