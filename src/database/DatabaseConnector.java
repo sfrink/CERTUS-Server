@@ -1217,7 +1217,7 @@ public class DatabaseConnector
 		if (voteDto.Validate().isVerified())
 		{
 			try {
-				String query = "SELECT (user_id, election_id) FROM vote WHERE user_id=? AND election_id=?";
+				String query = "SELECT user_id, election_id FROM vote WHERE user_id=? AND election_id=?";
 				st = this.con.prepareStatement(query);
 				st.setInt(1, voteDto.getUserId());
 				st.setInt(2, voteDto.getElectionId());
