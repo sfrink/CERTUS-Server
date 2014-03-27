@@ -1440,6 +1440,54 @@ public class DatabaseConnector
 		return val;
 	}
 
+	public Validator checkCandidateInElection(int electionId, int cand_id){
+		Validator val=new Validator();
+		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
+				selectCandidatesOfElection(electionId, Status.ENABLED).getObject();
+		boolean validCand = false;
+		for (int j = 0; j < candidatesOfElection.size(); j++) {
+			if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
+				validCand = true;
+				break;
+			}
+		}
+		val.setVerified(validCand);
+		return val;
+	}
+	
+	public Map<Integer, CandidateDto> initMap(int electionId){
+		Map<Integer, CandidateDto> map = new HashMap<Integer, CandidateDto>();
+		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
+				selectCandidatesOfElection(electionId, Status.ENABLED).getObject();		// all the candidates of the election
+		
+		// initialize the hashmap to have all the candidates
+		for (CandidateDto candidate : candidatesOfElection) {
+			map.put(candidate.getCandidateId(), candidate);
+		}
+		return map;
+	}
+	
+	public Map<Integer, CandidateDto> addToMap(Map<Integer, CandidateDto> map, int cand_id){
+		if (map.containsKey(cand_id)) {
+			// candidateDto is in the Hashmap
+			CandidateDto candidateDto = map.get(cand_id);
+			int voteCount = candidateDto.getVoteCount() + 1;
+			candidateDto.setVoteCount(voteCount);
+
+			// replace the candidateDto in the Hashmap
+			map.remove(cand_id);
+			map.put(cand_id, candidateDto); // TODO: not sure without these twolines,
+											// value is udpated by reference
+
+		} else {
+			// this is a new candidateDto to the Hashmap
+			CandidateDto candidateDto = (CandidateDto) selectCandidate(cand_id).getObject();
+			candidateDto.setVoteCount(1); // First voted counted
+			map.put(cand_id, candidateDto);
+		}
+		return map;
+	}
+	
 	/**
 	 * @param electionId
 	 * @return Validator with ElectionDto that has results
@@ -1447,13 +1495,10 @@ public class DatabaseConnector
 	 */
 	public Validator tally2(int electionId) {
 		Map<Integer, CandidateDto> map = new HashMap<Integer, CandidateDto>();
-
 		Validator val = new Validator();
-
 		SecurityValidator sec = new SecurityValidator();
 		ElectionDto electionDto = new ElectionDto();
 
-		
 		if (electionId > 0) {
 
 			Validator vElection = selectElection(electionId);
@@ -1466,13 +1511,7 @@ public class DatabaseConnector
 
 					if (voteVal.isVerified()) {
 						
-						ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
-								selectCandidatesOfElection(electionId, Status.ENABLED).getObject();		// all the candidates of the election
-						
-						// initialize the hashmap to have all the candidates
-						for (CandidateDto candidate : candidatesOfElection) {
-							map.put(candidate.getCandidateId(), candidate);
-						}
+						map=initMap(electionId);
 						
 						ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();			// all the votes for the election
 						
@@ -1482,43 +1521,17 @@ public class DatabaseConnector
 							String sig = votes.get(i).getVoteSignature();
 							
 							// check the signature of vote
-							if (sec.checkSignature(sig, enc, votes.get(i).getUserId())
-									.isVerified()) {
+							if (sec.checkSignature(sig, enc, votes.get(i).getUserId()).isVerified()) {
 								
 								byte[] plain=sec.hexStringtoByteArray(sec.decrypt(enc));
 								String id=new String(plain);
 								int cand_id = Integer.parseInt(id);
-								boolean validCand = false;
-								for (int j = 0; j < candidatesOfElection.size(); j++) {
-									if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
-										validCand = true;
-										break;
-									}
-								}
 								
-								if (validCand) {
-									if (map.containsKey(cand_id)) {
-										// candidateDto is in the Hashmap
-										CandidateDto candidateDto = map.get(cand_id);
-										int voteCount = candidateDto.getVoteCount() + 1;
-										candidateDto.setVoteCount(voteCount);
-
-										// replace the candidateDto in the Hashmap
-										map.remove(cand_id);
-										map.put(cand_id, candidateDto); // TODO: not sure without these twolines,
-																		// value is udpated by reference
-
-									} else {
-										// this is a new candidateDto to the Hashmap
-										CandidateDto candidateDto = (CandidateDto) selectCandidate(cand_id).getObject();
-										candidateDto.setVoteCount(1); // First voted counted
-										map.put(cand_id, candidateDto);
-									}
+								if (checkCandidateInElection(electionId, cand_id).isVerified()) {
+									map=addToMap(map, cand_id);
 								}
 							}
-						
 						}
-
 						// attach the candidates list with results to the ElectionDto
 						ArrayList<CandidateDto> candidateResultList = new ArrayList<CandidateDto>();
 						Iterator<Integer> iterator = map.keySet().iterator();
