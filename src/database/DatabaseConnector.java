@@ -335,6 +335,8 @@ public class DatabaseConnector
 				electionDto.setStatusDescription(statusDescription);
 				electionDto.setOwnerId(ownerId);
 
+				Validator vCandidates = selectCandidatesOfElection(electionId);
+				electionDto.setCandidateList( (ArrayList<CandidateDto>) vCandidates.getObject());
 			}
 			validator.setVerified(true);
 			validator.setObject(electionDto);
@@ -1470,10 +1472,22 @@ public class DatabaseConnector
 						for (int i = 0; i < votes.size(); i++) {
 							String enc = votes.get(i).getVoteEncrypted();
 							String sig = votes.get(i).getVoteSignature();
+							
+							System.out.println("Encrypted vote : " + enc);
+							System.out.println("Signature vote : " + sig);
+							
 							// check the signature of vote
 							if (sec.checkSignature(sig, enc, votes.get(i).getUserId())
 									.isVerified()) {
-								int cand_id = Integer.parseInt(sec.decrypt(enc), 16);
+								
+								System.out.println("valid Vote by user : " + votes.get(i).getUserId());
+								
+								byte[] plain=sec.hexStringtoByteArray(sec.decrypt(enc));
+								String id=new String(plain);
+								int cand_id = Integer.parseInt(id);
+								
+								System.out.println("decrypted candidate id : " + sec.decrypt(enc));
+								System.out.println("decrypted candidate id : " + cand_id);
 								boolean validCand = false;
 								for (int j = 0; j < candidatesOfElection.size(); j++) {
 									if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
@@ -1483,6 +1497,7 @@ public class DatabaseConnector
 								}
 								
 								if (validCand) {
+									System.out.println("valid candidate :" + votes.get(i).getUserId());
 									if (map.containsKey(cand_id)) {
 										// candidateDto is in the Hashmap
 										CandidateDto candidateDto = map.get(cand_id);
@@ -1501,6 +1516,9 @@ public class DatabaseConnector
 										map.put(cand_id, candidateDto);
 									}
 								}
+							}
+							else {
+								System.out.println("Invalid Vote by user : " + votes.get(i).getUserId());
 							}
 						}
 
