@@ -170,6 +170,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     
     @Override
     public Validator getTallierPublicKey() throws RemoteException{
+    	sec=new SecurityValidator();
     	return sec.getTallierPublicKey();
     }
     
