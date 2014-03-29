@@ -1496,44 +1496,31 @@ public class DatabaseConnector
 	 * @return Validator with ElectionDto that has results
 	 * @author Steven Frink/Hirosh Wickramasuriya
 	 */
-	public Validator tally(int electionId) {
+	public Validator tally(ElectionDto elec) {
 		Validator val = new Validator();
-		ElectionDto electionDto = new ElectionDto();
-		Validator vElection = selectElection(electionId);
-		
-		if (vElection.isVerified()) {
-			// get the election details
-			electionDto = (ElectionDto) vElection.getObject();
-			if (electionDto.getStatus() == ElectionStatus.CLOSED.getCode()) {
-				// get the votes for this election 
-				Validator voteVal = selectVotesByElectionId(electionId);
+			
+		// get the votes for this election 
+		Validator voteVal = selectVotesByElectionId(elec.getElectionId());
 
-				if (voteVal.isVerified()) {
-					Map<Integer, CandidateDto> map=initMap(electionDto);
-					ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();			// all the votes for the election
-					
-					// check the validity of each vote, decrypt and count the vote
-					for (int i = 0; i < votes.size(); i++) {
-						int cand_id=getDecryptedCandId(votes.get(i));	
-						if (cand_id!=-1) {
-							map=addToMap(map, cand_id);
-						}
-					}
-					// attach the candidates list with results to the ElectionDto
-					electionDto=putResultsInElection(map, electionDto);
-
-					val.setStatus("Tally computed");
-					val.setObject(electionDto);
-					val.setVerified(true);
+		if (voteVal.isVerified()) {
+			Map<Integer, CandidateDto> map=initMap(elec);
+			ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();			// all the votes for the election
+			
+			// check the validity of each vote, decrypt and count the vote
+			for (int i = 0; i < votes.size(); i++) {
+				int cand_id=getDecryptedCandId(votes.get(i));	
+				if (cand_id!=-1) {
+					map=addToMap(map, cand_id);
 				}
-				else {
-					val = voteVal;
-				}
-			} else {
-				val.setStatus("Election is not closed to tally the results");
 			}
+			// attach the candidates list with results to the ElectionDto
+			elec=putResultsInElection(map, elec);
+
+			val.setStatus("Tally computed");
+			val.setObject(elec);
+			val.setVerified(true);
 		} else {
-			val = vElection;
+			val = voteVal;
 		}
 		return val;
 	}
@@ -1587,9 +1574,9 @@ public class DatabaseConnector
 		return val;
 	}
 
-	public Validator closeElectionAndPublishResults(int electionId) {
+	public Validator publishResults(int electionId) {
 		Validator val = new Validator();
-		Validator vElectionStatus = editElectionStatus(electionId, ElectionStatus.CLOSED);
+		Validator vElectionStatus = compareElectionStatus(electionId, ElectionStatus.CLOSED);
 		if (vElectionStatus.isVerified()) {
 			Validator vResult = computeElectionResults(electionId);
 			
@@ -1626,9 +1613,8 @@ public class DatabaseConnector
 		if (vElectionStatus.isVerified()) {
 		
 			ElectionDto electionDto = (ElectionDto)vElectionStatus.getObject();
-			
 			// get the tallying results
-			Validator vElectionTally = tally(electionId);
+			Validator vElectionTally = tally(electionDto);
 
 			if (vElectionTally.isVerified()) {
 				// Get the results for each candidates
@@ -1661,7 +1647,6 @@ public class DatabaseConnector
 		} else {
 			val = vElectionStatus;
 		}
-
 		return val;
 	}
 	
