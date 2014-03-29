@@ -1520,7 +1520,6 @@ public class DatabaseConnector
 	 * @author Steven Frink/Hirosh Wickramasuriya
 	 */
 	public Validator tally2(int electionId) {
-		Map<Integer, CandidateDto> map = new HashMap<Integer, CandidateDto>();
 		Validator val = new Validator();
 		ElectionDto electionDto = new ElectionDto();
 		Validator vElection = selectElection(electionId);
@@ -1533,17 +1532,16 @@ public class DatabaseConnector
 				Validator voteVal = selectVotesByElectionId(electionId);
 
 				if (voteVal.isVerified()) {
-					map=initMap(electionDto);
+					Map<Integer, CandidateDto> map=initMap(electionDto);
 					ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();			// all the votes for the election
 					
 					// check the validity of each vote, decrypt and count the vote
 					for (int i = 0; i < votes.size(); i++) {
-						int cand_id=getDecryptedCandId(votes.get(i));
-							
-							if (cand_id!=-1) {
-								map=addToMap(map, cand_id);
-							}
+						int cand_id=getDecryptedCandId(votes.get(i));	
+						if (cand_id!=-1) {
+							map=addToMap(map, cand_id);
 						}
+					}
 					// attach the candidates list with results to the ElectionDto
 					electionDto=putResultsInElection(map, electionDto);
 
