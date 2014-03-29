@@ -115,8 +115,8 @@ public class DatabaseConnector
 			return result;
 		}
 
-		InputValidator iv = new InputValidator();
-		PasswordHasher hasher = new PasswordHasher();
+		//InputValidator iv = new InputValidator();
+		//PasswordHasher hasher = new PasswordHasher();
 
 		// get this user limited info from the database
 		UserDto userDto = selectUserByEmailLimited(email);
@@ -134,7 +134,7 @@ public class DatabaseConnector
 		// return result;
 		// }
 
-		String plainHash = hasher.sha512(plainPass, dbSalt);
+		String plainHash = PasswordHasher.sha512(plainPass, dbSalt);
 
 		// 4. if entered password is correct, return true with welcome message
 		if (plainHash.equals(dbHash)) {
