@@ -21,10 +21,12 @@ import server.SecurityValidator;
 import database.DatabaseConnector;
 import dto.CandidateDto;
 import dto.ElectionDto;
+import dto.UserDto;
 import dto.Validator;
 import dto.VoteDto;
 import enumeration.Status;
 import enumeration.ElectionStatus;
+import enumeration.UserStatus;
 
 
 public class CertusServer extends UnicastRemoteObject implements ServerInterface {
@@ -87,7 +89,27 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	
     }
     
-
+    public Validator addUser(UserDto userDto) throws RemoteException {
+    	return dbc.addUser(userDto); 
+    }
+    
+    public Validator selectAllUsers() throws RemoteException {
+    	return dbc.selectAllUsers();
+    }
+    
+    public Validator editUser(UserDto userDto) throws RemoteException {
+    	return dbc.editUser(userDto);
+    }
+    
+    public Validator editUserStatus(int userId, UserStatus userStatus) throws RemoteException {
+    	return dbc.editUserStatus(userId, userStatus);
+    }
+    
+    public Validator editUserType(int userId, int userType) throws RemoteException {
+    	return dbc.editUserType(userId, userType);
+    }
+    
+    
     public String sayHello(String name) {
 		System.out.println("Request received from the client: " + name);
 		return "Hello Certus Client: " + name;
@@ -204,4 +226,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator selectResults(int electionId) throws RemoteException { 
     	return dbc.selectResults(electionId);
     }
+    
+    
 }

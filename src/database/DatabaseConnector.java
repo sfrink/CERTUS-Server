@@ -31,6 +31,7 @@ import dto.Validator;
 import dto.VoteDto;
 import enumeration.Status;
 import enumeration.ElectionStatus;
+import enumeration.UserStatus;
 
 /**
  * @author sulo
@@ -1324,20 +1325,28 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 		Validator val = new Validator();
 		try {
-			String query = "UPDATE election" + " SET status=" + electionStatus.getCode() + " WHERE election_id="
-					+ electionId;
-			st = this.con.prepareStatement(query);
-			st.execute();
-			val.setStatus("Election status updated");
-			val.setVerified(true);
-			return val;
+			String query = "UPDATE election SET status=? WHERE election_id=?";
+			
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setInt(1, electionStatus.getCode());
+			st.setInt(1, electionId);
+			
+			st.executeUpdate();
+			
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
+				val.setStatus("Election status updated successfully");
+				val.setVerified(true);
+			} else {
+				val.setStatus("Failed to update the election status");
+			}
+			
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
-			val.setVerified(false);
-			return val;
 		}
+		return val;
 	}
 
 	/**
@@ -1974,4 +1983,212 @@ public class DatabaseConnector
 		return val;
 	}
 
+	// User
+	
+	/**
+	 * @param userDto
+	 * @return Validator with the userDto including the primary key assigned by the db.
+	 * @author Hirosh Wickramasuriya
+	 */
+	public Validator addUser(UserDto userDto) {
+		Validator val = new Validator();
+		
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		int newUserId = 0;
+		// Validate the user
+		Validator vUser = userDto.Validate();
+		
+		if (vUser.isVerified()) {
+			// insert user
+			String query = "INSERT INTO users (first_name, last_name, email) "
+					+ " VALUES (?, ?, ?)";
+			try {
+				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+				st.setString(1, userDto.getFirstName());
+				st.setString(2, userDto.getLastName());
+				st.setString(3, userDto.getEmail());
+				
+	
+				// run the query and get new user id
+				st.executeUpdate();
+				rs = st.getGeneratedKeys();
+				rs.next();
+				newUserId = rs.getInt(1);
+				if (newUserId > 0) {
+					userDto.setUserId(newUserId);
+					val.setVerified(true);
+					val.setStatus("User inserted successfully");
+					val.setObject(userDto);
+				} else {
+					val.setStatus("Failed to insert user");
+				}
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				val.setVerified(false);
+				val.setStatus("SQL Error");
+			}
+		} else {
+			val = vUser;
+		}
+		return val;
+	}
+	
+	
+	/**
+	 * @return - Validator with ArrayList<UserDto> 
+	 * @author Hirosh Wickramasuriya
+	 */
+	public Validator selectAllUsers()
+	{
+		Validator val = new Validator();
+
+		ArrayList<UserDto> users = new ArrayList<UserDto>();
+		PreparedStatement st = null;
+
+		String query = "SELECT user_id, first_name, last_name, email, activation_code "
+				+ " u.status, s.description "
+				+ " FROM users u"
+				+ " INNER JOIN status_user s"
+				+ " ON (u.status = s.status_id)"
+				+ " ORDER BY user_id";
+				
+		try {
+			st = this.con.prepareStatement(query);
+			
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				UserDto userDto = new UserDto();
+				userDto.setUserId(res.getInt(1));
+				userDto.setFirstName(res.getString(2));
+				userDto.setLastName(res.getString(3));
+				userDto.setEmail(res.getString(4));
+				userDto.setStatus(res.getInt(6));
+				userDto.setStatusDescription(res.getString(7));
+				users.add(userDto);
+			}
+			val.setStatus("Retrieved Users");
+			val.setVerified(true);
+			val.setObject(users);
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("Select failed");
+		}
+
+		return val;
+	}
+	
+	/**
+	 * @param userDto
+	 * @return Validator with status true upon successful update, false otherwise
+	 * @author Hirosh Wickramasuriya
+	 */
+	public Validator editUser(UserDto userDto) {
+		Validator val = new Validator();
+		
+		PreparedStatement st = null;
+		try {
+			String query = "UPDATE users SET first_name = ?,"
+					+ " last_name = ?,"
+					+ " email = ?,"
+					+ " status = ? "
+					+ " admin = ?"
+					+ " WHERE user_id=?";
+
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, userDto.getFirstName());
+			st.setString(2, userDto.getLastName());
+			st.setString(3, userDto.getEmail());
+			st.setInt(4, userDto.getStatus());
+			st.setInt(5, userDto.getAdministratorFlag());
+			st.setInt(6, userDto.getUserId());
+			st.executeUpdate();
+			
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
+				val.setStatus("User updated successfully");
+				val.setVerified(true);
+			} else {
+				val.setStatus("Failed to update the user");
+			}
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
+		}
+		return val;
+	}
+
+	/**
+	 * @param userId
+	 * @param userStatus
+	 * @return Validator with status true upon successful update, false otherwise
+	 * @author Hirosh Wickramasuriya
+	 */
+	public Validator editUserStatus(int userId, UserStatus userStatus){
+		Validator val = new Validator();
+		PreparedStatement st = null;
+		try {
+			String query = "UPDATE users  SET status = ? WHERE user_id=?";
+				
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setInt(1, userStatus.getCode());
+			st.setInt(2, userId);
+			
+			st.executeUpdate();
+			
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
+				val.setStatus("User status updated successfully");
+				val.setVerified(true);
+			} else {
+				val.setStatus("Failed to update the user status");
+			}
+			
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
+
+		}
+		return val;
+	}
+	
+	/**
+	 * @param userId
+	 * @param userType
+	 * @return Validator with status true upon successful update, false otherwise
+	 * @author Hirosh Wickramasuriya
+	 */
+	public Validator editUserType(int userId, int userType) {
+		Validator val = new Validator();
+		PreparedStatement st = null;
+		try {
+			String query = "UPDATE users  SET admin = ? WHERE user_id=?";
+				
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setInt(1, userType);
+			st.setInt(2, userId);
+			
+			st.executeUpdate();
+			
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
+				val.setStatus("User type updated successfully");
+				val.setVerified(true);
+			} else {
+				val.setStatus("Failed to update the user type");
+			}
+			
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
+
+		}
+		return val;
+	}
 }
