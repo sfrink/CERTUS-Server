@@ -426,6 +426,72 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * @param status
+	 *            (ElectionStatus) - specific status to be searched
+	 * @return Validator : ArrayList<ElectionDto> - List of elections that
+	 *         does not match to the status
+	 * @author Hirosh Wickramasuriya
+	 */
+	public Validator selectElectionsNotInStatus(ElectionStatus electionStatus) {
+		Validator validator = new Validator();
+		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
+
+		PreparedStatement st = null;
+
+		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime,"
+				+ " status, s.code, s.description, owner_id, candidates_string "
+				+ " FROM election e"
+				+ " INNER JOIN status_election s "
+				+ " ON (e.status = s.status_id) "
+				+ " WHERE status <> ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, electionStatus.getCode());
+
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+
+				int electionId = res.getInt(1);
+				String electionName = res.getString(2);
+				String electionDescription = res.getString(3);
+				Timestamp startDatetime = res.getTimestamp(4);
+				Timestamp closeDatetime = res.getTimestamp(5);
+				int statusId = res.getInt(6);
+				String statusCode = res.getString(7);
+				String statusDescription = res.getString(8);
+				int ownerId = res.getInt(9);
+				String candidatesListString = res.getString(10);
+				
+				ElectionDto electionDto = new ElectionDto();
+				electionDto.setElectionId(electionId);
+				electionDto.setElectionName(electionName);
+				electionDto.setElectionDescription(electionDescription);
+				electionDto.setStartDatetime(startDatetime);
+				electionDto.setCloseDatetime(closeDatetime);
+				electionDto.setStatus(statusId);
+				electionDto.setStatusCode(statusCode);
+				electionDto.setStatusDescription(statusDescription);
+				electionDto.setOwnerId(ownerId);
+				electionDto.setCandidatesListString(candidatesListString);
+
+				elections.add(electionDto);
+			}
+			validator.setVerified(true);
+			validator.setObject(elections);
+			validator.setStatus("Successfully selected");
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select Failed.");
+		}
+
+		return validator;
+
+	}
+	/**
 	 * @param electionOwnerId
 	 *            (int) - user_id of the user who owns this election
 	 * @param status
@@ -1032,29 +1098,11 @@ public class DatabaseConnector
 			if (vElection.isVerified()) {
 				// remove if there are any candidates already for this election
 				deleteCandidates( electionInDb.getElectionId() );
-				String candidateListString = electionInDb.getCandidatesListString();
+				
 				
 				// get the list of candidates 
-				String[] candidateNames = candidateListString.split(newLine);
-				int displayOrder = 1;
-				boolean status = true;
-				for (String candidateName : candidateNames) {
-					// add each candidate to this election
-					CandidateDto candidateDto = new CandidateDto();
-					candidateDto.setCandidateName(candidateName);
-					candidateDto.setDisplayOrder(displayOrder);
-					candidateDto.setElectionId(electionId);
-					
-					Validator vCandiateInserted = addCandidate(candidateDto);
-					
-					val.setStatus(val.getStatus() + newLine + vCandiateInserted.getStatus());
-					status &= vCandiateInserted.isVerified();
-					
-					displayOrder++;
-				}
-				val.setVerified(status);
-				if (status) {
-					// Set the status of the election to OPEN
+				Validator vAddCandidates = addCandidates(electionId, electionInDb.getCandidatesListString());
+				if (vAddCandidates.isVerified()) {
 					Validator vElectionStatusNew = editElectionStatus(electionId, ElectionStatus.OPEN);
 					if (vElectionStatusNew.isVerified()) {
 						val.setVerified(true); 
@@ -1062,6 +1110,8 @@ public class DatabaseConnector
 					} else {
 						val = vElectionStatusNew;
 					}
+				} else {
+					val = vAddCandidates;
 				}
 			} else {
 				val.setStatus(vElection.getStatus());
@@ -1071,6 +1121,38 @@ public class DatabaseConnector
 		}
 		return val;
 	}
+	
+	private Validator addCandidates(int electionId, String candidatesListString)
+	{
+		Validator val = new Validator();
+		
+		// get the list of candidates 
+		String[] candidateNames = candidatesListString.split(newLine);
+		int displayOrder = 1;
+		boolean status = true;
+		for (String candidateName : candidateNames) {
+			// add each candidate to this election
+			CandidateDto candidateDto = new CandidateDto();
+			candidateDto.setCandidateName(candidateName);
+			candidateDto.setDisplayOrder(displayOrder);
+			candidateDto.setElectionId(electionId);
+			
+			Validator vCandiateInserted = addCandidate(candidateDto);
+			
+			val.setStatus(val.getStatus() + newLine + vCandiateInserted.getStatus());
+			status &= vCandiateInserted.isVerified();
+			
+			displayOrder++;
+		}
+		val.setVerified(status);
+		
+		if (status) {
+			val.setVerified(true);
+			val.setStatus("Candidates have been added to the election");
+		}
+		return val;
+	}
+	
 	/**
 	 * @param candidateDto
 	 *            - candidate object
