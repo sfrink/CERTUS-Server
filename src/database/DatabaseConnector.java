@@ -2124,7 +2124,7 @@ public class DatabaseConnector
 
 	/**
 	 * @param userId
-	 * @param userStatus
+	 * @param userStatus - UserStatus enumeration value
 	 * @return Validator with status true upon successful update, false otherwise
 	 * @author Hirosh Wickramasuriya
 	 */
