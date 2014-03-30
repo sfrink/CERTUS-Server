@@ -556,6 +556,7 @@ public class DatabaseConnector
 		return validator;
 
 	}
+	
 
 	/**
 	 * @param election_owner_id
