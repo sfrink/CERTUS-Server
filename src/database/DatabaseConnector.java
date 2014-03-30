@@ -648,7 +648,7 @@ public class DatabaseConnector
 				+ " ON (e.status = s.status_id) "
 				+ " WHERE owner_id = ? "
 				+ " AND status <> " + ElectionStatus.DELETED.getCode()
-				+ " ORDER BY election_id";
+				+ " ORDER BY status, election_id";
 
 		try {
 			st = this.con.prepareStatement(query);
