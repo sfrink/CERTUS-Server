@@ -2157,38 +2157,5 @@ public class DatabaseConnector
 		return val;
 	}
 	
-	/**
-	 * @param userId
-	 * @param userType
-	 * @return Validator with status true upon successful update, false otherwise
-	 * @author Hirosh Wickramasuriya
-	 */
-	public Validator editUserType(int userId, int userType) {
-		Validator val = new Validator();
-		PreparedStatement st = null;
-		try {
-			String query = "UPDATE users  SET admin = ? WHERE user_id=?";
-				
-			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			st.setInt(1, userType);
-			st.setInt(2, userId);
-			
-			st.executeUpdate();
-			
-			int updateCount = st.getUpdateCount();
-			if (updateCount > 0) {
-				val.setStatus("User type updated successfully");
-				val.setVerified(true);
-			} else {
-				val.setStatus("Failed to update the user type");
-			}
-			
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
-
-		}
-		return val;
-	}
+	
 }

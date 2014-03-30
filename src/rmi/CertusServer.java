@@ -104,11 +104,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator editUserStatus(int userId, UserStatus userStatus) throws RemoteException {
     	return dbc.editUserStatus(userId, userStatus);
     }
-    
-    public Validator editUserType(int userId, int userType) throws RemoteException {
-    	return dbc.editUserType(userId, userType);
-    }
-    
+  
     
     public String sayHello(String name) {
 		System.out.println("Request received from the client: " + name);
