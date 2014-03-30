@@ -576,7 +576,7 @@ public class DatabaseConnector
 				+ " FROM election e" 
 				+ " INNER JOIN status_election s " 
 				+ " ON (e.status = s.status_id)"
-				+ " ORDER BY  status, election_id";
+				+ " ORDER BY  election_id";
 
 		try {
 			st = this.con.prepareStatement(query);
