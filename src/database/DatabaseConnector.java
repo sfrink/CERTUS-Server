@@ -2037,7 +2037,7 @@ public class DatabaseConnector
 	
 	
 	/**
-	 * @return - Validator with ArrayList<UserDto> 
+	 * @return - Validator with ArrayList<UserDto>  all the users in the system
 	 * @author Hirosh Wickramasuriya
 	 */
 	public Validator selectAllUsers()
