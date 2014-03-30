@@ -121,13 +121,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
-    public Validator addElectionWithCandidates(ElectionDto electionDto)throws RemoteException {
-    	return dbc.addElectionWithCandidates(electionDto);
-    }
-    
-    @Override
-    public Validator editElectionWithCandidates(ElectionDto electionDto) throws RemoteException{
-    	return dbc.editElectionWithCandidates(electionDto);
+    public Validator addElection(ElectionDto electionDto)throws RemoteException {
+    	return dbc.addElection(electionDto);
     }
 
     @Override
