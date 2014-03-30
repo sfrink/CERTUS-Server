@@ -376,7 +376,8 @@ public class DatabaseConnector
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
-				+ " WHERE status = ?";
+				+ " WHERE status = ?"
+				+ " ORDER BY election_id";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -443,7 +444,8 @@ public class DatabaseConnector
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
-				+ " WHERE status <> ?";
+				+ " WHERE status <> ?"
+				+ " ORDER BY election_id";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -511,7 +513,8 @@ public class DatabaseConnector
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
-				+ " WHERE owner_id = ?" + " AND status = ?";
+				+ " WHERE owner_id = ?" + " AND status = ?"
+				+ " ORDER BY election_id";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -576,7 +579,7 @@ public class DatabaseConnector
 				+ " FROM election e" 
 				+ " INNER JOIN status_election s " 
 				+ " ON (e.status = s.status_id)"
-				+ " ORDER BY  status, election_id";
+				+ " ORDER BY  election_id";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -643,7 +646,8 @@ public class DatabaseConnector
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
-				+ " WHERE owner_id = ?";
+				+ " WHERE owner_id = ?"
+				+ " ORDER BY election_id";
 
 		try {
 			st = this.con.prepareStatement(query);
