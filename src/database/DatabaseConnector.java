@@ -631,7 +631,7 @@ public class DatabaseConnector
 	/**
 	 * @param election_owner_id
 	 *            (int) - user_id of the user who owns elections
-	 * @return Validator : ArrayList<ElectionDto> - List of all the elections
+	 * @return Validator : ArrayList<ElectionDto> - List of all the elections (not disabled only)
 	 *         owned by the specific user (regardless of status)
 	 * @author Hirosh Wickramasuriya
 	 */
@@ -646,7 +646,8 @@ public class DatabaseConnector
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
-				+ " WHERE owner_id = ?"
+				+ " WHERE owner_id = ? "
+				+ " AND status <> " + ElectionStatus.DELETED.getCode()
 				+ " ORDER BY election_id";
 
 		try {
