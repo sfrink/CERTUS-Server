@@ -44,7 +44,8 @@ public class DatabaseConnector
 	private static String	dbPassword;
 	private static String	dbName;
 	private Connection		con;
-
+	private static String 	newLine = System.getProperty("line.separator");
+	
 	public DatabaseConnector()
 	{
 		Connection con = null;
@@ -370,7 +371,7 @@ public class DatabaseConnector
 
 		PreparedStatement st = null;
 
-		String query = "SELECT election_id, election_name, description, start_datetime, close_datetime,"
+		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime,"
 				+ " status, s.code, s.description, owner_id, candidates_string "
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
@@ -439,7 +440,7 @@ public class DatabaseConnector
 
 		PreparedStatement st = null;
 
-		String query = "SELECT election_id, election_name, description, start_datetime, close_datetime, "
+		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime, "
 				+ " status, s.code, s.description, owner_id, candidates_string "
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
@@ -504,7 +505,7 @@ public class DatabaseConnector
 
 		PreparedStatement st = null;
 
-		String query = "SELECT election_id, election_name, description, start_datetime, close_datetime,"
+		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime,"
 				+ " status, s.code, s.description, owner_id, candidates_string "
 				+ " FROM election e" 
 				+ " INNER JOIN status_election s " 
@@ -569,7 +570,7 @@ public class DatabaseConnector
 
 		PreparedStatement st = null;
 
-		String query = "SELECT election_id, election_name, description, start_datetime, close_datetime,"
+		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime,"
 				+ " status, s.code, s.description, owner_id, candidates_string"
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
@@ -943,7 +944,7 @@ public class DatabaseConnector
 	 * @return Validator - status of the candidate insert operation
 	 * @author Hirosh Wickramasuriya
 	 */
-	private Validator addCandidateToElection(CandidateDto candidateDto, int election_id) {
+	private Validator addCandidate(CandidateDto candidateDto) {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		Validator val = new Validator();
@@ -951,11 +952,12 @@ public class DatabaseConnector
 
 		try {
 
-			String query = "INSERT INTO candidate (candidate_name, election_id, status) VALUES (?,?,?)";
+			String query = "INSERT INTO candidate (candidate_name, election_id, status, display_order) VALUES (?,?,?,?)";
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setString(1, candidateDto.getCandidateName());
-			st.setInt(2, election_id);
+			st.setInt(2, candidateDto.getElectionId());
 			st.setInt(3, Status.ENABLED.getCode());
+			st.setInt(4, candidateDto.getDisplayOrder());
 
 			// run the query and get new candidate id
 			st.executeUpdate();
@@ -987,59 +989,88 @@ public class DatabaseConnector
 	 * @return validator - status of election update operation
 	 * @author Hirosh / Dmitry
 	 */
-	public Validator editElectionWithCandidates(ElectionDto electionDto) {
+	public Validator editElectionWithCandidatesString(ElectionDto electionDto) {
 
 		Validator out = new Validator();
-
-		String delimiter = "\n";
 
 		// 0. check the election status.
 		ElectionDto vElectionCurrent = (ElectionDto) selectElection(electionDto.getElectionId()).getObject();
 		if (vElectionCurrent.getStatus() == ElectionStatus.NEW.getCode())
 		{
-			// 1. Validate e
+			// 1. Validate Election
 			Validator vElection = electionDto.Validate();
 			if (vElection.isVerified()) {
 				// 2. Update the election details
-				Validator vElectionUpdated = editElection(electionDto);
-
-				if (vElectionUpdated.isVerified()) {
-					// election updated, then update the candidates
-					out = vElectionUpdated;
-					for (CandidateDto candidateDto : electionDto.getCandidateList()) {
-						if (candidateDto.getCandidateId() > 0) {
-							// candidate exists => update the candidate
-							Validator vCandidateUpdated = editCandidate(candidateDto);
-
-							out.setStatus(out.getStatus() + delimiter + vCandidateUpdated.getStatus());
-							out.setVerified(out.isVerified() && vCandidateUpdated.isVerified());
-						} else {
-							// candidate does not exist => insert the candidate
-							Validator vCandiateInserted = addCandidateToElection(candidateDto,
-									electionDto.getElectionId());
-
-							out.setStatus(out.getStatus() + delimiter + vCandiateInserted.getStatus());
-							out.setVerified(out.isVerified() && vCandiateInserted.isVerified());
-						}
-					}
-
-				} else {
-					out = vElectionUpdated;
-				}
-
+				out = editElection(electionDto);
 			} else {
-				out.setVerified(false);
-				out.setStatus(vElection.getStatus());
+				out = vElection;
 			}
-		}
-		else
-		{
-			out.setVerified(false);
+		} else { 
 			out.setStatus("Election status is " + vElectionCurrent.getStatusCode() + ", does not allow to modify.");
 		}
 		return out;
 	}
 
+	/**
+	 * @param electionDto
+	 *            - election data object
+	 * @return validator - status of election update operation
+	 * @author Hirosh / Dmitry
+	 */
+	public Validator openElectionAndPopulateCandidates(int electionId) {
+
+		Validator val = new Validator();
+		
+		Validator vElectionStatus = compareElectionStatus(electionId, ElectionStatus.NEW);
+		
+		// Retrieve the election object in the db
+		ElectionDto electionInDb = (ElectionDto)vElectionStatus.getObject();
+		if (vElectionStatus.isVerified()) {
+			
+			// 1. Validate the election, so that all the candidates get validated
+			Validator vElection = electionInDb.Validate();
+			if (vElection.isVerified()) {
+				// remove if there are any candidates already for this election
+				deleteCandidates( electionInDb.getElectionId() );
+				String candidateListString = electionInDb.getCandidatesListString();
+				
+				// get the list of candidates 
+				String[] candidateNames = candidateListString.split(newLine);
+				int displayOrder = 1;
+				boolean status = true;
+				for (String candidateName : candidateNames) {
+					// add each candidate to this election
+					CandidateDto candidateDto = new CandidateDto();
+					candidateDto.setCandidateName(candidateName);
+					candidateDto.setDisplayOrder(displayOrder);
+					candidateDto.setElectionId(electionId);
+					
+					Validator vCandiateInserted = addCandidate(candidateDto);
+					
+					val.setStatus(val.getStatus() + newLine + vCandiateInserted.getStatus());
+					status &= vCandiateInserted.isVerified();
+					
+					displayOrder++;
+				}
+				val.setVerified(status);
+				if (status) {
+					// Set the status of the election to OPEN
+					Validator vElectionStatusNew = editElectionStatus(electionId, ElectionStatus.OPEN);
+					if (vElectionStatusNew.isVerified()) {
+						val.setVerified(true); 
+						val.setStatus("Election has been opened.");
+					} else {
+						val = vElectionStatusNew;
+					}
+				}
+			} else {
+				val.setStatus(vElection.getStatus());
+			}
+		} else {
+			val.setStatus("Election status is " + electionInDb.getStatusCode() + ", does not allow to modify.");
+		}
+		return val;
+	}
 	/**
 	 * @param candidateDto
 	 *            - candidate object
@@ -1111,6 +1142,38 @@ public class DatabaseConnector
 		}
 	}
 
+	/**
+	 * @param electionId 	- election identification number
+	 * @return boolean 		- true : if the election is deleted successfully, else false
+	 * @author Hirosh Wickramasuriya
+	 */
+	private boolean deleteCandidates(int electionId) {
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		boolean status = false;
+
+		try {
+			String query = "DELETE FROM dandidate WHERE election_id = ?";
+
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setInt(1, electionId);
+
+			// update query
+			if (st.executeUpdate() < 0) {
+				// delete failed
+
+			} else {
+				// delete= sucessful
+				status = true;
+			}
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		return status;
+	}
+	
 	/*	*//**
 	 * @param electionId
 	 *            - the election to open Add candidates to an election
@@ -1192,17 +1255,23 @@ public class DatabaseConnector
 	 *            - the election to edit Edit an election
 	 * @author Steven Frink
 	 */
-	private Validator editElection(ElectionDto electionDto) {
+	public Validator editElection(ElectionDto electionDto) {
 		PreparedStatement st = null;
 
 		Validator val = new Validator();
 		try {
-			String query = "UPDATE election SET election_name=? WHERE election_id=?";
+			String query = "UPDATE election SET election_name=?, "
+					+ " description = ?, "
+					+ " candidates_string = ? "
+					+ " WHERE election_id=?";
 
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setString(1, electionDto.getElectionName());
-			st.setInt(2, electionDto.getElectionId());
+			st.setString(2, electionDto.getElectionDescription());
+			st.setString(3, electionDto.getCandidatesListString());
+			st.setInt(4, electionDto.getElectionId());
 			st.executeUpdate();
+			
 			int updateCount = st.getUpdateCount();
 			if (updateCount > 0) {
 				val.setStatus("Election updated successfully");
@@ -1214,7 +1283,6 @@ public class DatabaseConnector
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
-			val.setVerified(false);
 		}
 
 		return val;
@@ -1642,7 +1710,7 @@ public class DatabaseConnector
 	 * @param ElectionDto		- Election object
 	 * @param electionStatus 	- ElectionStatus enumerated value
 	 * @return Validator 		- the property isVerified() contains whether the given status 
-	 * matches to the status of the given election id
+	 * matches to the status of the given electionDto 
 	 * @author Hirosh Wickramasuriya
 	 */
 	private Validator compareElectionStatus(ElectionDto electionDto, ElectionStatus electionStatus)
@@ -1663,7 +1731,7 @@ public class DatabaseConnector
 	 * @param electionId		- Election identification number
 	 * @param electionStatus 	- ElectionStatus enumerated value
 	 * @return Validator 		- the property isVerified() contains whether the given status 
-	 * matches to the status of the given election id
+	 * matches to the status recorded in the database for the given election id
 	 * @author Hirosh Wickramasuriya
 	 */
 	private Validator compareElectionStatus(int electionId, ElectionStatus electionStatus)
