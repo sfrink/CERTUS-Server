@@ -575,7 +575,8 @@ public class DatabaseConnector
 				+ " status, s.code, s.description, owner_id, candidates_string "
 				+ " FROM election e" 
 				+ " INNER JOIN status_election s " 
-				+ " ON (e.status = s.status_id) ";
+				+ " ON (e.status = s.status_id)"
+				+ " ORDER BY  status, election_id";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -1127,7 +1128,7 @@ public class DatabaseConnector
 	{
 		Validator val = new Validator();
 		
-		// get the list of candidates 
+		// split the list of candidates by new line into an array of string
 		String[] candidateNames = candidatesListString.split(newLine);
 		int displayOrder = 1;
 		boolean status = true;
@@ -1138,6 +1139,7 @@ public class DatabaseConnector
 			candidateDto.setDisplayOrder(displayOrder);
 			candidateDto.setElectionId(electionId);
 			
+			// add candidate to the election
 			Validator vCandiateInserted = addCandidate(candidateDto);
 			
 			val.setStatus(val.getStatus() + newLine + vCandiateInserted.getStatus());
