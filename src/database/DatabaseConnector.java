@@ -1153,7 +1153,7 @@ public class DatabaseConnector
 		boolean status = false;
 
 		try {
-			String query = "DELETE FROM dandidate WHERE election_id = ?";
+			String query = "DELETE FROM candidate WHERE election_id = ?";
 
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setInt(1, electionId);
