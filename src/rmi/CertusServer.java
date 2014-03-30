@@ -106,6 +106,11 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
+    public Validator selectElectionsNotInStatus(ElectionStatus electionStatus) throws RemoteException{
+    	return dbc.selectElectionsNotInStatus(electionStatus);
+    }
+    
+    @Override
     public Validator selectElections() throws RemoteException{
     	return dbc.selectElections();
     }
@@ -125,6 +130,12 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	return dbc.addElection(electionDto);
     }
 
+    @Override
+    public Validator editElection(ElectionDto electionDto)throws RemoteException {
+    	return dbc.editElection(electionDto);
+    }
+
+    
     @Override
     public Validator editElectionStatus(int electionId, ElectionStatus electionStatus) throws RemoteException{   	
     	return dbc.editElectionStatus(electionId, electionStatus);
