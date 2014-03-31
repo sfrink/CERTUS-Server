@@ -2047,8 +2047,8 @@ public class DatabaseConnector
 		ArrayList<UserDto> users = new ArrayList<UserDto>();
 		PreparedStatement st = null;
 
-		String query = "SELECT user_id, first_name, last_name, email, activation_code "
-				+ " u.status, s.description "
+		String query = "SELECT user_id, first_name, last_name, email "
+				+ " , u.status, s.description "
 				+ " FROM users u"
 				+ " INNER JOIN status_user s"
 				+ " ON (u.status = s.status_id)"
@@ -2065,8 +2065,8 @@ public class DatabaseConnector
 				userDto.setFirstName(res.getString(2));
 				userDto.setLastName(res.getString(3));
 				userDto.setEmail(res.getString(4));
-				userDto.setStatus(res.getInt(6));
-				userDto.setStatusDescription(res.getString(7));
+				userDto.setStatus(res.getInt(5));
+				userDto.setStatusDescription(res.getString(6));
 				users.add(userDto);
 			}
 			val.setStatus("Retrieved Users");
