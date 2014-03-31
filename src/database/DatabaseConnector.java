@@ -2083,7 +2083,7 @@ public class DatabaseConnector
 	
 	/**
 	 * @param userDto
-	 * @return Validator with status true upon successful update, false otherwise
+	 * @return with the verified status true upon successful update, false otherwise
 	 * @author Hirosh Wickramasuriya
 	 */
 	public Validator editUser(UserDto userDto) {
