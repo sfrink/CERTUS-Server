@@ -2095,16 +2095,14 @@ public class DatabaseConnector
 					+ " last_name = ?,"
 					+ " email = ?,"
 					+ " status = ? "
-					+ " admin = ?"
 					+ " WHERE user_id=?";
 
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setString(1, userDto.getFirstName());
 			st.setString(2, userDto.getLastName());
 			st.setString(3, userDto.getEmail());
-			st.setInt(4, userDto.getStatus());
-			st.setInt(5, userDto.getAdministratorFlag());
-			st.setInt(6, userDto.getUserId());
+			st.setInt(4, userDto.getAdministratorFlag());
+			st.setInt(5, userDto.getUserId());
 			st.executeUpdate();
 			
 			int updateCount = st.getUpdateCount();
