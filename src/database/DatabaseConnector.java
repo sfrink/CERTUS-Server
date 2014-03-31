@@ -2101,7 +2101,7 @@ public class DatabaseConnector
 			st.setString(1, userDto.getFirstName());
 			st.setString(2, userDto.getLastName());
 			st.setString(3, userDto.getEmail());
-			st.setInt(4, userDto.getAdministratorFlag());
+			st.setInt(4, userDto.getStatus());
 			st.setInt(5, userDto.getUserId());
 			st.executeUpdate();
 			
