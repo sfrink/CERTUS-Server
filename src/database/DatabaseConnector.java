@@ -344,10 +344,14 @@ public class DatabaseConnector
 				
 				Validator vCandidates = selectCandidatesOfElection(electionId);
 				electionDto.setCandidateList( (ArrayList<CandidateDto>) vCandidates.getObject());
+				
+				validator.setVerified(true);
+				validator.setObject(electionDto);
+				validator.setStatus("Select successful");
+			} else {
+				validator.setStatus("Election not found");
 			}
-			validator.setVerified(true);
-			validator.setObject(electionDto);
-			validator.setStatus("Select successful");
+			
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -780,6 +784,8 @@ public class DatabaseConnector
 				validator.setVerified(true);
 				validator.setObject(candidateDto);
 				validator.setStatus("Successfully selected");
+			} else {
+				validator.setStatus("Candidate not found");
 			}
 
 		} catch (SQLException ex) {
@@ -2072,6 +2078,55 @@ public class DatabaseConnector
 			val.setStatus("Retrieved Users");
 			val.setVerified(true);
 			val.setObject(users);
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("Select failed");
+		}
+
+		return val;
+	}
+	
+	/**
+	 * @param - userId - user identificaiton number 
+	 * @return - Validator with UserDto containing user information for the given user id
+	 * @author Hirosh Wickramasuriya
+	 */
+	public Validator selectUser(int userId)
+	{
+		Validator val = new Validator();
+
+		UserDto userDto = new UserDto();
+		PreparedStatement st = null;
+
+		String query = "SELECT user_id, first_name, last_name, email "
+				+ " , u.status, s.description "
+				+ " FROM users u"
+				+ " INNER JOIN status_user s"
+				+ " ON (u.status = s.status_id)"
+				+ " WHERE user_id = ?";
+		
+				
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, userId);
+			
+			ResultSet res = st.executeQuery();
+
+			if (res.next()) {
+				userDto.setUserId(res.getInt(1));
+				userDto.setFirstName(res.getString(2));
+				userDto.setLastName(res.getString(3));
+				userDto.setEmail(res.getString(4));
+				userDto.setStatus(res.getInt(5));
+				userDto.setStatusDescription(res.getString(6));
+				
+				val.setStatus("Retrieved user information");
+				val.setVerified(true);
+				val.setObject(userDto);
+			} else {
+				val.setStatus("User not found ");
+			}
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);

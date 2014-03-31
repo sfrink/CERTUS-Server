@@ -93,6 +93,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	return dbc.addUser(userDto); 
     }
     
+    public Validator selectUser(int userId) throws RemoteException {
+    	return dbc.selectUser(userId);
+    }
+    
     public Validator selectAllUsers() throws RemoteException {
     	return dbc.selectAllUsers();
     }
