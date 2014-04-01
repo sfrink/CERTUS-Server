@@ -1215,29 +1215,29 @@ public class DatabaseConnector
 
 	public Validator editCandidateStatus(CandidateDto cand) {
 		PreparedStatement st = null;
-		InputValidation iv = new InputValidation();
+		//InputValidation iv = new InputValidation();
 		Validator val = new Validator();
 		try {
-			val = iv.validateInt(cand.getStatus(), "Candidate Status");
+			//val = iv.validateInt(cand.getStatus(), "Candidate Status");
 			if (val.isVerified()) {
 				String query = "UPDATE candidate SET status=? WHERE candidate_id=?";
 				st = this.con.prepareStatement(query);
 				st.setInt(1, cand.getStatus());
 				st.setInt(2, cand.getCandidateId());
+				
 				st.execute();
+				
+				val.setVerified(true);
 				val.setStatus("Candidate status updated");
-				return val;
 			} else {
 				val.setStatus("Status failed to verify");
-				return val;
 			}
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
-			val.setVerified(false);
-			return val;
 		}
+		return val;
 	}
 
 	/**
