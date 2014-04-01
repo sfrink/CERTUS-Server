@@ -1335,7 +1335,7 @@ public class DatabaseConnector
 			
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setInt(1, electionStatus.getCode());
-			st.setInt(1, electionId);
+			st.setInt(2, electionId);
 			
 			st.executeUpdate();
 			
