@@ -1222,7 +1222,8 @@ public class DatabaseConnector
 			if (val.isVerified()) {
 				String query = "UPDATE candidate SET status=? WHERE candidate_id=?";
 				st = this.con.prepareStatement(query);
-				st.setInt(1, cand.getCandidateId());
+				st.setInt(1, cand.getStatus());
+				st.setInt(2, cand.getCandidateId());
 				st.execute();
 				val.setStatus("Candidate status updated");
 				return val;
