@@ -1856,8 +1856,8 @@ public class DatabaseConnector
 	
 	
 	/**
-	 * @param candidateDto
-	 * @return
+	 * @param candidateDto - candiate object to be added to the results table
+	 * @return id of the inserted result record
 	 * @author Hirosh Wickramasuriya
 	 */
 	private int addResult(CandidateDto candidateDto) {
@@ -1946,6 +1946,8 @@ public class DatabaseConnector
 						+ " ON (r.candidate_id = c.candidate_id)"
 						+ " WHERE r.election_id = ?";
 
+				int maxVote = 0;
+				String winner = "";
 				st = this.con.prepareStatement(query);
 				st.setInt(1, electionId);
 
@@ -1960,6 +1962,13 @@ public class DatabaseConnector
 					int resDisplayOrder = res.getInt(5);
 					int resStatus = res.getInt(6);
 
+					if (resVoteCount > maxVote) {
+						maxVote = resVoteCount;
+						winner = resCandiateName;
+					} else if ( (resVoteCount == maxVote)  && (resVoteCount >0)) {
+						winner += resCandiateName + newLine;
+						
+					}
 					// populate candidates list
 					CandidateDto candidateDto = new CandidateDto();
 					candidateDto.setCandidateId(resCandidateId);
@@ -1972,8 +1981,8 @@ public class DatabaseConnector
 					candidates.add(candidateDto);
 				}
 
-				electionDto.setCandidateList(candidates); // attach candidates list to the election
-
+				electionDto.setCandidateList(candidates); 	// attach candidates list to the election
+				electionDto.setWinner(winner);				// sets who the winner is
 				// set the validator
 				val.setVerified(true);
 				val.setObject(electionDto);
