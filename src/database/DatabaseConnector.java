@@ -22,6 +22,7 @@ import server.ConfigurationProperties;
 import server.InputValidator;
 import server.PasswordHasher;
 import server.SecurityValidator;
+import dto.ActionDto;
 import dto.CandidateDto;
 import dto.ElectionDto;
 import dto.ElectionProgressDto;
@@ -2211,5 +2212,135 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	// get user role by the user id:
+	public Validator getUserRoleByID(int userID){
+		
+		Validator val = new Validator();
+		PreparedStatement st = null;
+		
+		try{
+			String query = "SELECT admin from users where (user_id = ?)";
+			
+			st = con.prepareStatement(query);
+			st.setInt(1, userID);
+			ResultSet res = st.executeQuery();
+
+			if (res.next()) {
+				val.setVerified(true);
+				val.setStatus("User found.");
+				val.setObject(res.getInt(1));
+			}else{
+				val.setVerified(false);
+				val.setStatus("User not found.");
+			}
+		}catch (SQLException ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");			
+		}
+		
+		return val;
+	}
 	
+	
+	// check if a user role is permitted to do an action:
+	public Validator checkRoleRight(int roleID, int actionID){
+		
+		Validator val = new Validator();
+		PreparedStatement st = null;
+		
+		try{
+			String query = "SELECT * from role_rights where ((role_id = ? ) && (action_id = ?))";
+			
+			st = con.prepareStatement(query);
+			st.setInt(1, roleID);
+			st.setInt(2, actionID);
+			ResultSet res = st.executeQuery();
+
+			if (res.next()) {
+				val.setVerified(true);
+				val.setStatus("User role is allowed to invoke action.");
+			}else{
+				val.setVerified(false);
+				val.setStatus("User role is not allowed to invoke action.");
+			}
+		}catch (SQLException ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");			
+		}
+		
+		return val;		
+	}
+	
+	
+	//get action id by the method name:
+	public Validator getActionIDbyMethod(String methodName){
+		Validator val = new Validator();
+		PreparedStatement st = null;
+		
+		try{
+			String query = "SELECT action_id from actions where (method_name = ?)";
+			
+			st = con.prepareStatement(query);
+			st.setString(1, methodName);
+			
+			ResultSet res = st.executeQuery();
+
+			if (res.next()) {
+				val.setVerified(true);
+				val.setStatus("Method name found.");
+				val.setObject(res.getInt(1));
+			}else{
+				val.setVerified(false);
+				val.setStatus("Method name is not found.");
+			}
+		}catch (SQLException ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");			
+		}
+		
+		return val;				
+	}
+	
+	//get all the rights allowed for a user role:
+	public Validator getRoleRights(int roleID){
+		Validator val = new Validator();
+		PreparedStatement st = null;
+		ArrayList<ActionDto> rightsListArray = new ArrayList<ActionDto>();
+		
+		
+		try{
+			String query = "SELECT action_id FROM role_rights where (role_id = ?)";
+			
+			st = con.prepareStatement(query);
+			st.setInt(1, roleID);
+			
+			ResultSet res = st.executeQuery();
+
+			
+			while (res.next()){
+				ActionDto action = new ActionDto();
+				action.setActionID(res.getInt(1));
+				rightsListArray.add(action);
+			}
+			
+			if (rightsListArray.size() != 0){
+				val.setVerified(true);
+				val.setStatus("Rights found.");
+				val.setObject(rightsListArray);
+			}else{
+				val.setVerified(false);
+				val.setStatus("No rights found.");
+			}
+			
+		}catch (SQLException ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");			
+		}
+		
+		return val;						
+	}
 }
