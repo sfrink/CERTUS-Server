@@ -1,6 +1,5 @@
 package database;
 
-import java.security.acl.Owner;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,8 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,10 +32,7 @@ import enumeration.Status;
 import enumeration.ElectionStatus;
 import enumeration.UserStatus;
 
-/**
- * @author sulo
- * 
- */
+
 public class DatabaseConnector
 {
 	private static String	dbHost;
@@ -51,8 +46,6 @@ public class DatabaseConnector
 	public DatabaseConnector()
 	{
 		Connection con = null;
-
-		// System.out.println(ConfigurationProperties.dbHost());
 
 		dbHost = ConfigurationProperties.dbHost();
 		dbPort = ConfigurationProperties.dbPort();
@@ -118,73 +111,26 @@ public class DatabaseConnector
 			return result;
 		}
 
-		//InputValidator iv = new InputValidator();
-		//PasswordHasher hasher = new PasswordHasher();
-
 		// get this user limited info from the database
 		UserDto userDto = selectUserByEmailLimited(email);
 
 		String dbHash = userDto.getPassword();
 		String dbSalt = userDto.getSalt();
 		int statusId = userDto.getStatus();
-		// int falseLogins = user.getFalseLogins();
 		int id = userDto.getUserId();
 
-		// 3. check if this user is active
-		// if (statusId != Enumeration.User.USER_STATUSID_ACTIVE) {
-		// result.setVerified(false);
-		// result.setStatus("Error, cannot login, this user account has been locked");
-		// return result;
-		// }
 
 		String plainHash = PasswordHasher.sha512(plainPass, dbSalt);
 
-		// 4. if entered password is correct, return true with welcome message
+		// 3. if entered password is correct, return true with welcome message
 		if (plainHash.equals(dbHash)) {
 
-			// updateDatabaseIntField("USERS", "ID", "FALSELOGINS", id, 0);
-			// unsetActivationCodeAndTempPassword(id);
 			result.setObject(userDto);
 			result.setVerified(true);
 			result.setStatus("Welcome to Certus");
 
-			// LoggerCustom.logLoginActivity(email, "Login Successful");
-
 			return result;
 		} else {
-			// 5. else record the failed login attempt
-			// int newFalseLogins = falseLogins + 1;
-			// updateDatabaseIntField("USERS", "ID", "FALSELOGINS", id,
-			// newFalseLogins);
-			//
-			// // if we reached the max of failed logins, lock the account, sent
-			// an
-			// // email
-			// if (newFalseLogins == Enumeration.User.USER_MAX_LOGIN_ATTEMPTS) {
-			// // lock
-			// updateDatabaseIntField("USERS", "ID", "STATUSID", id,
-			// Enumeration.User.USER_STATUSID_LOCKED);
-			//
-			// // generate activation code
-			// String activationCode = setActivationCode(id);
-			//
-			// // send email with activation code
-			// SendEmail.sendEmailNotification(email,
-			// Enumeration.Strings.ACCOUNT_LOCKED_SUBJECT,
-			// Enumeration.Strings.ACCOUNT_LOCKED_MESSAGE
-			// + activationCode);
-			//
-			// LoggerCustom.logLoginActivity(email, "Account locked");
-			//
-			// result.setVerified(false);
-			// result.setStatus("Error, exceeded the maximum number of login attempts, this user account has been locked");
-			// return result;
-			// } else {
-			// result.setVerified(false);
-			// result.setStatus("Error, the system could not resolve the provided combination of username and password.");
-			// return result;
-			// }
-
 			result.setVerified(false);
 			result.setStatus("Error, the system could not resolve the provided combination of username and password.");
 			return result;
@@ -261,20 +207,7 @@ public class DatabaseConnector
 				String last_name = res.getString(3);
 				String password = res.getString(4);
 				String salt = res.getString(5);
-
 				int statusId = res.getInt(6);
-
-				// String salt = res.getString(2);
-				//
-				// int falseLogins = res.getInt(4);
-				// int id = res.getInt(5);
-				// int roleId = res.getInt(6);
-				// String acticationCode = res.getString(7);
-				// String activationCodeSalt = res.getString(8);
-				// String tempPassword = res.getString(9);
-				// String tempPasswordSalt = res.getString(10);
-				// int firmId = res.getInt(11);
-
 				userDto.setUserId(user_id);
 				userDto.setFirstName(first_name);
 				userDto.setLastName(last_name);
@@ -317,9 +250,7 @@ public class DatabaseConnector
 		try {
 			st = this.con.prepareStatement(query);
 			st.setInt(1, id);
-
 			ResultSet res = st.executeQuery();
-
 			if (res.next()) {
 				int electionId = res.getInt(1);
 				String electionName = res.getString(2);
@@ -872,7 +803,6 @@ public class DatabaseConnector
 			st = this.con.prepareStatement(query);
 			st.setInt(1, electionIdKey);
 			st.setInt(2, candidateStatus.getCode());
-
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
@@ -939,51 +869,6 @@ public class DatabaseConnector
 
 		return newId;
 	}
-
-//	/**
-//	 * @param name
-//	 *            - election name Add new election to db
-//	 * @author Steven Frink
-//	 */
-//	public Validator addElectionWithCandidates(ElectionDto electionDto) {
-//
-//		Validator out = new Validator();
-//		// Validate the election
-//		Validator vElection = electionDto.Validate();
-//		Validator vCandidates = new Validator();
-//
-//		if (vElection.isVerified()) {
-//			// insert election
-//			int electionId = addElection(electionDto);
-//
-//			if (electionId > 0) {
-//				// if insert of elections was successful, insert candidate list
-//				vCandidates = addCandidatesToElection(electionDto.getCandidateList(), electionId);
-//
-//				if (vCandidates.isVerified()) {
-//					// if candidates insert was successful
-//					ArrayList<CandidateDto> candidates = (ArrayList<CandidateDto>) vCandidates.getObject();
-//					electionDto.setElectionId(electionId);
-//					electionDto.setCandidateList(candidates);
-//
-//					out.setVerified(true);
-//					out.setStatus("Election has been successfully inserted");
-//					out.setObject(electionDto);
-//				} else {
-//					out.setVerified(false);
-//					out.setStatus("Candidates insert failed");
-//				}
-//			} else {
-//				out.setVerified(false);
-//				out.setStatus("Election insert failed");
-//			}
-//		} else {
-//			out.setVerified(false);
-//			out.setStatus(vElection.getStatus());
-//		}
-//
-//		return out;
-//	}
 
 	/**
 	 * @param electionDto   - election details
@@ -1168,51 +1053,6 @@ public class DatabaseConnector
 		}
 		return val;
 	}
-	
-	/**
-	 * @param candidateDto
-	 *            - candidate object
-	 * @author Steven Frink
-	 */
-	private Validator editCandidate(CandidateDto candidateDto) {
-		PreparedStatement st = null;
-		Validator val = new Validator();
-		try {
-
-			Validator vCandidate = candidateDto.Validate();
-			if (vCandidate.isVerified()) {
-
-				// String query =
-				// "UPDATE candidate SET (candidate_name, display_order)=(?,?) WHERE candidate_id=?";
-				String query = "UPDATE candidate "
-						+ " SET candidate_name = ?, "
-						+ " display_order = ?, "
-						+ " status = ?"
-						+ " WHERE candidate_id = ?";
-				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-
-				st.setString(1, candidateDto.getCandidateName());
-				st.setInt(2, candidateDto.getDisplayOrder());
-				st.setInt(3, candidateDto.getStatus());
-				st.setInt(4, candidateDto.getCandidateId());
-				int updateCount = st.executeUpdate();
-				if (updateCount > 0) {
-					val.setStatus("Candidate updated successfully");
-					val.setVerified(true);
-				} else {
-					val.setStatus("Failed to update candidate");
-				}
-			} else {
-				val = vCandidate;
-			}
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
-			val.setVerified(false);
-		}
-		return val;
-	}
 
 	public Validator editCandidateStatus(CandidateDto cand) {
 		PreparedStatement st = null;
@@ -1248,7 +1088,6 @@ public class DatabaseConnector
 	 */
 	private boolean deleteCandidates(int electionId) {
 		PreparedStatement st = null;
-		ResultSet rs = null;
 		boolean status = false;
 
 		try {
@@ -1272,54 +1111,6 @@ public class DatabaseConnector
 		}
 		return status;
 	}
-	
-	/*	*//**
-	 * @param electionId
-	 *            - the election to open Add candidates to an election
-	 * @author Steven Frink
-	 */
-	/*
-	 * public Validator openElection(int electionId) { PreparedStatement st =
-	 * null; Validator val = new Validator();
-	 * 
-	 * try { String query = "UPDATE election" + " SET status=" +
-	 * ElectionStatus.NEW.getCode() + " WHERE election_id=" + electionId; st =
-	 * this.con.prepareStatement(query); st.execute(); val.setVerified(true);
-	 * val.setStatus("Election opened"); return val; } catch (SQLException ex) {
-	 * Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-	 * lgr.log(Level.WARNING, ex.getMessage(), ex); val.setStatus("SQL Error");
-	 * val.setVerified(false); return val; } }
-	 *//**
-	 * @param electionId
-	 *            - the election to close Close an election
-	 * @author Steven Frink
-	 */
-	/*
-	 * public Validator closeElection(int electionId) { PreparedStatement st =
-	 * null; Validator val = new Validator(); try { String query =
-	 * "UPDATE election" + " SET status=" + ElectionStatus.CLOSED.getCode() +
-	 * " WHERE election_id=" + electionId; st =
-	 * this.con.prepareStatement(query); st.execute(); val.setVerified(true);
-	 * val.setStatus("Election closed"); return val; } catch (SQLException ex) {
-	 * Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-	 * lgr.log(Level.WARNING, ex.getMessage(), ex); val.setVerified(false);
-	 * val.setStatus("SQL Error"); return val; } }
-	 *//**
-	 * @param electionId
-	 *            - the election to delete Delete an election
-	 * @author Steven Frink
-	 */
-	/*
-	 * public Validator deleteElection(int electionId) { PreparedStatement st =
-	 * null; Validator val = new Validator(); try { String query =
-	 * "UPDATE election SET status=7 WHERE election_id=" + electionId; st =
-	 * this.con.prepareStatement(query); st.execute();
-	 * val.setStatus("Election deleted"); val.setVerified(true); return val; }
-	 * catch (SQLException ex) { Logger lgr =
-	 * Logger.getLogger(DatabaseConnector.class.getName());
-	 * lgr.log(Level.WARNING, ex.getMessage(), ex); val.setStatus("SQL Error");
-	 * val.setVerified(false); return val; } }
-	 */
 
 	/**
 	 * @param electionId
@@ -1897,7 +1688,6 @@ public class DatabaseConnector
 	 */
 	private boolean deleteResults(int electionId) {
 		PreparedStatement st = null;
-		ResultSet rs = null;
 		boolean status = false;
 
 		try {
@@ -1929,18 +1719,14 @@ public class DatabaseConnector
 	 */
 	public Validator selectResults(int electionId) {
 		Validator val = new Validator();
-
 		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
-	
 		PreparedStatement st = null;
-
 		Validator vElectionStatus = compareElectionStatus(electionId, ElectionStatus.PUBLISHED);
+		
 		if (vElectionStatus.isVerified()) {
 			ElectionDto electionDto = (ElectionDto)vElectionStatus.getObject();
 			
 			try {
-
-				// get the results
 				String query = "SELECT r.election_id, r.candidate_id, vote_count, candidate_name, display_order, status"
 						+ " FROM results r"
 						+ " INNER JOIN candidate c"
@@ -1948,12 +1734,9 @@ public class DatabaseConnector
 						+ " WHERE r.election_id = ?";
 
 				int maxVote = 0;
-				String winner = "";
 				st = this.con.prepareStatement(query);
 				st.setInt(1, electionId);
-
 				ResultSet res = st.executeQuery();
-
 				
 				while (res.next()) {
 
