@@ -167,4 +167,17 @@ public class Election
 		}
 		
 	}
+	
+	@Test 
+	public void testSelectResults() {
+		int electionId = 9;
+		Validator val = dbc.selectResults(electionId);
+		assertTrue("elections results", val.isVerified());
+		if (val.isVerified()) {
+			ElectionDto results = (ElectionDto) val.getObject();
+			System.out.println(results.toString());
+		}
+		
+	}
+	
 }
