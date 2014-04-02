@@ -2,8 +2,13 @@ package database;
 
 import static org.junit.Assert.*;
 
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Timer;
+
 import org.junit.Test;
 
+import dto.CandidateDto;
 import dto.ElectionDto;
 import dto.ElectionProgressDto;
 import dto.Validator;
@@ -18,7 +23,7 @@ public class Election
 	public void testSelectElection() {
 		//ElectionDto election = new ElectionDto();
 		
-		int electionId = 9;
+		int electionId = 26;
 		Validator val = dbc.selectElection(electionId);
 		assertTrue("select election", val.isVerified());
 		
@@ -99,11 +104,40 @@ public class Election
 		assertTrue("select elections owned by user", val.isVerified());
 	}
 
-	@Test
+	//@Test
 	public void testAddElection() {
 		// ElectionDto election = new ElectionDto();
-		fail("Not implemented since there will be changes to the database.");
+		ElectionDto election = new ElectionDto();
+		
+		int ownerId = 1;
+		
+		election.setElectionName("automated election name");
+		election.setElectionDescription("automated election description");
+		election.setCandidatesListString("automated 1 \nautomated 2");
+		election.setOwnerId(ownerId);
+		Timestamp start = new Timestamp(System.currentTimeMillis());
+		election.setStartDatetime(start);
+		
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(start);
+		calendar.add(Calendar.DAY_OF_WEEK, 7);
+		Timestamp close = new Timestamp(calendar.getTimeInMillis());
+		election.setCloseDatetime(close);
+		
+		//System.out.println(election.toString());
+		
+		Validator val = dbc.addElection(election);
+		assertTrue("add election", val.isVerified());
+		
+		if (!val.isVerified()) {
+			System.out.println("Add election failed :" );
+			System.out.println(val.getStatus());
+		}
+		
+		
 	}
+		
+	
 
 	@Test
 	public void testEditElectionWithCandidatesString() {
@@ -165,7 +199,6 @@ public class Election
 			ElectionProgressDto progress = (ElectionProgressDto) val.getObject();
 			System.out.println(progress.toString());
 		}
-		
 	}
 	
 	@Test 
@@ -176,8 +209,11 @@ public class Election
 		if (val.isVerified()) {
 			ElectionDto results = (ElectionDto) val.getObject();
 			System.out.println(results.toString());
+			
+			for(CandidateDto candidate: results.getCandidateList()) {
+				System.out.println(candidate.toString());
+			}
 		}
-		
 	}
 	
 }

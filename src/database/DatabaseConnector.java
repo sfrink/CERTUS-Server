@@ -1931,7 +1931,7 @@ public class DatabaseConnector
 		Validator val = new Validator();
 
 		ArrayList<CandidateDto> candidates = new ArrayList<CandidateDto>();
-
+	
 		PreparedStatement st = null;
 
 		Validator vElectionStatus = compareElectionStatus(electionId, ElectionStatus.PUBLISHED);
@@ -1954,6 +1954,7 @@ public class DatabaseConnector
 
 				ResultSet res = st.executeQuery();
 
+				
 				while (res.next()) {
 
 					int resElectionId = res.getInt(1);
@@ -1963,13 +1964,6 @@ public class DatabaseConnector
 					int resDisplayOrder = res.getInt(5);
 					int resStatus = res.getInt(6);
 
-					if (resVoteCount > maxVote) {
-						maxVote = resVoteCount;
-						winner = resCandiateName;
-					} else if ( (resVoteCount == maxVote)  && (resVoteCount >0)) {
-						winner += resCandiateName + newLine;
-						
-					}
 					// populate candidates list
 					CandidateDto candidateDto = new CandidateDto();
 					candidateDto.setCandidateId(resCandidateId);
@@ -1978,12 +1972,23 @@ public class DatabaseConnector
 					candidateDto.setDisplayOrder(resDisplayOrder);
 					candidateDto.setVoteCount(resVoteCount);
 					candidateDto.setStatus(resStatus);
-
+					
+					// indicate the winning candidate
+					if (resVoteCount > maxVote) {
+						for (CandidateDto candidate : candidates) {
+							candidate.setWinner(false);
+						}
+						candidateDto.setWinner(true);
+						maxVote = resVoteCount;
+					
+					} else if ( (resVoteCount == maxVote)  && (resVoteCount >0)) {
+						candidateDto.setWinner(true);
+					}
 					candidates.add(candidateDto);
 				}
 
 				electionDto.setCandidateList(candidates); 	// attach candidates list to the election
-				electionDto.setWinner(winner);				// sets who the winner is
+
 				// set the validator
 				val.setVerified(true);
 				val.setObject(electionDto);
@@ -2005,7 +2010,6 @@ public class DatabaseConnector
 	/**
 	 * @param userDto
 	 * @return Validator with the userDto including the primary key assigned by the db.
-	 * @author Hirosh Wickramasuriya
 	 */
 	public Validator addUser(UserDto userDto) {
 		Validator val = new Validator();
