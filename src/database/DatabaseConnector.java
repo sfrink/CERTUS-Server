@@ -255,8 +255,8 @@ public class DatabaseConnector
 				int electionId = res.getInt(1);
 				String electionName = res.getString(2);
 				String electionDescription = res.getString(3);
-				Timestamp startDatetime = res.getTimestamp(4);
-				Timestamp closeDatetime = res.getTimestamp(5);
+				String startDatetime = res.getString(4);
+				String closeDatetime = res.getString(5);
 				int statusId = res.getInt(6);
 				String statusCode = res.getString(7);
 				String statusDescription = res.getString(8);
@@ -327,8 +327,8 @@ public class DatabaseConnector
 				int electionId = res.getInt(1);
 				String electionName = res.getString(2);
 				String electionDescription = res.getString(3);
-				Timestamp startDatetime = res.getTimestamp(4);
-				Timestamp closeDatetime = res.getTimestamp(5);
+				String startDatetime = res.getString(4);
+				String closeDatetime = res.getString(5);
 				int statusId = res.getInt(6);
 				String statusCode = res.getString(7);
 				String statusDescription = res.getString(8);
@@ -395,8 +395,8 @@ public class DatabaseConnector
 				int electionId = res.getInt(1);
 				String electionName = res.getString(2);
 				String electionDescription = res.getString(3);
-				Timestamp startDatetime = res.getTimestamp(4);
-				Timestamp closeDatetime = res.getTimestamp(5);
+				String startDatetime = res.getString(4);
+				String closeDatetime = res.getString(5);
 				int statusId = res.getInt(6);
 				String statusCode = res.getString(7);
 				String statusDescription = res.getString(8);
@@ -451,7 +451,7 @@ public class DatabaseConnector
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
 				+ " WHERE owner_id = ?" + " AND status = ?"
-				+ " ORDER BY election_id";
+				+ " ORDER BY election_id DESC";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -465,8 +465,8 @@ public class DatabaseConnector
 				int electionId = res.getInt(1);
 				String electionName = res.getString(2);
 				String electionDescription = res.getString(3);
-				Timestamp startDatetime = res.getTimestamp(4);
-				Timestamp closeDatetime = res.getTimestamp(5);
+				String startDatetime = res.getString(4);
+				String closeDatetime = res.getString(5);
 				int statusId = res.getInt(6);
 				String statusCode = res.getString(7);
 				String statusDescription = res.getString(8);
@@ -528,8 +528,8 @@ public class DatabaseConnector
 				int electionId = res.getInt(1);
 				String electionName = res.getString(2);
 				String electionDescription = res.getString(3);
-				Timestamp startDatetime = res.getTimestamp(4);
-				Timestamp closeDatetime = res.getTimestamp(5);
+				String startDatetime = res.getString(4);
+				String closeDatetime = res.getString(5);
 				int statusId = res.getInt(6);
 				String statusCode = res.getString(7);
 				String statusDescription = res.getString(8);
@@ -585,7 +585,7 @@ public class DatabaseConnector
 				+ " ON (e.status = s.status_id) "
 				+ " WHERE owner_id = ? "
 				+ " AND status <> " + ElectionStatus.DELETED.getCode()
-				+ " ORDER BY status, election_id";
+				+ " ORDER BY election_id DESC";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -598,8 +598,8 @@ public class DatabaseConnector
 				int electionId = res.getInt(1);
 				String electionName = res.getString(2);
 				String electionDescription = res.getString(3);
-				Timestamp startDatetime = res.getTimestamp(4);
-				Timestamp closeDatetime = res.getTimestamp(5);
+				String startDatetime = res.getString(4);
+				String closeDatetime = res.getString(5);
 				int statusId = res.getInt(6);
 				String statusCode = res.getString(7);
 				String statusDescription = res.getString(8);
@@ -660,8 +660,8 @@ public class DatabaseConnector
 				e.setElectionName(res.getString(2));
 				e.setElectionDescription(res.getString(3));
 				e.setOwnerId(res.getInt(4));
-				e.setStartDatetime(res.getTimestamp(5));
-				e.setCloseDatetime(res.getTimestamp(6));
+				e.setStartDatetime(res.getString(5));
+				e.setCloseDatetime(res.getString(6));
 				
 				elecs.add(e);
 			}
@@ -857,8 +857,8 @@ public class DatabaseConnector
 			st.setInt(3, ElectionStatus.NEW.getCode());
 			st.setInt(4, electionDto.getOwnerId());
 			st.setString(5, electionDto.getCandidatesListString());
-			st.setTimestamp(6, electionDto.getStartDatetime());
-			st.setTimestamp(7, electionDto.getCloseDatetime());
+			st.setString(6, electionDto.getStartDatetime());
+			st.setString(7, electionDto.getCloseDatetime());
 			
 			// update query
 			st.executeUpdate();
@@ -1164,16 +1164,20 @@ public class DatabaseConnector
 
 		Validator val = new Validator();
 		try {
-			String query = "UPDATE election SET election_name=?, "
-					+ " description = ?, "
-					+ " candidates_string = ? "
+			String query = "UPDATE election SET election_name = ? "
+					+ " , description = ? "
+					+ " , candidates_string = ? "
+					+ " , start_datetime = ? "
+					+ " , close_datetime = ? "
 					+ " WHERE election_id=?";
 
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setString(1, electionDto.getElectionName());
 			st.setString(2, electionDto.getElectionDescription());
 			st.setString(3, electionDto.getCandidatesListString());
-			st.setInt(4, electionDto.getElectionId());
+			st.setString(4, electionDto.getStartDatetime());
+			st.setString(5, electionDto.getCloseDatetime());
+			st.setInt(6, electionDto.getElectionId());
 			st.executeUpdate();
 			
 			int updateCount = st.getUpdateCount();

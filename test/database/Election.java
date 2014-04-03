@@ -61,6 +61,14 @@ public class Election
 		}
 		election.setCandidatesListString(testString);
 		
+		
+		testString = "";
+		for (int i=0; i<129; i++) {
+			testString += "a";
+		}
+		election.setStartDatetime(testString);
+		election.setCloseDatetime(testString);
+		
 		val = election.Validate();
 		assertFalse("validate election failure", val.isVerified());
 	}
@@ -104,25 +112,25 @@ public class Election
 		assertTrue("select elections owned by user", val.isVerified());
 	}
 
-	//@Test
+	@Test
 	public void testAddElection() {
 		// ElectionDto election = new ElectionDto();
 		ElectionDto election = new ElectionDto();
 		
 		int ownerId = 1;
 		
-		election.setElectionName("automated election name");
-		election.setElectionDescription("automated election description");
-		election.setCandidatesListString("automated 1 \nautomated 2");
+		election.setElectionName("automated test election name");
+		election.setElectionDescription("automated test election description");
+		election.setCandidatesListString("automated test 1 \nautomated test 2");
 		election.setOwnerId(ownerId);
 		Timestamp start = new Timestamp(System.currentTimeMillis());
-		election.setStartDatetime(start);
+		election.setStartDatetime(start.toString());
 		
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(start);
 		calendar.add(Calendar.DAY_OF_WEEK, 7);
 		Timestamp close = new Timestamp(calendar.getTimeInMillis());
-		election.setCloseDatetime(close);
+		election.setCloseDatetime(close.toString());
 		
 		//System.out.println(election.toString());
 		
