@@ -846,30 +846,36 @@ public class DatabaseConnector
 		int newId = 0;
 
 		try {
-			String query = "INSERT INTO election (election_name, description, status, owner_id, candidates_string) VALUES (?,?,?,?,?)";
-			int status = ElectionStatus.NEW.getCode();
+			String query = "INSERT INTO election "
+					+ " (election_name, description, status, owner_id, candidates_string, start_datetime, close_datetime)"
+					+ " VALUES (?,		?,				?,		?,		?,					?,				?)";
+			
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			
 			st.setString(1, electionDto.getElectionName());
 			st.setString(2,  electionDto.getElectionDescription());
-			st.setInt(3, status);
+			st.setInt(3, ElectionStatus.NEW.getCode());
 			st.setInt(4, electionDto.getOwnerId());
 			st.setString(5, electionDto.getCandidatesListString());
-
+			st.setTimestamp(6, electionDto.getStartDatetime());
+			st.setTimestamp(7, electionDto.getCloseDatetime());
+			
 			// update query
 			st.executeUpdate();
 			// get inserted id
 			rs = st.getGeneratedKeys();
-			rs.next();
-			newId = rs.getInt(1);
+			if (rs.next() ) {
+				newId = rs.getInt(1);
+			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			lgr.log(Level.WARNING, ex.getMessage(), ex);	
 		}
 
 		return newId;
 	}
-
+	
 	/**
 	 * @param electionDto   - election details
 	 * @return Validator 	- with ElectionDto object with primary key assigned by the db, upon successful insert
