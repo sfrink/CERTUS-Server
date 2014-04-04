@@ -16,11 +16,15 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import server.Authoriser;
+import server.ClientSessions;
 import server.ConfigurationProperties;
 import server.SecurityValidator;
 import database.DatabaseConnector;
+import dto.ActionDto;
 import dto.CandidateDto;
 import dto.ElectionDto;
+import dto.RightsListDto;
 import dto.UserDto;
 import dto.Validator;
 import dto.VoteDto;
@@ -34,6 +38,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     private static int PORT;
     private static DatabaseConnector dbc;
     private static SecurityValidator sec;
+    
+    public static Authoriser refMonitor;
+    public static ClientSessions clientSessions = new ClientSessions();
 
     
     public CertusServer() throws Exception {
@@ -46,6 +53,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
     public static void main(String args[]) {
     	
+
     	PORT = Integer.parseInt(ConfigurationProperties.rmiPort());
     	String filePath = ConfigurationProperties.rmiBasePath();
 		System.setProperty("java.security.policy", filePath + ConfigurationProperties.rmiFilePolicy());
@@ -68,8 +76,11 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
 			dbc = new DatabaseConnector();
 			sec = new SecurityValidator();
+			refMonitor = new Authoriser(dbc);
 			
 			System.out.println("Certus Service bound in registry");
+
+			
 		} catch (Exception e) {
 			System.out.println("Certus RMI service exception: " + e.getMessage());
 			e.printStackTrace();
@@ -225,6 +236,12 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator selectResults(int electionId) throws RemoteException { 
     	return dbc.selectResults(electionId);
+    }
+    
+    @Override
+    public boolean isAllowed(String sessionID, String method){
+    	int userID = clientSessions.getSession(sessionID);
+    	return refMonitor.isAllowed(userID, method);
     }
     
     
