@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import server.Authoriser;
-import server.ClientSessions;
+import server.ClientsSessions;
 import server.ConfigurationProperties;
 import server.SecurityValidator;
 import database.DatabaseConnector;
@@ -40,7 +40,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     private static SecurityValidator sec;
     
     public static Authoriser refMonitor;
-    public static ClientSessions clientSessions = new ClientSessions();
+    public static ClientsSessions clientSessions = new ClientsSessions();
 
     
     public CertusServer() throws Exception {

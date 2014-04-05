@@ -3,7 +3,7 @@ package server;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class ClientSessions {
+public class ClientsSessions {
 	
 	private ArrayList<Integer> usersID = new ArrayList<Integer>();
 	private ArrayList<String> sessionsID = new ArrayList<String>();
