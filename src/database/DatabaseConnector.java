@@ -999,22 +999,21 @@ public class DatabaseConnector
 		ElectionDto electionInDb = (ElectionDto)vElectionStatus.getObject();
 		if (vElectionStatus.isVerified()) {
 			
-			// 1. Validate the election, so that all the candidates get validated
+			// Validate the election, so that all the candidates get validated
 			Validator vElection = electionInDb.Validate();
 			if (vElection.isVerified()) {
 				// remove if there are any candidates already for this election
 				deleteCandidates( electionInDb.getElectionId() );
 				
-				
 				// get the list of candidates 
 				Validator vAddCandidates = addCandidates(electionId, electionInDb.getCandidatesListString());
 				if (vAddCandidates.isVerified()) {
-					Validator vElectionStatusNew = editElectionStatus(electionId, ElectionStatus.OPEN);
-					if (vElectionStatusNew.isVerified()) {
+					Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
+					if (vElectionStatusOpen.isVerified()) {
 						val.setVerified(true); 
 						val.setStatus("Election has been opened.");
 					} else {
-						val = vElectionStatusNew;
+						val = vElectionStatusOpen;
 					}
 				} else {
 					val = vAddCandidates;
@@ -1237,6 +1236,9 @@ public class DatabaseConnector
 					}
 
 				} else {
+					voteDto.setVoteSignatureError(true);
+					voteDto.setVoteSignatureErrorMessage("invalid signature for this vote");
+					val.setObject(voteDto);
 					val.setStatus("invalid signature for this vote");
 				}
 			} catch (SQLException ex) {
@@ -1244,13 +1246,11 @@ public class DatabaseConnector
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
 				val.setStatus("SQL Error");
 			}
-
 		} else {
 			val.setStatus("Vote information did not validate");
 		}
 
 		return val;
-
 	}
 
 	/**
