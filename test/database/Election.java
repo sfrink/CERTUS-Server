@@ -13,6 +13,7 @@ import dto.ElectionDto;
 import dto.ElectionProgressDto;
 import dto.Validator;
 import enumeration.ElectionStatus;
+import enumeration.ElectionType;
 
 public class Election
 {
@@ -112,15 +113,15 @@ public class Election
 		assertTrue("select elections owned by user", val.isVerified());
 	}
 
-	@Test
-	public void testAddElection() {
+	//@Test
+	public void testAddPrivateElection() {
 		// ElectionDto election = new ElectionDto();
 		ElectionDto election = new ElectionDto();
 		
 		int ownerId = 1;
 		
-		election.setElectionName("automated test election name");
-		election.setElectionDescription("automated test election description");
+		election.setElectionName("automated test PRIVATE election name");
+		election.setElectionDescription("automated test PRIVATE election description");
 		election.setCandidatesListString("automated test 1 \nautomated test 2");
 		election.setOwnerId(ownerId);
 		Timestamp start = new Timestamp(System.currentTimeMillis());
@@ -132,24 +133,64 @@ public class Election
 		Timestamp close = new Timestamp(calendar.getTimeInMillis());
 		election.setCloseDatetime(close.toString());
 		
-		//System.out.println(election.toString());
+		election.setElectionType(ElectionType.PRIVATE.getCode());
+		//election.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nmygoodness\nhirosh@yahoo.com\nthisisnotemail");
+		election.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nhirosh@yahoo.com");
+		System.out.println(election.toString());
+		
+		System.out.println("::::::::::::::::::::::::::::::::::::");
 		
 		Validator val = dbc.addElection(election);
+		System.out.println("added ? : " + val.isVerified());
+		System.out.println("add status : " + val.getStatus());
+		
+		ElectionDto electionAdd = (ElectionDto)val.getObject();
+		System.out.println(electionAdd.toString());
+		
 		assertTrue("add election", val.isVerified());
-		
-		if (!val.isVerified()) {
-			System.out.println("Add election failed :" );
-			System.out.println(val.getStatus());
-		}
-		
 		
 	}
 		
+	//@Test
+	public void testAddPublicElection() {
+		// ElectionDto election = new ElectionDto();
+		ElectionDto election = new ElectionDto();
+		
+		int ownerId = 1;
+		
+		election.setElectionName("automated test PUBLIC election name");
+		election.setElectionDescription("automated test PUBLIC election description");
+		election.setCandidatesListString("automated test 1 \nautomated test 2");
+		election.setOwnerId(ownerId);
+		Timestamp start = new Timestamp(System.currentTimeMillis());
+		election.setStartDatetime(start.toString());
+		
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(start);
+		calendar.add(Calendar.DAY_OF_WEEK, 7);
+		Timestamp close = new Timestamp(calendar.getTimeInMillis());
+		election.setCloseDatetime(close.toString());
+		
+		election.setElectionType(ElectionType.PUBLIC.getCode());
+		//election.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nmygoodness\nhirosh@yahoo.com\nthisisnotemail");
+		election.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nhirosh@yahoo.com");
+		System.out.println(election.toString());
+		
+		
+		Validator val = dbc.addElection(election);
+		System.out.println("added ? : " + val.isVerified());
+		System.out.println("add status : " + val.getStatus());
+		
+		ElectionDto electionAdd = (ElectionDto)val.getObject();
+		System.out.println(electionAdd.toString());
+		
+		assertTrue("add election", val.isVerified());
+	}
 	
 
 	@Test
 	public void testEditElectionWithCandidatesString() {
-		int electionId = 9;
+		int electionId = 16;
 		int ownerId = 1;
 		Validator val = dbc.selectElection(electionId);
 		if (val.isVerified()){
@@ -161,14 +202,18 @@ public class Election
 			electionNew.setElectionDescription("automated election description");
 			electionNew.setCandidatesListString("automated 1 \nautomated 2");
 			electionNew.setOwnerId(ownerId); 
+			electionNew.setElectionType(ElectionType.PRIVATE.getCode());
+			electionNew.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nhirosh@yahoo.com");
 			
 			//electionNew.setStartDatetime();
 			
 			Validator valEdit = dbc.editElection(electionNew);
+			System.out.println("edit election message : " + valEdit.getStatus());
+			System.out.println("edit election status : " + valEdit.isVerified());
 			assertTrue("edit election", valEdit.isVerified());
 			
-			valEdit = dbc.editElection(election);
-			assertTrue("undo edit election", valEdit.isVerified());
+			//valEdit = dbc.editElection(election);
+			//assertTrue("undo edit election", valEdit.isVerified());
 			
 		} else {
 			assertFalse("select election failed", val.isVerified());
@@ -222,6 +267,20 @@ public class Election
 				System.out.println(candidate.toString());
 			}
 		}
+	}
+	
+	@Test
+	public void testOpenElectionAndPopulateCandidatesIntElectionId() {
+		int electionId = 47;
+		Validator val = dbc.openElectionAndPopulateCandidates(electionId);
+		if (val.isVerified()) {
+			
+			System.out.println("Open Election ::::::::::::::::::");
+			System.out.println(val.getStatus());
+		}
+		
+		
+		assertTrue("elections results", val.isVerified());
 	}
 	
 }
