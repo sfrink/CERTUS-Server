@@ -10,8 +10,8 @@ public class Authoriser {
 	public Authoriser(DatabaseConnector dbCon){
 		this.dbc = dbCon;
 	}
-	
-	//check if a user is allowed to invoke a method:
+
+	//check if a user is allowed to invoke a method (by user id):
 	public boolean isAllowed (int userID, String methodName){
 		boolean allowed = false;
 		
@@ -40,7 +40,7 @@ public class Authoriser {
 		
 		return allowed;
 	}
-
+	
 	//get all the rights for a role:
 	public static Validator getAllRoleRights(int roleID){
 		return dbc.getRoleRights(roleID);
