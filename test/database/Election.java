@@ -13,6 +13,7 @@ import dto.ElectionDto;
 import dto.ElectionProgressDto;
 import dto.Validator;
 import enumeration.ElectionStatus;
+import enumeration.ElectionType;
 
 public class Election
 {
@@ -113,14 +114,14 @@ public class Election
 	}
 
 	@Test
-	public void testAddElection() {
+	public void testAddPrivateElection() {
 		// ElectionDto election = new ElectionDto();
 		ElectionDto election = new ElectionDto();
 		
 		int ownerId = 1;
 		
-		election.setElectionName("automated test election name");
-		election.setElectionDescription("automated test election description");
+		election.setElectionName("automated test PRIVATE election name");
+		election.setElectionDescription("automated test PRIVATE election description");
 		election.setCandidatesListString("automated test 1 \nautomated test 2");
 		election.setOwnerId(ownerId);
 		Timestamp start = new Timestamp(System.currentTimeMillis());
@@ -132,19 +133,59 @@ public class Election
 		Timestamp close = new Timestamp(calendar.getTimeInMillis());
 		election.setCloseDatetime(close.toString());
 		
-		//System.out.println(election.toString());
+		election.setElectionType(ElectionType.PRIVATE.getCode());
+		//election.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nmygoodness\nhirosh@yahoo.com\nthisisnotemail");
+		election.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nhirosh@yahoo.com");
+		System.out.println(election.toString());
+		
+		System.out.println("::::::::::::::::::::::::::::::::::::");
 		
 		Validator val = dbc.addElection(election);
+		System.out.println("added ? : " + val.isVerified());
+		System.out.println("add status : " + val.getStatus());
+		
+		ElectionDto electionAdd = (ElectionDto)val.getObject();
+		System.out.println(electionAdd.toString());
+		
 		assertTrue("add election", val.isVerified());
-		
-		if (!val.isVerified()) {
-			System.out.println("Add election failed :" );
-			System.out.println(val.getStatus());
-		}
-		
 		
 	}
 		
+	@Test
+	public void testAddPublicElection() {
+		// ElectionDto election = new ElectionDto();
+		ElectionDto election = new ElectionDto();
+		
+		int ownerId = 1;
+		
+		election.setElectionName("automated test PUBLIC election name");
+		election.setElectionDescription("automated test PUBLIC election description");
+		election.setCandidatesListString("automated test 1 \nautomated test 2");
+		election.setOwnerId(ownerId);
+		Timestamp start = new Timestamp(System.currentTimeMillis());
+		election.setStartDatetime(start.toString());
+		
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(start);
+		calendar.add(Calendar.DAY_OF_WEEK, 7);
+		Timestamp close = new Timestamp(calendar.getTimeInMillis());
+		election.setCloseDatetime(close.toString());
+		
+		election.setElectionType(ElectionType.PUBLIC.getCode());
+		//election.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nmygoodness\nhirosh@yahoo.com\nthisisnotemail");
+		election.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nhirosh@yahoo.com");
+		System.out.println(election.toString());
+		
+		
+		Validator val = dbc.addElection(election);
+		System.out.println("added ? : " + val.isVerified());
+		System.out.println("add status : " + val.getStatus());
+		
+		ElectionDto electionAdd = (ElectionDto)val.getObject();
+		System.out.println(electionAdd.toString());
+		
+		assertTrue("add election", val.isVerified());
+	}
 	
 
 	@Test
@@ -222,6 +263,20 @@ public class Election
 				System.out.println(candidate.toString());
 			}
 		}
+	}
+	
+	@Test
+	public void testOpenElectionAndPopulateCandidatesIntElectionId() {
+		int electionId = 47;
+		Validator val = dbc.openElectionAndPopulateCandidates(electionId);
+		if (val.isVerified()) {
+			
+			System.out.println("Open Election ::::::::::::::::::");
+			System.out.println(val.getStatus());
+		}
+		
+		
+		assertTrue("elections results", val.isVerified());
 	}
 	
 }
