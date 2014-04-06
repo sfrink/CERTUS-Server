@@ -80,8 +80,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 			clientSessions = new ClientsSessions();
 			
 			System.out.println("Certus Service bound in registry");
-
-			
+		
 		} catch (Exception e) {
 			System.out.println("Certus RMI service exception: " + e.getMessage());
 			e.printStackTrace();
@@ -526,19 +525,20 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setStatus("Permission denied.");
         	return res;
         }else{
-    	
-        	Validator res = new Validator();//to be deleted
-        	res.setVerified(false);//to be deleted
-        	res.setStatus("You are allowed to invoke.");//to be deleted
-        	return res;//to be deleted
+        	return dbc.selectResults(electionId);
         }
-//    	return dbc.selectResults(electionId);
+    	
     }
     
     @Override
     public boolean isAllowed(String sessionID, String method){
     	int userID = clientSessions.getSession(sessionID);
     	return refMonitor.isAllowed(userID, method);
+    }
+    
+    @Override
+    public Validator registerNewUser (UserDto userDto){
+    	return dbc.registerNewUser(userDto);
     }
     
     

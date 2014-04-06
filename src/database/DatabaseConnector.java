@@ -1,5 +1,6 @@
 package database;
 
+import java.security.PublicKey;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -15,9 +16,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.sql.rowset.serial.SerialBlob;
+
 import server.ClientsSessions;
 import server.ConfigurationProperties;
 import server.PasswordHasher;
+import server.RSAKeys;
 import server.SecurityValidator;
 import dto.ActionDto;
 import dto.CandidateDto;
@@ -2311,4 +2315,105 @@ public class DatabaseConnector
 		
 		return val;						
 	}
+	
+	//register new user:
+	public Validator registerNewUser(UserDto newUser){
+		Validator res = new Validator();
+		if (checkUserEmail(newUser.getEmail()).isVerified()){
+			//email found, cannot add user:
+			res.setVerified(false);
+			res.setStatus("E-mail address is used.");
+		}else{
+			//email address is not found, let's add it:
+			
+			//first we need to generate some salt to hash the password:
+			String salt = PasswordHasher.generateSalt();
+			
+			//hash the password:
+			String hashedPass = PasswordHasher.sha512(newUser.getPassword(), salt);
+			
+			//let's generate the keys and protect the private key with the users protecion password:
+			String keyPass = newUser.getTempPassword();
+			RSAKeys rsaKeys = new RSAKeys();
+			rsaKeys.generateKeys(keyPass);
+			
+			//get the public key to be saved at the DB:
+			PublicKey pubKey = rsaKeys.getPublicKey();
+			
+			
+			//ready to push to DB:
+			PreparedStatement st = null;
+			ResultSet rs = null;
+			int newUserId = 0;
+			// Validate the user
+			Validator vUser = newUser.Validate();
+			
+			if (vUser.isVerified()) {
+				// insert user
+				String query = "INSERT INTO users (first_name, last_name, email, password, salt, "
+						+ "public_key, admin, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+				try {
+					st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+					st.setString(1, newUser.getFirstName());
+					st.setString(2, newUser.getLastName());
+					st.setString(3, newUser.getEmail());
+					st.setString(4, hashedPass);
+					st.setString(5, salt);
+					Blob pubKeyBlob = new SerialBlob(pubKey.getEncoded());
+					st.setBlob(6, pubKeyBlob);
+					st.setInt(7, 0);
+					st.setInt(8, 1);
+		
+					// run the query and get new user id
+					st.executeUpdate();
+					rs = st.getGeneratedKeys();
+					rs.next();
+					newUserId = rs.getInt(1);
+					if (newUserId > 0) {
+						newUser.setUserId(newUserId);
+						res.setVerified(true);
+						res.setStatus("User inserted successfully");
+						
+						//send the private key as an email:
+						rsaKeys.sendProtectedPrivateKey(newUser.getEmail());
+					} else {
+						res.setStatus("Failed to insert user");
+					}
+				} catch (SQLException ex) {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					res.setVerified(false);
+					res.setStatus("SQL Error");
+				}
+			} else {
+				res = vUser;
+			}
+		}
+		return res;
+	}
+
+	
+	//get the public key for a user:
+	public byte[] getPublicKeyFromBlob(int userID){
+		byte [] res = null;
+		PreparedStatement st = null;
+		ResultSet rs = null;
+
+		String query = "select public_key from users WHERE user_id=?";
+		try {
+			
+			st = con.prepareStatement(query);
+			st.setInt(1, userID);
+			rs = st.executeQuery();
+			if(rs.next()){
+				Blob b = rs.getBlob(1);
+				int blobLength = (int) b.length();
+				res = b.getBytes(1, blobLength);
+			}
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+		}
+		return res;
+	}
+	
 }
