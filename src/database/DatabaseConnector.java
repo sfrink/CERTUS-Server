@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import server.ClientsSessions;
 import server.ConfigurationProperties;
 import server.PasswordHasher;
 import server.SecurityValidator;
@@ -125,6 +126,10 @@ public class DatabaseConnector
 		// 3. if entered password is correct, return true with welcome message
 		if (plainHash.equals(dbHash)) {
 
+			ClientsSessions clientSession = new ClientsSessions();
+			String sessionId = clientSession.addNewClient(id);
+			userDto.setSessionId(sessionId);
+			
 			result.setObject(userDto);
 			result.setVerified(true);
 			result.setStatus("Welcome to Certus");
