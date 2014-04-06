@@ -12,12 +12,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import server.ConfigurationProperties;
-import server.InputValidator;
 import server.PasswordHasher;
 import server.SecurityValidator;
 import dto.ActionDto;
@@ -28,8 +26,10 @@ import dto.InputValidation;
 import dto.UserDto;
 import dto.Validator;
 import dto.VoteDto;
+import enumeration.ElectionType;
 import enumeration.Status;
 import enumeration.ElectionStatus;
+import enumeration.UserRole;
 import enumeration.UserStatus;
 
 
@@ -139,7 +139,7 @@ public class DatabaseConnector
 	}
 
 	public Validator validateEmailAndPlainInput(String email, String plainPass) {
-		InputValidator iv = new InputValidator();
+		InputValidation iv = new InputValidation();
 		Validator vResult = new Validator();
 		Validator vEmail, vPlain;
 		Boolean verified = true;
@@ -241,7 +241,7 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 
 		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime, "
-				+ " status, s.code, s.description, owner_id, candidates_string"
+				+ " status, s.code, s.description, owner_id, candidates_string, type, allowed_users_emails"
 				+ " FROM election e "
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
@@ -262,6 +262,9 @@ public class DatabaseConnector
 				String statusDescription = res.getString(8);
 				int ownerId = res.getInt(9);
 				String candidatesListString = res.getString(10);
+				int electionType = res.getInt(11);
+				String allowedUserEmails = res.getString(12);
+				
 				
 				electionDto.setElectionId(electionId);
 				electionDto.setElectionName(electionName);
@@ -273,6 +276,8 @@ public class DatabaseConnector
 				electionDto.setStatusDescription(statusDescription);
 				electionDto.setOwnerId(ownerId);
 				electionDto.setCandidatesListString(candidatesListString);
+				electionDto.setElectionType(electionType);
+				electionDto.setRegisteredEmailList(allowedUserEmails);
 				
 				Validator vCandidates = selectCandidatesOfElection(electionId);
 				electionDto.setCandidateList( (ArrayList<CandidateDto>) vCandidates.getObject());
@@ -846,9 +851,10 @@ public class DatabaseConnector
 		int newId = 0;
 
 		try {
+			
 			String query = "INSERT INTO election "
-					+ " (election_name, description, status, owner_id, candidates_string, start_datetime, close_datetime)"
-					+ " VALUES (?,		?,				?,		?,		?,					?,				?)";
+					+ " (election_name, description, status, owner_id, candidates_string, start_datetime, close_datetime, type, allowed_users_emails)"
+					+ " VALUES (?,		?,				?,		?,		?,					?,				?,				?, 		?)";
 			
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			
@@ -859,7 +865,12 @@ public class DatabaseConnector
 			st.setString(5, electionDto.getCandidatesListString());
 			st.setString(6, electionDto.getStartDatetime());
 			st.setString(7, electionDto.getCloseDatetime());
-			
+			st.setInt(8, electionDto.getElectionType());
+			if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
+				st.setString(9, electionDto.getRegisteredEmailList());
+			} else {
+				st.setString(9, "");
+			}
 			// update query
 			st.executeUpdate();
 			// get inserted id
@@ -888,6 +899,16 @@ public class DatabaseConnector
 		Validator vElection = electionDto.Validate();
 		
 		if (vElection.isVerified()) {
+			// For private elections, check whether the given email addresses are registered 
+			if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
+				// private election - check all the emails
+				Validator vEmailList = checkUserEmails(electionDto);
+				
+				ElectionDto electionDtoEmailChecked = (ElectionDto)vEmailList.getObject();
+				electionDto.setRegisteredEmailList(electionDtoEmailChecked.getRegisteredEmailList());
+				electionDto.setUnregisteredEmailList(electionDtoEmailChecked.getUnregisteredEmailList());	
+			}
+			
 			// insert election
 			int electionId = addElectionWithCandidatesString(electionDto);
 			if (electionId > 0) {
@@ -999,15 +1020,31 @@ public class DatabaseConnector
 		ElectionDto electionInDb = (ElectionDto)vElectionStatus.getObject();
 		if (vElectionStatus.isVerified()) {
 			
-			// Validate the election, so that all the candidates get validated
+			// Validate the election, so that all the candidates get validated, 
+			// and also the list of email account for private election
 			Validator vElection = electionInDb.Validate();
 			if (vElection.isVerified()) {
 				// remove if there are any candidates already for this election
 				deleteCandidates( electionInDb.getElectionId() );
 				
-				// get the list of candidates 
+				// add the list of candidates 
 				Validator vAddCandidates = addCandidates(electionId, electionInDb.getCandidatesListString());
 				if (vAddCandidates.isVerified()) {
+					// add allowed users for private elections
+					if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()) {
+						Validator vAddUsers = addAllowedUsers(electionId, electionInDb.getRegisteredEmailList());
+						if (vAddUsers.isVerified()) {
+							
+						} else {
+							// remove the candidates already added
+							deleteCandidates( electionInDb.getElectionId() );
+							
+							val = vAddUsers;
+						}
+							
+					}
+					
+					// change the status of electio to OPEN
 					Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
 					if (vElectionStatusOpen.isVerified()) {
 						val.setVerified(true); 
@@ -1058,7 +1095,71 @@ public class DatabaseConnector
 		}
 		return val;
 	}
+	
+	private Validator addAllowedUsers(int electionId, String emailListString) {
+		Validator val = new Validator();
+		
+		// split the list of emails by new line into an array of string
+		String[] emails = emailListString.split(newLine);
+		boolean status = true;
+		for (String email : emails) {
+			// add users to participate table 
+			Validator vAddUser = AddAllowedUser(electionId, email, UserRole.ELECTORATE);
+			
+			val.setStatus(val.getStatus() + newLine + vAddUser.getStatus());
+			status &= vAddUser.isVerified();
+		}
+		val.setVerified(status);
+		if (status) {
+			val.setVerified(true);
+			val.setStatus("Users have been allowed to participate the election");
+		}
+		return val;
+	}
 
+	private Validator AddAllowedUser(int electionId, String email, UserRole userRole) {
+		
+		
+		Validator val = new Validator();
+
+		PreparedStatement st = null;
+		try {
+
+			String query = "INSERT INTO participate "
+								+ " (user_id, election_id, role_id) "
+								+ " VALUES "
+								+ "( "
+								+ "	(SELECT user_id FROM users WHERE email = ?) "
+								+ " , ?"
+								+ " , ? "
+								+ ")";
+	
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, email);
+			st.setInt(2, electionId);
+			st.setInt(3, userRole.getCode());
+			
+			// run the query and get the count of rows updated
+			int recInserted = st.executeUpdate();
+			
+			if (recInserted > 0) {
+				// successfully inserted
+				val.setVerified(true);
+				val.setStatus("User allowed to vote is inserted successfully");
+
+			} else {
+				val.setStatus("Failed to insert user : " + email);
+			}
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("SQL Error");
+		}
+
+		return val;
+	}
 	public Validator editCandidateStatus(CandidateDto cand) {
 		PreparedStatement st = null;
 		//InputValidation iv = new InputValidation();
@@ -1379,8 +1480,6 @@ public class DatabaseConnector
 		return val;
 	}
 
-	
-
 	public Validator checkCandidateInElection(int electionId, int cand_id){
 		Validator val=new Validator();
 		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
@@ -1396,6 +1495,33 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	private Validator checkUserEmails(ElectionDto electionDto){
+		Validator val=new Validator();
+		
+		String registeredEmails = "";
+		String unregisteredEmails = "";
+		boolean allRegisteredEmails = true;
+		
+		String[] emails = electionDto.getEmailList().split(newLine);
+		for (String email : emails) {
+			if (verifyUserEmail(email).isVerified()) {
+				registeredEmails += email + newLine;
+			} else {
+				unregisteredEmails += email + newLine;
+				allRegisteredEmails = false;
+			}
+		}
+		
+		electionDto.setRegisteredEmailList(registeredEmails);
+		electionDto.setUnregisteredEmailList(unregisteredEmails);
+		electionDto.setVotersEmailListError(!allRegisteredEmails);
+		electionDto.setVotersEmailListMessage("Unregistered email addresses detected.");
+		
+		val.setObject(electionDto);
+		val.setVerified(allRegisteredEmails);
+		
+		return val;
+	}
 	private Map<Integer, CandidateDto> initMap(ElectionDto elec){
 		Map<Integer, CandidateDto> map = new HashMap<Integer, CandidateDto>();
 		
