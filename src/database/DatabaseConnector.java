@@ -106,7 +106,7 @@ public class DatabaseConnector
 		}
 
 		// 2. validate email
-		result = verifyUserEmail(email);
+		result = checkUserEmail(email);
 		if (!result.isVerified()) {
 			return result;
 		}
@@ -161,7 +161,7 @@ public class DatabaseConnector
 		return vResult;
 	}
 
-	public Validator verifyUserEmail(String emailToSelect) {
+	private Validator checkUserEmail(String emailToSelect) {
 		Validator v = new Validator();
 		v.setVerified(false);
 		v.setStatus("Error, the system could not resolve the provided combination of username and password.");
@@ -907,6 +907,8 @@ public class DatabaseConnector
 				ElectionDto electionDtoEmailChecked = (ElectionDto)vEmailList.getObject();
 				electionDto.setRegisteredEmailList(electionDtoEmailChecked.getRegisteredEmailList());
 				electionDto.setUnregisteredEmailList(electionDtoEmailChecked.getUnregisteredEmailList());	
+				electionDto.setEmailListError(electionDtoEmailChecked.isEmailListError());
+				electionDto.setEmailListMessage(electionDtoEmailChecked.getEmailListMessage());
 			}
 			
 			// insert election
@@ -914,8 +916,8 @@ public class DatabaseConnector
 			if (electionId > 0) {
 				electionDto.setElectionId(electionId);
 				
-				val.setVerified(true);
-				val.setStatus("Election has been successfully inserted");
+				val.setVerified(true & !electionDto.isEmailListError());
+				val.setStatus("Election has been inserted");
 				val.setObject(electionDto);
 			} else {
 				val.setVerified(false);
@@ -982,26 +984,41 @@ public class DatabaseConnector
 	 * @return validator - status of election update operation
 	 * @author Hirosh / Dmitry
 	 */
-	public Validator editElectionWithCandidatesString(ElectionDto electionDto) {
+	public Validator editElection(ElectionDto electionDto) {
 
-		Validator out = new Validator();
+		Validator val = new Validator();
 
-		// 0. check the election status.
+		// check the election status.
 		ElectionDto vElectionCurrent = (ElectionDto) selectElection(electionDto.getElectionId()).getObject();
 		if (vElectionCurrent.getStatus() == ElectionStatus.NEW.getCode())
 		{
-			// 1. Validate Election
+			// Validate Election
 			Validator vElection = electionDto.Validate();
 			if (vElection.isVerified()) {
-				// 2. Update the election details
-				out = editElection(electionDto);
+				// For private elections, check whether the given email addresses are registered 
+				if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
+					// private election - check all the emails
+					Validator vEmailList = checkUserEmails(electionDto);
+					
+					ElectionDto electionDtoEmailChecked = (ElectionDto)vEmailList.getObject();
+					electionDto.setRegisteredEmailList(electionDtoEmailChecked.getRegisteredEmailList());
+					electionDto.setUnregisteredEmailList(electionDtoEmailChecked.getUnregisteredEmailList());	
+					electionDto.setEmailListError(electionDtoEmailChecked.isEmailListError());
+					electionDto.setEmailListMessage(electionDtoEmailChecked.getEmailListMessage());
+				}
+				
+				// Update the election details
+				Validator vEditElection = editElectionWithCandidatesString(electionDto);
+				val.setObject(electionDto);
+				val.setStatus(vEditElection.getStatus());
+				val.setVerified(vEditElection.isVerified() & !electionDto.isEmailListError());
 			} else {
-				out = vElection;
+				val = vElection;
 			}
 		} else { 
-			out.setStatus("Election status is " + vElectionCurrent.getStatusCode() + ", does not allow to modify.");
+			val.setStatus("Election status is " + vElectionCurrent.getStatusCode() + ", does not allow to modify.");
 		}
-		return out;
+		return val;
 	}
 
 	/**
@@ -1041,7 +1058,6 @@ public class DatabaseConnector
 							
 							val = vAddUsers;
 						}
-							
 					}
 					
 					// change the status of electio to OPEN
@@ -1259,7 +1275,7 @@ public class DatabaseConnector
 	 *            - the election to edit Edit an election
 	 * @author Steven Frink
 	 */
-	public Validator editElection(ElectionDto electionDto) {
+	private Validator editElectionWithCandidatesString(ElectionDto electionDto) {
 		PreparedStatement st = null;
 
 		Validator val = new Validator();
@@ -1269,6 +1285,8 @@ public class DatabaseConnector
 					+ " , candidates_string = ? "
 					+ " , start_datetime = ? "
 					+ " , close_datetime = ? "
+					+ " , type = ?"
+					+ " , allowed_users_emails = ? "
 					+ " WHERE election_id=?";
 
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
@@ -1277,7 +1295,13 @@ public class DatabaseConnector
 			st.setString(3, electionDto.getCandidatesListString());
 			st.setString(4, electionDto.getStartDatetime());
 			st.setString(5, electionDto.getCloseDatetime());
-			st.setInt(6, electionDto.getElectionId());
+			st.setInt(6, electionDto.getElectionType());
+			if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
+				st.setString(7, electionDto.getRegisteredEmailList());
+			} else {
+				st.setString(7, "");
+			}
+			st.setInt(8, electionDto.getElectionId());
 			st.executeUpdate();
 			
 			int updateCount = st.getUpdateCount();
@@ -1502,23 +1526,30 @@ public class DatabaseConnector
 		String unregisteredEmails = "";
 		boolean allRegisteredEmails = true;
 		
-		String[] emails = electionDto.getEmailList().split(newLine);
-		for (String email : emails) {
-			if (verifyUserEmail(email).isVerified()) {
-				registeredEmails += email + newLine;
-			} else {
-				unregisteredEmails += email + newLine;
-				allRegisteredEmails = false;
+		if (electionDto.getEmailList() != null) {
+			String[] emails = electionDto.getEmailList().split(newLine);
+			for (String email : emails) {
+				if (checkUserEmail(email).isVerified()) {
+					registeredEmails += email + newLine;
+				} else {
+					unregisteredEmails += email + newLine;
+					allRegisteredEmails = false;
+				}
 			}
 		}
 		
 		electionDto.setRegisteredEmailList(registeredEmails);
 		electionDto.setUnregisteredEmailList(unregisteredEmails);
-		electionDto.setVotersEmailListError(!allRegisteredEmails);
-		electionDto.setVotersEmailListMessage("Unregistered email addresses detected.");
-		
+		electionDto.setEmailListError(!allRegisteredEmails);
+		if (allRegisteredEmails) {
+			val.setVerified(true);
+			val.setStatus("All email addresses are valid");
+		} else {
+			val.setVerified(false);
+			val.setStatus("Unregistered email addresses detected");
+			electionDto.setEmailListMessage("Unregistered email addresses detected");
+		}
 		val.setObject(electionDto);
-		val.setVerified(allRegisteredEmails);
 		
 		return val;
 	}

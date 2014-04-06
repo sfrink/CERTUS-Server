@@ -113,7 +113,7 @@ public class Election
 		assertTrue("select elections owned by user", val.isVerified());
 	}
 
-	@Test
+	//@Test
 	public void testAddPrivateElection() {
 		// ElectionDto election = new ElectionDto();
 		ElectionDto election = new ElectionDto();
@@ -151,7 +151,7 @@ public class Election
 		
 	}
 		
-	@Test
+	//@Test
 	public void testAddPublicElection() {
 		// ElectionDto election = new ElectionDto();
 		ElectionDto election = new ElectionDto();
@@ -190,7 +190,7 @@ public class Election
 
 	@Test
 	public void testEditElectionWithCandidatesString() {
-		int electionId = 9;
+		int electionId = 16;
 		int ownerId = 1;
 		Validator val = dbc.selectElection(electionId);
 		if (val.isVerified()){
@@ -202,14 +202,18 @@ public class Election
 			electionNew.setElectionDescription("automated election description");
 			electionNew.setCandidatesListString("automated 1 \nautomated 2");
 			electionNew.setOwnerId(ownerId); 
+			electionNew.setElectionType(ElectionType.PRIVATE.getCode());
+			electionNew.setEmailList("hirosh@certus.org\ndummy@certus.org\nuser@certus.org\nhirosh@yahoo.com");
 			
 			//electionNew.setStartDatetime();
 			
 			Validator valEdit = dbc.editElection(electionNew);
+			System.out.println("edit election message : " + valEdit.getStatus());
+			System.out.println("edit election status : " + valEdit.isVerified());
 			assertTrue("edit election", valEdit.isVerified());
 			
-			valEdit = dbc.editElection(election);
-			assertTrue("undo edit election", valEdit.isVerified());
+			//valEdit = dbc.editElection(election);
+			//assertTrue("undo edit election", valEdit.isVerified());
 			
 		} else {
 			assertFalse("select election failed", val.isVerified());
