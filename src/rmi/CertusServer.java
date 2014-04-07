@@ -91,7 +91,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator checkIfUsernamePasswordMatch(String email, String plainPass)  throws RemoteException{
     	//Look up username in db, get salt, password hash
     	//DatabaseConnector db = new DatabaseConnector();
-    	Validator validator = dbc.checkIfUsernamePasswordMatch(email, plainPass);
+    	Validator validator = dbc.checkIfUsernamePasswordMatch(email, plainPass, clientSessions);
     	
 //    	UserDto userDto=selectUserByEmailLimited(username);
 //    	String hash=PasswordHasher.sha512(password,userDto.getSalt());
@@ -539,6 +539,23 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator registerNewUser (UserDto userDto){
     	return dbc.registerNewUser(userDto);
+    }
+    
+    @Override
+    public Validator generateNewKeys(int userID, String newKeyPass, String sessionID) {
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int clientID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowed(clientID, action);
+
+        if (!allowed){
+        	Validator res = new Validator();
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	return dbc.generateNewKeys(userID, newKeyPass);
+        	
+        }
     }
     
     

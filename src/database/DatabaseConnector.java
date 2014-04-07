@@ -103,7 +103,7 @@ public class DatabaseConnector
 		return u;
 	}
 
-	public Validator checkIfUsernamePasswordMatch(String email, String plainPass) {
+	public Validator checkIfUsernamePasswordMatch(String email, String plainPass, ClientsSessions clientSession) {
 		// 1. validate input
 		Validator result = validateEmailAndPlainInput(email, plainPass);
 		if (!result.isVerified()) {
@@ -130,7 +130,6 @@ public class DatabaseConnector
 		// 3. if entered password is correct, return true with welcome message
 		if (plainHash.equals(dbHash)) {
 
-			ClientsSessions clientSession = new ClientsSessions();
 			String sessionId = clientSession.addNewClient(id);
 			userDto.setSessionId(sessionId);
 			
@@ -2413,6 +2412,85 @@ public class DatabaseConnector
 		} catch (SQLException ex) {
 			ex.printStackTrace();
 		}
+		return res;
+	}
+
+	//get email address by user ID:
+	public Validator getUesrEmail (int userID){
+		Validator res = new Validator();
+		PreparedStatement st = null;
+		ResultSet rs = null;
+
+					   
+		String query = "select email from users WHERE user_id=?";
+		try {
+			
+			st = con.prepareStatement(query);
+			st.setInt(1, userID);
+			rs = st.executeQuery();
+			
+			if(rs.next()){
+				res.setVerified(true);		
+				res.setStatus(rs.getString(1));
+			}else{
+				res.setVerified(false);
+				res.setStatus("User not found");
+			}
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+		}
+		
+		return res;
+	}
+	
+	
+	//generate new keys for a user:
+	public Validator generateNewKeys(int userID, String newKeyPass){
+		Validator res = null;
+		res = getUesrEmail(userID);
+		
+		if (res.isVerified()){
+			String email = res.getStatus();
+			//let's generate the keys and protect the private key with the users protecion password:
+			RSAKeys rsaKeys = new RSAKeys();
+			rsaKeys.generateKeys(newKeyPass);
+			
+			//get the public key to be saved at the DB:
+			PublicKey pubKey = rsaKeys.getPublicKey();
+			
+			PreparedStatement st = null;
+
+			String query = "UPDATE users SET public_key=? WHERE user_id=?";
+			try {
+				
+				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+				Blob pubKeyBlob = new SerialBlob(pubKey.getEncoded());
+				st.setBlob(1, pubKeyBlob);
+				st.setInt(2, userID);
+				
+				st.executeUpdate();
+				int updateCount = st.getUpdateCount();
+				if (updateCount > 0) {
+					res.setStatus("User updated successfully");
+					res.setVerified(true);
+				} else {
+					res.setVerified(false);
+					res.setStatus("Failed to update the user");
+				}
+				
+				//send the private key as an email:
+				rsaKeys.sendProtectedPrivateKey(email);				
+				
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+		}else{
+			res.setVerified(false);
+			res.setStatus("User not found");
+		}
+			
+		
+		
 		return res;
 	}
 	

@@ -22,8 +22,8 @@ public class Main {
 		UserDto u = db.selectUserById(1);
 		
 		//System.out.println(u.toString());
-		
-		Validator v = db.checkIfUsernamePasswordMatch("user@certus.org", "password");
+		ClientsSessions cs = new ClientsSessions();
+		Validator v = db.checkIfUsernamePasswordMatch("user@certus.org", "password", cs);
 		System.out.println(v.getStatus());
 		
 		// Retrive Elections
