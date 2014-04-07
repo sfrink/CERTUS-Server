@@ -907,6 +907,8 @@ public class DatabaseConnector
 		Validator vElection = electionDto.Validate();
 		
 		if (vElection.isVerified()) {
+			
+			int electionId = 0;
 			// For private elections, check whether the given email addresses are registered 
 			if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
 				// private election - check all the emails
@@ -917,10 +919,17 @@ public class DatabaseConnector
 				electionDto.setUnregisteredEmailList(electionDtoEmailChecked.getUnregisteredEmailList());	
 				electionDto.setEmailListError(electionDtoEmailChecked.isEmailListError());
 				electionDto.setEmailListMessage(electionDtoEmailChecked.getEmailListMessage());
+				
+				if (!electionDtoEmailChecked.isEmailListError()) {
+					electionId = addElectionWithCandidatesString(electionDto);
+				}
+				
+			} else if (electionDto.getElectionType() == ElectionType.PUBLIC.getCode()) {
+				electionId = addElectionWithCandidatesString(electionDto);
 			}
 			
 			// insert election
-			int electionId = addElectionWithCandidatesString(electionDto);
+			
 			if (electionId > 0) {
 				electionDto.setElectionId(electionId);
 				
