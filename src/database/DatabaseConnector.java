@@ -103,7 +103,7 @@ public class DatabaseConnector
 		return u;
 	}
 
-	public Validator checkIfUsernamePasswordMatch(String email, String plainPass, ClientsSessions clientSession) {
+	public Validator checkIfUsernamePasswordMatch(String email, String plainPass) {
 		// 1. validate input
 		Validator result = validateEmailAndPlainInput(email, plainPass);
 		if (!result.isVerified()) {
@@ -129,9 +129,6 @@ public class DatabaseConnector
 
 		// 3. if entered password is correct, return true with welcome message
 		if (plainHash.equals(dbHash)) {
-
-			String sessionId = clientSession.addNewClient(id);
-			userDto.setSessionId(sessionId);
 			
 			result.setObject(userDto);
 			result.setVerified(true);
@@ -1400,7 +1397,7 @@ public class DatabaseConnector
 	 *            - userDetails with public key
 	 * @return Validator - status of the public key update operation
 	 * @author Hirosh Wickramasuriya
-	 * 
+	 * This function can be called only by admins.
 	 */
 	public Validator editUserPublicKey(UserDto userDto) {
 		PreparedStatement st = null;
@@ -2497,10 +2494,90 @@ public class DatabaseConnector
 			res.setVerified(false);
 			res.setStatus("User not found");
 		}
-			
-		
-		
+				
 		return res;
 	}
+	
+	//Update user information - this function to be invked only by the users:		
+	public Validator updateUser(UserDto userDto) {
+		Validator val = new Validator();
+		
+		PreparedStatement st = null;
+		try {
+			String query = "UPDATE users SET first_name = ?, last_name = ? WHERE user_id=?";
+
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, userDto.getFirstName());
+			st.setString(2, userDto.getLastName());
+			st.setInt(3, userDto.getUserId());
+			
+			st.executeUpdate();
+			
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
+				val.setStatus("User updated successfully");
+				val.setVerified(true);
+			} else {
+				val.setStatus("Failed to update the user");
+			}
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
+		}
+		return val;
+	}
+
+	public boolean checkCorrectPassword(int userID, String password){		
+		UserDto dbUser = new UserDto();
+		dbUser = selectUserById(userID);
+		String dbHash = dbUser.getPassword();
+		String dbSalt = dbUser.getSalt();
+		String newHash = PasswordHasher.sha512(password, dbSalt);
+		
+		return newHash.equals(dbHash);
+	}
+
+	public Validator updateUserPassword(UserDto userInfo){
+		Validator res = new Validator();
+		
+		String newPass = userInfo.getTempPassword();
+		int userID = userInfo.getUserId();
+		
+		//first we need to generate some salt to hash the password:
+		String newSalt = PasswordHasher.generateSalt();
+		
+		//hash the password:
+		String hashedPass = PasswordHasher.sha512(newPass, newSalt);
+		
+		//ready to update the password:
+		PreparedStatement st = null;
+		try {
+			String query = "UPDATE users SET password = ?, salt = ? WHERE user_id=?";
+
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, hashedPass);
+			st.setString(2, newSalt);
+			st.setInt(3, userID);
+			
+			st.executeUpdate();
+			
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
+				res.setStatus("Password updated successfully");
+				res.setVerified(true);
+			} else {
+				res.setStatus("Failed to update password");
+			}
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res.setStatus("SQL Error");
+		}
+
+		return res;
+		
+	}
+	
 	
 }

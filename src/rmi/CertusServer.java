@@ -91,8 +91,13 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator checkIfUsernamePasswordMatch(String email, String plainPass)  throws RemoteException{
     	//Look up username in db, get salt, password hash
     	//DatabaseConnector db = new DatabaseConnector();
-    	Validator validator = dbc.checkIfUsernamePasswordMatch(email, plainPass, clientSessions);
-    	
+    	Validator validator = dbc.checkIfUsernamePasswordMatch(email, plainPass);
+    	if (validator.isVerified()){
+    		UserDto user = (UserDto) validator.getObject();
+    		
+    		user.setSessionId(clientSessions.addNewClient(user.getUserId()));
+    		validator.setObject(user);    		
+    	}
 //    	UserDto userDto=selectUserByEmailLimited(username);
 //    	String hash=PasswordHasher.sha512(password,userDto.getSalt());
 //    	return hash==userDto.getPassword();
@@ -109,9 +114,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.isAllowed(clientID, action);
-    	
-        if (allowed){
+        boolean allowed = refMonitor.isAllowed(clientID, action);        
+        
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -558,5 +563,75 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }
     }
     
+    @Override
+    public Validator logOut(String sessionID){
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int clientID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowed(clientID, action);
+
+        Validator res = new Validator();
+        if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	boolean done = clientSessions.removeClient(sessionID);
+        	res.setVerified(done);
+        	if (done){
+        		res.setStatus("Log out succeeded");
+        	}else{
+        		res.setStatus("Log out faild");
+        	}
+        }
+        return res;
+    }
+    
+    @Override
+    public Validator updateUser(UserDto userDto, String sessionID){
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int clientID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowed(clientID, action);
+
+        Validator res = new Validator();
+        if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	userDto.setUserId(clientID);
+        	return dbc.updateUser(userDto);
+        }
+        
+    }
+    
+    @Override
+    public Validator updateUserPassword(UserDto userDto, String sessionID){
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int clientID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowed(clientID, action);
+
+        userDto.setUserId(clientID);
+        Validator res = new Validator();
+        if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	//check if the current password is correct for the user:
+        	boolean correct = dbc.checkCorrectPassword(clientID, userDto.getPassword());
+        	
+        	if (correct){
+        		//the password matched, we can update it now:
+        		res = dbc.updateUserPassword(userDto);
+        	}else{
+        		//the password didn't match, we cannot update the password:
+        		res.setVerified(false);
+        		res.setStatus("old password is not correct.");
+        	}
+        	
+        	return res;
+        }    	
+    }
+
     
 }

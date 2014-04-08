@@ -23,7 +23,7 @@ public class Main {
 		
 		//System.out.println(u.toString());
 		ClientsSessions cs = new ClientsSessions();
-		Validator v = db.checkIfUsernamePasswordMatch("user@certus.org", "password", cs);
+		Validator v = db.checkIfUsernamePasswordMatch("user@certus.org", "password");
 		System.out.println(v.getStatus());
 		
 		// Retrive Elections
