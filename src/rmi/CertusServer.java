@@ -2,6 +2,7 @@ package rmi;
 
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -80,7 +81,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 			clientSessions = new ClientsSessions();
 			
 			System.out.println("Certus Service bound in registry");
-		
+			
+			
 		} catch (Exception e) {
 			System.out.println("Certus RMI service exception: " + e.getMessage());
 			e.printStackTrace();
@@ -633,5 +635,27 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }    	
     }
 
+
+    @Override
+    public Validator uploadPubKey(byte[] keyBytes, String sessionID){
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int clientID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowed(clientID, action);    
+        
+        Validator res = new Validator();
+        
+        if (keyBytes.length > 10240){
+        	res.setVerified(false);
+        	res.setStatus("Large file");
+        }else if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        }else{
+        	res = dbc.uploadPubKey(keyBytes, clientID);        	
+        }    	
+        
+        return res;
+    }
+    
     
 }

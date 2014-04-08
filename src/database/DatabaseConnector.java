@@ -1,5 +1,6 @@
 package database;
 
+import java.io.InputStream;
 import java.security.PublicKey;
 import java.sql.Blob;
 import java.sql.Connection;
@@ -2583,5 +2584,43 @@ public class DatabaseConnector
 		
 	}
 	
+
+	public Validator uploadPubKey(byte[] keyBytes, int userID) {
+		Validator res = new Validator();
+		
+		PreparedStatement st = null;
+		
+		if (keyBytes == null){
+			res.setVerified(false);
+			res.setStatus("Empty input");
+			return res;
+		}
+		
+		String query = "UPDATE users SET public_key=? WHERE user_id=?";
+		try {
+			
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			
+			Blob pubKeyBlob = new SerialBlob(keyBytes);
+			st.setBlob(1, pubKeyBlob);
+			st.setInt(2, userID);
+			
+			st.executeUpdate();
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
+				res.setStatus("Public key updated successfully");
+				res.setVerified(true);
+			} else {
+				res.setVerified(false);
+				res.setStatus("Failed to update public key");
+			}
+			
+		} catch (SQLException ex) {
+			ex.printStackTrace();
+			res.setVerified(false);
+			res.setStatus("SQL Exception");
+		}
+		return res;
+	}
 	
 }
