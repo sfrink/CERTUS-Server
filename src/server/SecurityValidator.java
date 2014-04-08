@@ -3,6 +3,8 @@ package server;
 import java.io.FileInputStream;
 import java.security.Key;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.PrivateKey;
@@ -11,6 +13,7 @@ import java.security.Signature;
 import java.security.cert.Certificate;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -184,5 +187,29 @@ public class SecurityValidator {
 			val.setVerified(false);
 			return val;
     	}
+	}
+	
+	public Validator generateKeyPair(){
+		Validator val=new Validator();
+		try{
+			KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
+			gen.initialize(3072);
+			KeyPair keyPair = gen.generateKeyPair();
+			PublicKey K = keyPair.getPublic();
+			PrivateKey k = keyPair.getPrivate();
+			byte[] publicEncoded=K.getEncoded();
+			byte[] privateEncoded=k.getEncoded();
+			ArrayList<byte[]> keys=new ArrayList<byte[]>();
+			keys.add(publicEncoded);
+			keys.add(privateEncoded);
+			val.setObject(keys);
+			val.setVerified(true);
+			val.setStatus("Keys successfully generated");
+		}
+		catch(Exception e){
+			val.setVerified(false);
+			val.setStatus("Failed to generate keys");
+		}
+		return val;
 	}
 }
