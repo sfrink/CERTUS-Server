@@ -459,7 +459,7 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 
 		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime, "
-				+ " status, s.code, s.description, owner_id, candidates_string "
+				+ " status, s.code, s.description, owner_id, candidates_string, type "
 				+ " FROM election e"
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
@@ -485,6 +485,7 @@ public class DatabaseConnector
 				String statusDescription = res.getString(8);
 				int ownerId = res.getInt(9);
 				String candidatesListString = res.getString(10);
+				int electionType = res.getInt(11);
 				
 				ElectionDto electionDto = new ElectionDto();
 				electionDto.setElectionId(electionId);
@@ -497,6 +498,7 @@ public class DatabaseConnector
 				electionDto.setStatusDescription(statusDescription);
 				electionDto.setOwnerId(ownerId);
 				electionDto.setCandidatesListString(candidatesListString);
+				electionDto.setElectionType(electionType);
 				elections.add(electionDto);
 			}
 			validator.setVerified(true);
