@@ -1763,6 +1763,7 @@ public class DatabaseConnector
 		String sig = vote.getVoteSignature();
 		SecurityValidator sec=new SecurityValidator();
 		if (sec.checkSignature(sig, enc, vote.getUserId()).isVerified()){
+			System.out.println("###############"+password +" "+electionId);
 			byte[] plain=sec.hexStringtoByteArray(sec.decrypt(enc, password, electionId));
 			String id=new String(plain);
 			int cand_id = Integer.parseInt(id);
