@@ -208,7 +208,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator selectElectionFullDetail (int electionId, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.isAllowed(clientID, action);
+        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
     	
         if (allowed){
         	Validator res = new Validator();
