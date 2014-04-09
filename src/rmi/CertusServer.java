@@ -518,7 +518,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
-    public Validator publishResults(int electionId, String sessionID) throws RemoteException {   	
+    public Validator publishResults(int electionId, String password, String sessionID) throws RemoteException {   	
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int clientID = clientSessions.getSession(sessionID);
         boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
@@ -529,7 +529,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setStatus("Permission denied.");
         	return res;
         }else{
-        	return dbc.publishResults(electionId);
+        	return dbc.publishResults(electionId, password);
         }
     	
     }

@@ -1856,11 +1856,11 @@ public class DatabaseConnector
 		return val;
 	}
 
-	public Validator publishResults(int electionId) {
+	public Validator publishResults(int electionId, String password) {
 		Validator val = new Validator();
 		Validator vElectionStatus = compareElectionStatus(electionId, ElectionStatus.CLOSED);
 		if (vElectionStatus.isVerified()) {
-			Validator vResult = computeElectionResults(electionId);
+			Validator vResult = computeElectionResults(electionId, password);
 			
 			if (vResult.isVerified()) {
 				vElectionStatus = editElectionStatus(electionId, ElectionStatus.PUBLISHED);
@@ -1887,7 +1887,7 @@ public class DatabaseConnector
 	 * 						(2) false if it failed to compute and populate the election results
 	 * @author Hirosh Wickramasuriya
 	 */
-	private Validator computeElectionResults(int electionId) {
+	private Validator computeElectionResults(int electionId, String password) {
 		Validator val = new Validator();
 
 		// check the election status
@@ -1895,6 +1895,7 @@ public class DatabaseConnector
 		if (vElectionStatus.isVerified()) {
 		
 			ElectionDto electionDto = (ElectionDto)vElectionStatus.getObject();
+			electionDto.setPassword(password);
 			// get the tallying results
 			Validator vElectionTally = tally(electionDto);
 
