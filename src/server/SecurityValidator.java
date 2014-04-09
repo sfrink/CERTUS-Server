@@ -12,7 +12,9 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
 import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -102,91 +104,27 @@ public class SecurityValidator {
 		return sb.toString();
 	}
 
-	public String decrypt(String ciph) {
+	public String decrypt(String ciph, String password, int electionId) {
 		byte[] ct = hexStringtoByteArray(ciph);
 		try {
-			PrivateKey priv = getPrivateKey();
-			Cipher dec = Cipher.getInstance("RSA");
-			dec.init(Cipher.DECRYPT_MODE, priv);
-			byte[] plain = dec.doFinal(ct);
-			String plaintext = byteArraytoHex(plain);
-			return plaintext;
+			DatabaseConnector dbc=new DatabaseConnector();
+			Validator val=dbc.getPrivateKey(electionId);
+			if(val.isVerified()){
+				byte[] decKey=DataEncryptor.AESDecrypt((byte[])val.getObject(), password);
+				KeyFactory kf=KeyFactory.getInstance("RSA");
+				PKCS8EncodedKeySpec ks=new PKCS8EncodedKeySpec(decKey);
+				PrivateKey priv = kf.generatePrivate(ks);
+				Cipher dec = Cipher.getInstance("RSA");
+				dec.init(Cipher.DECRYPT_MODE, priv);
+				byte[] plain = dec.doFinal(ct);
+				String plaintext = byteArraytoHex(plain);
+				return plaintext;
+			}
 		} catch (Exception ex) {
 			Logger lgr = Logger.getLogger(SecurityValidator.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 		return null;
-	}
-
-	public PrivateKey getPrivateKey() {
-		KeyStore ks;
-		try {
-			ks = KeyStore.getInstance("PKCS12");
-
-			// get user password and file input stream
-			char[] password = securityKeystorePassword.toCharArray();
-
-			java.io.FileInputStream fis = null;
-			try {
-				fis = new java.io.FileInputStream(securityKeystorePrivatekey);
-				ks.load(fis, password);
-			} finally {
-				if (fis != null) {
-					fis.close();
-				}
-			}
-			KeyStore.ProtectionParameter protParam = new KeyStore.PasswordProtection(
-					password);
-
-			// get my private key
-			KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) ks
-					.getEntry(securityKeystoreAlias, protParam);
-			PrivateKey myPrivateKey = pkEntry.getPrivateKey();
-			return myPrivateKey;
-
-		} catch (Exception ex) {
-			Logger lgr = Logger.getLogger(SecurityValidator.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			return null;
-		}
-	}
-	
-	public Validator getTallierPublicKey(){
-		Validator val=new Validator();
-    	try{
-	    	FileInputStream is = new FileInputStream(securityKeystoreFile);
-	
-	        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-	        keystore.load(is, securityKeystorePassword.toCharArray());
-	
-	
-	
-	        Key key = keystore.getKey(securityKeystoreAlias, securityKeystorePassword.toCharArray());
-	        if (key instanceof PrivateKey) {
-	          // Get certificate of public key
-	          Certificate cert = keystore.getCertificate(securityKeystoreAlias);
-	
-	          // Get public key
-	          PublicKey publicKey = cert.getPublicKey();
-	          val.setVerified(true);
-	          val.setStatus("Retrieved public key");
-	          val.setObject(publicKey);
-	          return val;
-	          
-	        }
-	        else{
-	        	val.setVerified(false);
-	        	val.setStatus("Failed to retrieve public key");
-	        	return val;
-	        }
-    	}
-    	catch(Exception ex){
-    		Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("Error occured");
-			val.setVerified(false);
-			return val;
-    	}
 	}
 	
 	public Validator generateKeyPair(){

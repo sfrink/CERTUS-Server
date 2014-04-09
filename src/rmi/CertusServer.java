@@ -462,7 +462,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
-    public Validator getTallierPublicKey() throws RemoteException{
+    public Validator getTallierPublicKey(int electionId) throws RemoteException{
 //    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
 //    	int clientID = clientSessions.getSession(sessionID);
 //        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
@@ -479,10 +479,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 //        	res.setStatus("You are allowed to invoke.");//to be deleted
 //        	return res;//to be deleted
 //        }
-    	
-    	
-    	sec=new SecurityValidator();
-    	return sec.getTallierPublicKey();
+    	return dbc.getTallierPublicKey(electionId);
     }
     
     @Override

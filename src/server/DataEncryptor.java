@@ -14,12 +14,12 @@ import javax.xml.bind.DatatypeConverter;
 public class DataEncryptor {
 	
 	static int keyIterations = 10000;
-	static int ivItereations = 9000;
+	static int ivIterations = 9000;
 	
 	public static byte[] AESEncrypt(byte[] plainText, String password) throws Exception {
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 		String encryptionKey = generateKey(password, keyIterations);
-		String IV = generateKey(password, ivItereations);
+		String IV = generateKey(password, ivIterations);
 		SecretKeySpec key = new SecretKeySpec(encryptionKey.getBytes(), "AES");
 		cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(IV.getBytes()));
 		return cipher.doFinal(plainText);
@@ -28,7 +28,7 @@ public class DataEncryptor {
 	public static byte[] AESDecrypt(byte[] cipherText, String password) throws Exception {
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 		String encryptionKey = generateKey(password, keyIterations);
-		String IV = generateKey(password, ivItereations);
+		String IV = generateKey(password, ivIterations);
 		SecretKeySpec key = new SecretKeySpec(encryptionKey.getBytes(), "AES");
 		cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(IV.getBytes()));
 		return cipher.doFinal(cipherText);

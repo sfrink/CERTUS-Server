@@ -21,6 +21,7 @@ import javax.sql.rowset.serial.SerialBlob;
 
 import server.ClientsSessions;
 import server.ConfigurationProperties;
+import server.DataEncryptor;
 import server.PasswordHasher;
 import server.RSAKeys;
 import server.SecurityValidator;
@@ -963,40 +964,57 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		int newId = 0;
+		SecurityValidator sec=new SecurityValidator();
 
 		try {
 			
 			String query = "INSERT INTO election "
-					+ " (election_name, description, status, owner_id, candidates_string, start_datetime, close_datetime, type, allowed_users_emails)"
-					+ " VALUES (?,		?,				?,		?,		?,					?,				?,				?, 		?)";
+					+ " (election_name, description, status, owner_id, candidates_string, start_datetime, close_datetime, type, allowed_users_emails, public_key, private_key)"
+					+ " VALUES (?,		?,				?,		?,		?,					?,				?,				?, 		?					?		?)";
 			
-			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			
-			st.setString(1, electionDto.getElectionName());
-			st.setString(2,  electionDto.getElectionDescription());
-			st.setInt(3, ElectionStatus.NEW.getCode());
-			st.setInt(4, electionDto.getOwnerId());
-			st.setString(5, electionDto.getCandidatesListString());
-			st.setString(6, electionDto.getStartDatetime());
-			st.setString(7, electionDto.getCloseDatetime());
-			st.setInt(8, electionDto.getElectionType());
-			if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
-				st.setString(9, electionDto.getRegisteredEmailList());
-			} else {
-				st.setString(9, "");
-			}
-			// update query
-			st.executeUpdate();
-			// get inserted id
-			rs = st.getGeneratedKeys();
-			if (rs.next() ) {
-				newId = rs.getInt(1);
+			Validator keyVal=sec.generateKeyPair();
+			if(keyVal.isVerified()){
+				byte[] pk=((ArrayList<byte[]>)keyVal.getObject()).get(0);
+				byte[] sk=DataEncryptor.AESEncrypt(((ArrayList<byte[]>)keyVal.getObject()).get(1), 
+						electionDto.getPassword());
+				
+				
+				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+				
+				st.setString(1, electionDto.getElectionName());
+				st.setString(2,  electionDto.getElectionDescription());
+				st.setInt(3, ElectionStatus.NEW.getCode());
+				st.setInt(4, electionDto.getOwnerId());
+				st.setString(5, electionDto.getCandidatesListString());
+				st.setString(6, electionDto.getStartDatetime());
+				st.setString(7, electionDto.getCloseDatetime());
+				st.setInt(8, electionDto.getElectionType());
+				if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
+					st.setString(9, electionDto.getRegisteredEmailList());
+				} else {
+					st.setString(9, "");
+				}
+				Blob bpk=new SerialBlob(pk);
+				st.setBlob(10, bpk);
+				Blob bsk = new SerialBlob(sk);
+				st.setBlob(11,bsk);
+				// update query
+				st.executeUpdate();
+				// get inserted id
+				rs = st.getGeneratedKeys();
+				if (rs.next() ) {
+					newId = rs.getInt(1);
+				}
 			}
 
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);	
+		} catch (Exception e){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, e.getMessage(), e);	
 		}
+		
 
 		return newId;
 	}
@@ -1727,12 +1745,12 @@ public class DatabaseConnector
 		
 	}
 	
-	private int getDecryptedCandId(VoteDto vote){
+	private int getDecryptedCandId(VoteDto vote, String password, int electionId){
 		String enc = vote.getVoteEncrypted();
 		String sig = vote.getVoteSignature();
 		SecurityValidator sec=new SecurityValidator();
 		if (sec.checkSignature(sig, enc, vote.getUserId()).isVerified()){
-			byte[] plain=sec.hexStringtoByteArray(sec.decrypt(enc));
+			byte[] plain=sec.hexStringtoByteArray(sec.decrypt(enc, password, electionId));
 			String id=new String(plain);
 			int cand_id = Integer.parseInt(id);
 			return cand_id;
@@ -1759,7 +1777,7 @@ public class DatabaseConnector
 			
 			// check the validity of each vote, decrypt and count the vote
 			for (int i = 0; i < votes.size(); i++) {
-				int cand_id=getDecryptedCandId(votes.get(i));	
+				int cand_id=getDecryptedCandId(votes.get(i), elec.getPassword(), elec.getElectionId());	
 				if (cand_id!=-1) {
 					map=addToMap(map, cand_id);
 				}
@@ -2809,4 +2827,60 @@ public class DatabaseConnector
 		return res;
 	}
 	
+	public Validator getTallierPublicKey(int electionId){
+		Validator val=new Validator();
+		PreparedStatement st = null;
+		String query="SELECT public_key FROM election WHERE election_id=?";
+		try{
+			st = this.con.prepareStatement(query);
+			st.setInt(1,electionId);
+			ResultSet rs=st.executeQuery();
+			if(rs.next()){
+				Blob pubKey = rs.getBlob(1);
+				byte[] pk = pubKey.getBytes(1, (int) pubKey.length());
+				val.setObject(pk);
+				val.setVerified(true);
+				val.setStatus("Public key retrieved");
+			}
+			else{
+				val.setVerified(false);
+				val.setStatus("Public key does not exist for this election");
+			}
+		} catch(SQLException ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("Failed to retrieve public key");
+		}
+		return val;
+	}
+	
+	public Validator getPrivateKey(int electionId){
+		Validator val=new Validator();
+		PreparedStatement st=null;
+		String query="SELECT private_key FROM election WHERE election_id=?";
+		try{
+			st=this.con.prepareStatement(query);
+			st.setInt(1,electionId);
+			ResultSet rs=st.executeQuery();
+			if(rs.next()){
+				Blob privKey = rs.getBlob(1);
+				byte[] sk = privKey.getBytes(1, (int) privKey.length());
+				val.setObject(sk);
+				val.setVerified(true);
+				val.setStatus("Private key retrieved");
+			}
+			else{
+				val.setVerified(false);
+				val.setStatus("Private key does not exist for this election");
+			}
+		}
+		catch(SQLException ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("Failed to retrieve private key");
+		}
+		return val;
+	}
 }
