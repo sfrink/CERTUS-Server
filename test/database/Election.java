@@ -283,4 +283,20 @@ public class Election
 		assertTrue("elections results", val.isVerified());
 	}
 	
+	
+	@Test
+	public void testSelectElectionFullDetail() {
+		int electionId = 54;
+		Validator val = dbc.selectElectionFullDetail(electionId);
+		if (val.isVerified()) {
+			
+			System.out.println("Opened Election ::::::::::::::::::");
+			System.out.println(val.getStatus());
+			System.out.println(((ElectionDto)val.getObject()).toString());
+			
+		}
+		
+		
+		assertTrue("elections details with participating voters", val.isVerified());
+	}
 }

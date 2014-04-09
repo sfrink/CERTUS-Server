@@ -306,19 +306,18 @@ public class DatabaseConnector
 		return validator;
 	}
 
-	public Validator selectElectionWithParticipatingVoters(int id) {
+	
+	public Validator selectElectionFullDetail(int id) {
 		Validator validator = new Validator();
 		ElectionDto electionDto = new ElectionDto();
 
 		PreparedStatement st = null;
 
 		String query = "SELECT e.election_id, election_name, e.description, start_datetime, close_datetime, "
-				+ " status, s.code, s.description, owner_id, candidates_string, type, allowed_users_emails"
+				+ " e.status, s.code, s.description, owner_id, candidates_string, type"
 				+ " FROM election e "
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
-				+ " INNER JOIN participate p"
-				+ " ON (e.election_id = p.election_id) "
 				+ " WHERE e.election_id = ?";
 
 		try {
@@ -337,8 +336,6 @@ public class DatabaseConnector
 				int ownerId = res.getInt(9);
 				String candidatesListString = res.getString(10);
 				int electionType = res.getInt(11);
-				String allowedUserEmails = res.getString(12);
-				
 				
 				electionDto.setElectionId(electionId);
 				electionDto.setElectionName(electionName);
@@ -351,10 +348,12 @@ public class DatabaseConnector
 				electionDto.setOwnerId(ownerId);
 				electionDto.setCandidatesListString(candidatesListString);
 				electionDto.setElectionType(electionType);
-				electionDto.setRegisteredEmailList(allowedUserEmails);
 				
-				Validator vCandidates = selectCandidatesOfElection(electionId);
-				electionDto.setCandidateList( (ArrayList<CandidateDto>) vCandidates.getObject());
+				electionDto.setCurrentEmailList(selectParticipatingVotersOfElection(electionId));
+				
+				electionDto.setCandidateList((ArrayList<CandidateDto>) selectCandidatesOfElection(
+						electionId
+						, Status.ENABLED).getObject());
 				
 				validator.setVerified(true);
 				validator.setObject(electionDto);
@@ -918,6 +917,42 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * @param electionIdKey
+	 *            - election identification number
+	 * @return String : list of all the voters email participating the election (seperated by new line)
+	 *         of a given election
+	 * @author Hirosh Wickramasuriya
+	 */
+	public String selectParticipatingVotersOfElection(int electionIdKey) {
+		
+		PreparedStatement st = null;
+
+		String query = "SELECT p.user_id, p.election_id, email "
+				+ " FROM participate p"
+				+ " INNER JOIN users u"
+				+ " ON (p.user_id = u.user_id)"
+				+ " WHERE election_id = ?"
+				;
+		String currentEmailList = "";
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, electionIdKey);
+
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				currentEmailList += res.getString(3) + newLine;
+			}
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			
+		}
+
+		return currentEmailList;
+	}
+	/**
 	 * @param name
 	 *            - election name Add new election to db
 	 * @author Steven Frink
@@ -1162,7 +1197,7 @@ public class DatabaseConnector
 				val.setStatus(vElection.getStatus());
 			}
 		} else {
-			val.setStatus("Election status is " + electionInDb.getStatusCode() + ", does not allow to modify.");
+			val.setStatus(vElectionStatus.getStatus());
 		}
 		return val;
 	}
@@ -1333,7 +1368,12 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 		Validator val = new Validator();
 		try {
-			String query = "UPDATE election SET status=? WHERE election_id=?";
+			String query = "";
+			if (electionStatus.equals(ElectionStatus.OPEN)) {
+				query = "UPDATE election SET status=?, allowed_user_emails = null WHERE election_id=?";
+			} else {
+				query = "UPDATE election SET status=? WHERE election_id=?";
+			}
 			
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setInt(1, electionStatus.getCode());

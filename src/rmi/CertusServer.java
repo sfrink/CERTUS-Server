@@ -187,7 +187,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     // Election
     
     @Override
-    public Validator selectElection(int id, String sessionID) throws RemoteException{
+    public Validator selectElection(int electionId, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int clientID = clientSessions.getSession(sessionID);
         boolean allowed = refMonitor.isAllowed(clientID, action);
@@ -198,11 +198,27 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setStatus("Permission denied.");
         	return res;
         }else{
-        	return dbc.selectElection(id);
+        	return dbc.selectElection(electionId);
         }
     	
     }
     
+    @Override
+    public Validator selectElectionFullDetail (int electionId, String sessionID) throws RemoteException{
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int clientID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowed(clientID, action);
+    	
+        if (allowed){
+        	Validator res = new Validator();
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	return dbc.selectElectionFullDetail(electionId);
+        }
+    	
+    }
     @Override
     public Validator selectElections(ElectionStatus electionStatus, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
