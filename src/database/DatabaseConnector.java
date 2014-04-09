@@ -199,7 +199,7 @@ public class DatabaseConnector
 
 		PreparedStatement st = null;
 
-		String query = "SELECT user_id, first_name, last_name, password, salt, status FROM users WHERE email = ?";
+		String query = "SELECT user_id, first_name, last_name, password, salt, status, admin FROM users WHERE email = ?";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -214,12 +214,14 @@ public class DatabaseConnector
 				String password = res.getString(4);
 				String salt = res.getString(5);
 				int statusId = res.getInt(6);
+				int admin = res.getInt(7);
 				userDto.setUserId(user_id);
 				userDto.setFirstName(first_name);
 				userDto.setLastName(last_name);
 				userDto.setPassword(password);
 				userDto.setSalt(salt);
 				userDto.setStatus(statusId);
+				userDto.setAdministratorFlag(admin);
 
 			} else {
 
@@ -2620,6 +2622,81 @@ public class DatabaseConnector
 			res.setVerified(false);
 			res.setStatus("SQL Exception");
 		}
+		return res;
+	}
+
+	//Check if election is public:
+	public boolean isPublicElection(int electionID){
+		boolean res = false;
+		
+		PreparedStatement st = null;
+		String query = "SELECT type FROM election WHERE election_id=?";
+
+		try {
+			st = con.prepareStatement(query);
+			st.setInt(1, electionID);
+			ResultSet rs = st.executeQuery();
+			
+			if (rs.next()){
+				int type = rs.getInt(1);
+				res = (type == 1) ? true : false;
+			}
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res = false;
+		}		
+		
+		
+		return res;
+	}
+	
+	
+	//Check if userID got access to elecionID:
+	public boolean gotAccessToElection(int userID, int electionID){
+		boolean res = false;
+		
+		if (isPublicElection(electionID)){
+			return true;
+		}
+		
+		PreparedStatement st = null;
+		String query = "SELECT * FROM participate WHERE (user_id = ?) and (election_id=?)";
+
+		try {
+			st = con.prepareStatement(query);
+			st.setInt(1, userID);
+			st.setInt(2, electionID);
+			ResultSet rs = st.executeQuery();
+			res = (rs.next()) ? true : false;	
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res = false;
+		}		
+		
+		return res;
+	}
+	
+	//Check if userID is election authority on electionID:
+	public boolean isElectionAuth(int userID, int electionID){
+		boolean res = false;
+		
+		PreparedStatement st = null;
+		String query = "SELECT * FROM election WHERE (election_id = ?) and (owner_id=?)";
+
+		try {
+			st = con.prepareStatement(query);
+			st.setInt(1, electionID);
+			st.setInt(2, userID);
+			ResultSet rs = st.executeQuery();
+			res = (rs.next()) ? true : false;	
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res = false;
+		}		
+
 		return res;
 	}
 	
