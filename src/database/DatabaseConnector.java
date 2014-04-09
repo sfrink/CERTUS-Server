@@ -199,7 +199,7 @@ public class DatabaseConnector
 
 		PreparedStatement st = null;
 
-		String query = "SELECT user_id, first_name, last_name, password, salt, status FROM users WHERE email = ?";
+		String query = "SELECT user_id, first_name, last_name, password, salt, status, admin FROM users WHERE email = ?";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -214,13 +214,14 @@ public class DatabaseConnector
 				String password = res.getString(4);
 				String salt = res.getString(5);
 				int statusId = res.getInt(6);
+				int adminFlag = res.getInt(7);
 				userDto.setUserId(user_id);
 				userDto.setFirstName(first_name);
 				userDto.setLastName(last_name);
 				userDto.setPassword(password);
 				userDto.setSalt(salt);
 				userDto.setStatus(statusId);
-
+				userDto.setAdministratorFlag(adminFlag);
 			} else {
 
 			}
