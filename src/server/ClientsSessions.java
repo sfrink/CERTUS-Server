@@ -3,9 +3,12 @@ package server;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import dto.UserDto;
+
 public class ClientsSessions {
 	
 	private ArrayList<Integer> usersID = new ArrayList<Integer>();
+	private ArrayList<Integer> usersRole = new ArrayList<Integer>();
 	private ArrayList<String> sessionsID = new ArrayList<String>();
 	
 	private String generateSessionID(){
@@ -13,13 +16,18 @@ public class ClientsSessions {
 	}
 	
 	
-	public String addNewClient (int userID){
+	public String addNewClient (UserDto user){
 		String userSession = "";
+		
+		int userID = user.getUserId();
+		int isAdmin = user.getAdministratorFlag();
+		
 		if (isLoggedIn(userID)){
 			userSession = getSession(userID);
 		}else{
 			userSession = generateSessionID();
 			usersID.add(userID);
+			usersRole.add(isAdmin);
 			sessionsID.add(userSession);
 		}
 		return userSession;
@@ -60,10 +68,74 @@ public class ClientsSessions {
 		}
 		
 		usersID.remove(index);
+		usersRole.remove(index);
 		sessionsID.remove(index);
 		
 		return true;
 	}
+	
+	public boolean isAdmin(int userID){
+		int index = usersID.indexOf(userID);
+		
+		//if session is not found:
+		if (index == -1){
+			return false;
+		}
+		
+		if (usersRole.get(index) == 1){
+			return true;
+		}else{
+			return false;
+		}
+		
+	}
+	
+	public boolean isAdmin(String sessionID){
+		int index = sessionsID.indexOf(sessionID);
+		
+		//if session is not found:
+		if (index == -1){
+			return false;
+		}
+		
+		if (usersRole.get(index) == 1){
+			return true;
+		}else{
+			return false;
+		}
+		
+	}
+	
+	public boolean isUser(int userID){
+		int index = usersID.indexOf(userID);
+		
+		//if session is not found:
+		if (index == -1){
+			return false;
+		}
+		
+		if (usersRole.get(index) == 0){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public boolean isUser(String sessionID){
+		int index = sessionsID.indexOf(sessionID);
+	
+		//if session is not found:
+		if (index == -1){
+			return false;
+		}
+		
+		if (usersRole.get(index) == 0){
+			return true;
+		}else{
+			return false;
+		}	
+	}
+	
 	
 	public String toString(){
 		String out = "";
@@ -71,12 +143,12 @@ public class ClientsSessions {
 			return ("(No logged in users.)");
 		}
 		for (int i = 0; i < usersID.size(); i++){
-			out += "(";
-			out += sessionsID.get(i);
-			out += " : ";
-			out += usersID.get(i);
-			out += ")";
-			out += "\n";
+			out += "(User ID: " + usersID.get(i);
+			out += " | ";
+			out += "User Role: " + usersRole.get(i);
+			out += " | ";
+			out += "User Session: " + sessionsID.get(i);
+			out += ")\n";
 		}
 		return out;
 	}
