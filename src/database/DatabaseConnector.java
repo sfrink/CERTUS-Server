@@ -1,7 +1,10 @@
 package database;
 
 import java.io.InputStream;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -2847,7 +2850,10 @@ public class DatabaseConnector
 			if(rs.next()){
 				Blob pubKey = rs.getBlob(1);
 				byte[] pk = pubKey.getBytes(1, (int) pubKey.length());
-				val.setObject(pk);
+				KeyFactory kf=KeyFactory.getInstance("RSA");
+				PKCS8EncodedKeySpec ks=new PKCS8EncodedKeySpec(pk);
+				PublicKey pub = kf.generatePublic(ks);
+				val.setObject(pub);
 				val.setVerified(true);
 				val.setStatus("Public key retrieved");
 			}
@@ -2860,6 +2866,11 @@ public class DatabaseConnector
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setVerified(false);
 			val.setStatus("Failed to retrieve public key");
+		} catch(Exception ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("Key in incorrect binary format");
 		}
 		return val;
 	}
