@@ -1138,6 +1138,8 @@ public class DatabaseConnector
 			Validator vElection = electionDto.Validate();
 			if (vElection.isVerified()) {
 				// For private elections, check whether the given email addresses are registered 
+				
+				Validator vEditElection = new Validator();
 				if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
 					// private election - check all the emails
 					Validator vEmailList = checkUserEmails(electionDto);
@@ -1147,10 +1149,17 @@ public class DatabaseConnector
 					electionDto.setUnregisteredEmailList(electionDtoEmailChecked.getUnregisteredEmailList());	
 					electionDto.setEmailListError(electionDtoEmailChecked.isEmailListError());
 					electionDto.setEmailListMessage(electionDtoEmailChecked.getEmailListMessage());
+					
+					if (!electionDtoEmailChecked.isEmailListError()) {
+						// Update the election details if all email good for private election
+						vEditElection = editElectionWithCandidatesString(electionDto);
+					}
+					
+				} else if (electionDto.getElectionType() == ElectionType.PUBLIC.getCode()) {
+					// updated the election details of public election
+					vEditElection = editElectionWithCandidatesString(electionDto);
 				}
 				
-				// Update the election details
-				Validator vEditElection = editElectionWithCandidatesString(electionDto);
 				val.setObject(electionDto);
 				val.setStatus(vEditElection.getStatus());
 				val.setVerified(vEditElection.isVerified() & !electionDto.isEmailListError());
