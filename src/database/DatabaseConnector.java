@@ -308,6 +308,73 @@ public class DatabaseConnector
 		return validator;
 	}
 
+	public Validator selectElectionWithParticipatingVoters(int id) {
+		Validator validator = new Validator();
+		ElectionDto electionDto = new ElectionDto();
+
+		PreparedStatement st = null;
+
+		String query = "SELECT e.election_id, election_name, e.description, start_datetime, close_datetime, "
+				+ " status, s.code, s.description, owner_id, candidates_string, type, allowed_users_emails"
+				+ " FROM election e "
+				+ " INNER JOIN status_election s "
+				+ " ON (e.status = s.status_id) "
+				+ " INNER JOIN participate p"
+				+ " ON (e.election_id = p.election_id) "
+				+ " WHERE e.election_id = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, id);
+			ResultSet res = st.executeQuery();
+			if (res.next()) {
+				int electionId = res.getInt(1);
+				String electionName = res.getString(2);
+				String electionDescription = res.getString(3);
+				String startDatetime = res.getString(4);
+				String closeDatetime = res.getString(5);
+				int statusId = res.getInt(6);
+				String statusCode = res.getString(7);
+				String statusDescription = res.getString(8);
+				int ownerId = res.getInt(9);
+				String candidatesListString = res.getString(10);
+				int electionType = res.getInt(11);
+				String allowedUserEmails = res.getString(12);
+				
+				
+				electionDto.setElectionId(electionId);
+				electionDto.setElectionName(electionName);
+				electionDto.setElectionDescription(electionDescription);
+				electionDto.setStartDatetime(startDatetime);
+				electionDto.setCloseDatetime(closeDatetime);
+				electionDto.setStatus(statusId);
+				electionDto.setStatusCode(statusCode);
+				electionDto.setStatusDescription(statusDescription);
+				electionDto.setOwnerId(ownerId);
+				electionDto.setCandidatesListString(candidatesListString);
+				electionDto.setElectionType(electionType);
+				electionDto.setRegisteredEmailList(allowedUserEmails);
+				
+				Validator vCandidates = selectCandidatesOfElection(electionId);
+				electionDto.setCandidateList( (ArrayList<CandidateDto>) vCandidates.getObject());
+				
+				validator.setVerified(true);
+				validator.setObject(electionDto);
+				validator.setStatus("Select successful");
+			} else {
+				validator.setStatus("Election not found");
+			}
+			
+
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setVerified(false);
+			validator.setStatus("Select failed");
+		}
+
+		return validator;
+	}
 	/**
 	 * @param status
 	 *            (ElectionStatus) - specific status to be searched
@@ -937,10 +1004,11 @@ public class DatabaseConnector
 			if (electionId > 0) {
 				electionDto.setElectionId(electionId);
 				
-				val.setVerified(true & !electionDto.isEmailListError());
-				val.setStatus("Election has been inserted");
 				val.setObject(electionDto);
+				val.setVerified(true & !electionDto.isEmailListError());
+				val.setStatus("Election has been inserted");	
 			} else {
+				val.setObject(electionDto);
 				val.setVerified(false);
 				val.setStatus("Election insert failed");
 			}
@@ -1550,10 +1618,11 @@ public class DatabaseConnector
 		if (electionDto.getEmailList() != null) {
 			String[] emails = electionDto.getEmailList().split(newLine);
 			for (String email : emails) {
-				if (checkUserEmail(email).isVerified()) {
-					registeredEmails += email + newLine;
+				String emailTrimmed = email.trim();
+				if (checkUserEmail(emailTrimmed).isVerified()) {
+					registeredEmails += emailTrimmed + newLine;
 				} else {
-					unregisteredEmails += email + newLine;
+					unregisteredEmails += emailTrimmed + newLine;
 					allRegisteredEmails = false;
 				}
 			}
