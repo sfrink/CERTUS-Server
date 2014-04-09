@@ -974,7 +974,7 @@ public class DatabaseConnector
 			
 			String query = "INSERT INTO election "
 					+ " (election_name, description, status, owner_id, candidates_string, start_datetime, close_datetime, type, allowed_users_emails, public_key, private_key)"
-					+ " VALUES (?,		?,				?,		?,		?,					?,				?,				?, 		?					?		?)";
+					+ " VALUES (?,		?,				?,		?,		?,					?,				?,				?, 		?,					?,		?)";
 			
 			Validator keyVal=sec.generateKeyPair();
 			if(keyVal.isVerified()){
@@ -1403,7 +1403,7 @@ public class DatabaseConnector
 		try {
 			String query = "";
 			if (electionStatus.equals(ElectionStatus.OPEN)) {
-				query = "UPDATE election SET status=?, allowed_user_emails = null WHERE election_id=?";
+				query = "UPDATE election SET status=?, allowed_users_emails = null WHERE election_id=?";
 			} else {
 				query = "UPDATE election SET status=? WHERE election_id=?";
 			}
