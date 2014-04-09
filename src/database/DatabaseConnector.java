@@ -5,6 +5,7 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -2850,9 +2851,8 @@ public class DatabaseConnector
 			if(rs.next()){
 				Blob pubKey = rs.getBlob(1);
 				byte[] pk = pubKey.getBytes(1, (int) pubKey.length());
-				KeyFactory kf=KeyFactory.getInstance("RSA");
-				PKCS8EncodedKeySpec ks=new PKCS8EncodedKeySpec(pk);
-				PublicKey pub = kf.generatePublic(ks);
+				PublicKey pub = KeyFactory.getInstance("RSA").
+						generatePublic(new X509EncodedKeySpec(pk));
 				val.setObject(pub);
 				val.setVerified(true);
 				val.setStatus("Public key retrieved");
