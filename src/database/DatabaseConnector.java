@@ -939,6 +939,7 @@ public class DatabaseConnector
 				+ " INNER JOIN users u"
 				+ " ON (p.user_id = u.user_id)"
 				+ " WHERE election_id = ?"
+				+ " GROUP BY p.user_id"
 				;
 		String currentEmailList = "";
 		try {
