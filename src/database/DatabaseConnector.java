@@ -1300,11 +1300,13 @@ public class DatabaseConnector
 					if (!electionDtoEmailChecked.isEmailListError()) {
 						// add new users to the participate table if all email good for private election
 						Validator vAddUsers = addAllowedUsers(electionDto.getElectionId(), electionDto.getRegisteredEmailList());
-						electionDto.setCurrentEmailList(selectParticipatingVotersOfElection(electionDto.getElectionId()));
+						
 						val = vAddUsers; // Verified status is set to true or false by the previous statement
 					} else {
 						val.setStatus(electionDtoEmailChecked.getEmailListMessage());
 					}
+					// get the current users' email list
+					electionDto.setCurrentEmailList(selectParticipatingVotersOfElection(electionDto.getElectionId()));
 					val.setObject(electionDto);
 				} else {
 					// not a private election, do not add users
