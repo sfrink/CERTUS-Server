@@ -300,7 +300,7 @@ public class Election
 		assertTrue("elections details with participating voters", val.isVerified());
 	}
 	
-	@Test
+	//@Test
 	public void testAddAdditionalUsersToElection() {
 		int electionId = 70;
 		ElectionDto electionDto = new ElectionDto();
