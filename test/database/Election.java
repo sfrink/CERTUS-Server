@@ -299,4 +299,26 @@ public class Election
 		
 		assertTrue("elections details with participating voters", val.isVerified());
 	}
+	
+	@Test
+	public void testAddAdditionalUsersToElection() {
+		int electionId = 70;
+		ElectionDto electionDto = new ElectionDto();
+		electionDto.setElectionId(electionId);
+		String emailList = "user@somewhere.com\n";
+		emailList += "sfrink1@gmail.com";
+		//emailList += "bademal";
+		electionDto.setEmailList(emailList);
+		System.out.println("-----------------------------------------------------------");
+		Validator val = dbc.addAdditionalUsersToElection(electionDto);
+		System.out.println(val.getStatus());
+		if (val.isVerified()) {
+			
+			System.out.println("Add aditional users");
+			System.out.println(val.getStatus());
+			System.out.println(((ElectionDto)val.getObject()).toString());
+		}
+		
+		assertTrue("add additional voters ", val.isVerified());
+	}
 }
