@@ -127,10 +127,25 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.selectUser(userId);
         }
+    }
+    
+    public Validator addAdditionalUsersToElection(ElectionDto electionDto, String sessionID) throws RemoteException {
+    	
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int clientID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);        
+        
+        if (!allowed){
+        	Validator res = new Validator();
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	return dbc.addAdditionalUsersToElection(electionDto);
+        }
         
     	
     }
-    
     public Validator selectAllUsers(String sessionID) throws RemoteException {
     	
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
