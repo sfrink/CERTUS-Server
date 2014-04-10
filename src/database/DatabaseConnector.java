@@ -930,7 +930,7 @@ public class DatabaseConnector
 	 *         of a given election
 	 * @author Hirosh Wickramasuriya
 	 */
-	public String selectParticipatingVotersOfElection(int electionIdKey) {
+	private String selectParticipatingVotersOfElection(int electionIdKey) {
 		
 		PreparedStatement st = null;
 
@@ -1276,6 +1276,7 @@ public class DatabaseConnector
 				|| electionDtoCurrent.getStatus() == ElectionStatus.OPEN.getCode() ) {
 			// Election is NEW or OPEN state
 			
+			// These properties are set from the db, in order to pass the validation.
 			electionDto.setElectionName(electionDtoCurrent.getElectionName());
 			electionDto.setElectionDescription(electionDtoCurrent.getElectionDescription());
 			electionDto.setElectionType(electionDtoCurrent.getElectionType());
@@ -1299,7 +1300,7 @@ public class DatabaseConnector
 					if (!electionDtoEmailChecked.isEmailListError()) {
 						// add new users to the participate table if all email good for private election
 						Validator vAddUsers = addAllowedUsers(electionDto.getElectionId(), electionDto.getRegisteredEmailList());
-						
+						electionDto.setCurrentEmailList(selectParticipatingVotersOfElection(electionDto.getElectionId()));
 						val = vAddUsers; // Verified status is set to true or false by the previous statement
 					} else {
 						val.setStatus(electionDtoEmailChecked.getEmailListMessage());
