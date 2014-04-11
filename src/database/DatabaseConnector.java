@@ -1426,6 +1426,33 @@ public class DatabaseConnector
 		}
 		return val;
 	}
+	
+	public Validator deleteElection(int electionId) {
+		PreparedStatement st = null;
+		Validator val = new Validator();
+		try {
+			String query = "UPDATE election SET status=? WHERE election_id=?";
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setInt(1, ElectionStatus.CLOSED.getCode());
+			st.setInt(2, electionId);
+			
+			st.executeUpdate();
+			
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
+				val.setStatus("Election status updated successfully");
+				val.setVerified(true);
+			} else {
+				val.setStatus("Failed to delete the election");
+			}
+			
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
+		}
+		return val;
+	}
 
 	/**
 	 * @param electionDto
