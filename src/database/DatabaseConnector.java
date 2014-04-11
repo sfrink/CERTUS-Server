@@ -2341,16 +2341,14 @@ public class DatabaseConnector
 		try {
 			String query = "UPDATE users SET first_name = ?,"
 					+ " last_name = ?,"
-					+ " email = ?,"
 					+ " status = ? "
 					+ " WHERE user_id=?";
 
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setString(1, userDto.getFirstName());
 			st.setString(2, userDto.getLastName());
-			st.setString(3, userDto.getEmail());
-			st.setInt(4, userDto.getStatus());
-			st.setInt(5, userDto.getUserId());
+			st.setInt(3, userDto.getStatus());
+			st.setInt(4, userDto.getUserId());
 			st.executeUpdate();
 			
 			int updateCount = st.getUpdateCount();
