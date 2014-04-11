@@ -1167,6 +1167,7 @@ public class DatabaseConnector
 					if (vAddCandidates.isVerified()) {
 						// add allowed users for private elections
 						if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()) {
+							// private election
 							Validator vAddUsers = addAllowedUsers(electionId, electionInDb.getRegisteredEmailList());
 							if (vAddUsers.isVerified()) {
 								// change the status of election to OPEN
@@ -1181,6 +1182,16 @@ public class DatabaseConnector
 								// remove the candidates already added
 								deleteCandidates( electionInDb.getElectionId() );
 								val = vAddUsers;
+							}
+						} else if (electionInDb.getElectionType() == ElectionType.PUBLIC.getCode()){
+							// public election
+							// change the status of election to OPEN
+							Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
+							if (vElectionStatusOpen.isVerified()) {
+								val.setVerified(true); 
+								val.setStatus("Election has been opened.");
+							} else {
+								val = vElectionStatusOpen;
 							}
 						}
 					} else {
