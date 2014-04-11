@@ -101,11 +101,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
     		validator.setObject(user);    		
     	}
-//    	UserDto userDto=selectUserByEmailLimited(username);
-//    	String hash=PasswordHasher.sha512(password,userDto.getSalt());
-//    	return hash==userDto.getPassword();
     	return validator;
-    	
     }
     
     public Validator addUser(UserDto userDto) throws RemoteException {
@@ -116,8 +112,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator selectUser(int userId, String sessionID) throws RemoteException {
     	
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);        
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, userId, action);        
         
         if (!allowed){
         	Validator res = new Validator();
@@ -132,8 +128,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator addAdditionalUsersToElection(ElectionDto electionDto, String sessionID) throws RemoteException {
     	
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);        
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup2(requesterID, electionDto.getElectionId(), action);        
         allowed = true;
         if (!allowed){
         	Validator res = new Validator();
@@ -149,10 +145,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator selectAllUsers(String sessionID) throws RemoteException {
     	
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -164,10 +160,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     
     public Validator editUser(UserDto userDto, String sessionID) throws RemoteException {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, userDto.getUserId(), action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -179,10 +175,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     
     public Validator editUserStatus(int userId, UserStatus userStatus, String sessionID) throws RemoteException {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -204,10 +200,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator selectElectionForOwner(int electionId, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup2(requesterID, electionId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -220,10 +216,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator selectElectionForVoter(int electionId, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowedToVote(requesterID, requesterID, electionId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -241,10 +237,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator selectElectionFullDetail (int electionId, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup2(requesterID, electionId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -258,10 +254,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator selectElectionsForAdmin(String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -275,10 +271,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator selectElectionsForResults(int userId, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, userId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -291,10 +287,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator selectElectionsForOwner(int electionOwnerId, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, electionOwnerId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -308,10 +304,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator addElection(ElectionDto electionDto, String sessionID)throws RemoteException {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -325,10 +321,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator editElection(ElectionDto electionDto, String sessionID)throws RemoteException {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup2(requesterID, electionDto.getElectionId(), action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -343,10 +339,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator editElectionStatus(int electionId, ElectionStatus electionStatus, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup2(requesterID, electionId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -360,10 +356,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator openElectionAndPopulateCandidates(int electionId, String sessionID) throws RemoteException {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup2(requesterID, electionId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -378,10 +374,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator vote(VoteDto v, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowedToVote(requesterID, v.getUserId(), v.getElectionId(), action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -393,33 +389,29 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
-    public Validator getTallierPublicKey(int electionId) throws RemoteException{
-//    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-//    	int clientID = clientSessions.getSession(sessionID);
-//        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
-//    	
-//        if (!allowed){
-//        	Validator res = new Validator();
-//        	res.setVerified(false);
-//        	res.setStatus("Permission denied.");
-//        	return res;
-//        }else{
-//    	
-//        	Validator res = new Validator();//to be deleted
-//        	res.setVerified(false);//to be deleted
-//        	res.setStatus("You are allowed to invoke.");//to be deleted
-//        	return res;//to be deleted
-//        }
-    	return dbc.getTallierPublicKey(electionId);
+    public Validator getTallierPublicKey(int electionId, String sessionID) throws RemoteException{
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowedToVote(requesterID, requesterID, electionId, action);
+    	
+        if (!allowed){
+        	Validator res = new Validator();
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	return dbc.getTallierPublicKey(electionId);
+        }
+    	
     }
     
     @Override
     public Validator selectElectionsForVoter(int userId, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, userId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -434,10 +426,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator voteProgressStatusForElection(int electionId, String sessionID) throws RemoteException {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowedToViewResults(requesterID, electionId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -451,10 +443,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator publishResults(int electionId, String password, String sessionID) throws RemoteException {   	
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup2(requesterID, electionId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -468,10 +460,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator selectResults(int electionId, String sessionID) throws RemoteException {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.isAllowedToViewResults(requesterID, electionId, action);
     	
-        if (allowed){
+        if (!allowed){
         	Validator res = new Validator();
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
@@ -490,8 +482,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator generateNewKeys(int userID, String newKeyPass, String sessionID) {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, userID, action);
 
         if (!allowed){
         	Validator res = new Validator();
@@ -507,8 +499,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator logOut(String sessionID){
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
 
         Validator res = new Validator();
         if (!allowed){
@@ -530,8 +522,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator updateUser(UserDto userDto, String sessionID){
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, requesterID, action);
 
         Validator res = new Validator();
         if (!allowed){
@@ -539,7 +531,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setStatus("Permission denied.");
         	return res;
         }else{
-        	userDto.setUserId(clientID);
+        	userDto.setUserId(requesterID);
         	return dbc.updateUser(userDto);
         }
         
@@ -548,10 +540,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator updateUserPassword(UserDto userDto, String sessionID){
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, userDto.getUserId(), action);
 
-        userDto.setUserId(clientID);
+        userDto.setUserId(requesterID);
         Validator res = new Validator();
         if (!allowed){
         	res.setVerified(false);
@@ -559,7 +551,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	return res;
         }else{
         	//check if the current password is correct for the user:
-        	boolean correct = dbc.checkCorrectPassword(clientID, userDto.getPassword());
+        	boolean correct = dbc.checkCorrectPassword(requesterID, userDto.getPassword());
         	
         	if (correct){
         		//the password matched, we can update it now:
@@ -578,8 +570,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator uploadPubKey(byte[] keyBytes, String sessionID){
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int clientID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup0(clientID, action);    
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, requesterID, action);    
         
         Validator res = new Validator();
         
@@ -590,7 +582,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
         }else{
-        	res = dbc.uploadPubKey(keyBytes, clientID);        	
+        	res = dbc.uploadPubKey(keyBytes, requesterID);        	
         }    	
         
         return res;
@@ -598,7 +590,19 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     
     @Override
     public Validator deleteElection(int electionId, String sessionID){
-    	return dbc.deleteElection(electionId);
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int requesterID = clientSessions.getSession(sessionID);
+        boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
+
+        Validator res = new Validator();
+        if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	return dbc.deleteElection(electionId);
+        }
+
     }
     
     
