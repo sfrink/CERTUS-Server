@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.crypto.AEADBadTagException;
 import javax.sql.rowset.serial.SerialBlob;
 
 import server.ClientsSessions;
@@ -1821,22 +1822,21 @@ public class DatabaseConnector
 		
 	}
 	
-	private int getDecryptedCandId(VoteDto vote, String password, int electionId){
+	private int getDecryptedCandId(VoteDto vote, PrivateKey privateKey){
+		int out = -1;
+		
 		String enc = vote.getVoteEncrypted();
 		String sig = vote.getVoteSignature();
 		SecurityValidator sec=new SecurityValidator();
-		if (sec.checkSignature(sig, enc, vote.getUserId()).isVerified()){
-			//System.out.println("###############"+password +" "+electionId);
-			String plainHex=sec.decrypt(enc, password, electionId);
-			//System.out.println("##########"+plainHex);
-			byte[] plain=sec.hexStringtoByteArray(plainHex);
-			String id=new String(plain);
-			int cand_id = Integer.parseInt(id);
-			return cand_id;
+		if (sec.checkSignature(sig, enc, vote.getUserId()).isVerified()) {
+			Validator vDecryptVote = sec.decryptVote(enc, privateKey);
+
+			if(vDecryptVote.isVerified()) {
+				out = (Integer) vDecryptVote.getObject();				
+			}			
 		}
-		else{
-			return -1;
-		}
+		
+		return out;
 	}
 	
 	/**
@@ -1846,30 +1846,43 @@ public class DatabaseConnector
 	 */
 	public Validator tally(ElectionDto elec) {
 		Validator val = new Validator();
+		Validator vKey = getElectionPrivateKey(elec.getElectionId(), elec.getPassword());
+		
+		if(vKey.isVerified()) {
+			PrivateKey privateKey = (PrivateKey) vKey.getObject();
 			
-		// get the votes for this election 
-		Validator voteVal = selectVotesByElectionId(elec.getElectionId());
-
-		if (voteVal.isVerified()) {
-			Map<Integer, CandidateDto> map=initMap(elec);
-			ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();			// all the votes for the election
-			
-			// check the validity of each vote, decrypt and count the vote
-			for (int i = 0; i < votes.size(); i++) {
-				int cand_id=getDecryptedCandId(votes.get(i), elec.getPassword(), elec.getElectionId());	
-				if (cand_id!=-1) {
-					map=addToMap(map, cand_id);
+			// get the votes for this election 
+			Validator voteVal = selectVotesByElectionId(elec.getElectionId());
+	
+			if (voteVal.isVerified()) {
+				Map<Integer, CandidateDto> map=initMap(elec);
+				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) voteVal.getObject();			// all the votes for the election
+				
+				// check the validity of each vote, decrypt and count the vote
+				for (int i = 0; i < votes.size(); i++) {
+					int cand_id=getDecryptedCandId(votes.get(i), privateKey);	
+					if (cand_id!=-1) {
+						map=addToMap(map, cand_id);
+					} else {
+						System.out.println("Partially computed");
+					}
 				}
+				// attach the candidates list with results to the ElectionDto
+				elec=putResultsInElection(map, elec);
+	
+				val.setStatus("Tally computed");
+				val.setObject(elec);
+				val.setVerified(true);
+			} else {
+				val = voteVal;
 			}
-			// attach the candidates list with results to the ElectionDto
-			elec=putResultsInElection(map, elec);
-
-			val.setStatus("Tally computed");
-			val.setObject(elec);
-			val.setVerified(true);
 		} else {
-			val = voteVal;
+			elec.setPasswordError(true);
+			elec.setPasswordErrorMessage("Invalid password");
+			vKey.setObject(elec);
+			val = vKey;
 		}
+		
 		return val;
 	}
 
@@ -2865,6 +2878,10 @@ public class DatabaseConnector
 			return true;
 		}
 		
+		if(isElectionAuth(userID, electionID)) {
+			return true;
+		}
+		
 		PreparedStatement st = null;
 		String query = "SELECT * FROM participate WHERE (user_id = ?) and (election_id=?)";
 
@@ -2995,4 +3012,41 @@ public class DatabaseConnector
 		
 		return res;
 	}
+	
+	
+	
+	public Validator getElectionPrivateKey(int electionId, String password) {
+		Validator vKey = new Validator();
+		Validator vKeyDb = getPrivateKey(electionId);
+		
+		
+		if(vKeyDb.isVerified()) {			
+			// key from DB has been fetched
+			byte[] keyBytesEncrypted = (byte[]) vKeyDb.getObject();
+
+			try {
+				byte[] keyBytesDecrypted = DataEncryptor.AESDecrypt(keyBytesEncrypted, password);
+				vKey = RSAKeys.getPrivateKey(keyBytesDecrypted);
+			} catch (Exception e) {
+				vKey.setVerified(false);
+				vKey.setStatus("Invalid password");
+			}
+		} else {
+			vKey.setVerified(false);
+			vKey.setStatus("Election key could not be fetched");
+		}
+		
+		return vKey;
+	}
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }

@@ -81,7 +81,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 			clientSessions = new ClientsSessions();
 			
 			System.out.println("Certus Service bound in registry");
-
+			
 			
 		} catch (Exception e) {
 			System.out.println("Certus RMI service exception: " + e.getMessage());
@@ -452,7 +452,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setStatus("Permission denied.");
         	return res;
         }else{
-        	return dbc.publishResults(electionId, password);
+        	Validator v = dbc.publishResults(electionId, password);
+        	System.out.println(v);
+        	return v;
         }
     	
     }

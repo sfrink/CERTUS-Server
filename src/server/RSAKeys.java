@@ -6,10 +6,15 @@ package server;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.EncodedKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+
+import dto.Validator;
 
 public class RSAKeys {
 
@@ -82,5 +87,22 @@ public class RSAKeys {
 		bos.close();
 	}	
 	
-	
+	public static Validator getPrivateKey (byte[] encodedPrivateKey){
+		Validator vKey = new Validator();
+		
+		try {
+			EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
+					encodedPrivateKey);
+			KeyFactory generator = KeyFactory.getInstance("RSA");
+			PrivateKey privateKey = generator.generatePrivate(privateKeySpec);
+
+			vKey.setVerified(true);
+			vKey.setObject(privateKey);
+		} catch (Exception e) {
+			vKey.setVerified(false);
+			vKey.setStatus("Convertion of bytes to private key failed");
+		}
+		
+		return vKey;
+	}
 }

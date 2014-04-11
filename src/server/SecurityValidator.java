@@ -104,8 +104,38 @@ public class SecurityValidator {
 		return sb.toString();
 	}
 
+
+	public Validator decryptVote(String ciph, PrivateKey privateKey) {
+		Validator vRes = new Validator();
+		byte[] ct = hexStringtoByteArray(ciph);
+		
+		try {
+			Cipher dec = Cipher.getInstance("RSA");
+			dec.init(Cipher.DECRYPT_MODE, privateKey);
+			byte[] plain = dec.doFinal(ct);
+			String plaintext = byteArraytoHex(plain);
+
+			byte[] plain2=hexStringtoByteArray(plaintext);
+			String id=new String(plain2);
+			int cand_id = Integer.parseInt(id);
+			
+			vRes.setVerified(true);
+			vRes.setObject(cand_id);
+		} catch (Exception ex) {
+			vRes.setVerified(false);
+			vRes.setStatus("Could not decrypt the vote");			
+		}
+		
+		return vRes;
+	}
+
+	
+	
+	
 	public String decrypt(String ciph, String password, int electionId) {
 		byte[] ct = hexStringtoByteArray(ciph);
+		String out = "";
+
 		try {
 			DatabaseConnector dbc=new DatabaseConnector();
 			Validator val=dbc.getPrivateKey(electionId);
@@ -117,14 +147,16 @@ public class SecurityValidator {
 				Cipher dec = Cipher.getInstance("RSA");
 				dec.init(Cipher.DECRYPT_MODE, priv);
 				byte[] plain = dec.doFinal(ct);
-				String plaintext = byteArraytoHex(plain);
-				return plaintext;
+				String plaintext = byteArraytoHex(plain);				
+				out = plaintext;
 			}
 		} catch (Exception ex) {
 			Logger lgr = Logger.getLogger(SecurityValidator.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			out = "";
 		}
-		return null;
+		
+		return out;
 	}
 	
 	public Validator generateKeyPair(){
