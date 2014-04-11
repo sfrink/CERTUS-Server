@@ -672,15 +672,29 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 
 		String query = "SELECT e.election_id, e.election_name, e.description, e.owner_id, "
-				+ "e.start_datetime, e.close_datetime FROM election as e "
-				+ "LEFT JOIN vote as v ON e.election_id = v.election_id "
-				+ "WHERE (v.user_id is null  OR v.user_id != ?) AND e.status = ? "
-				+ "GROUP BY e.election_id";
+				+ " e.start_datetime, e.close_datetime"
+				+ " FROM election e "
+				+ " WHERE (e.status = ? AND e.type = ? AND e.election_id NOT IN (SELECT election_id FROM vote WHERE user_id = ?)) "
+				+ " UNION"
+				+ "  SELECT e.election_id, e.election_name, e.description, e.owner_id, "
+				+ " e.start_datetime, e.close_datetime "
+				+ " FROM election e "
+				+ " INNER JOIN participate p "
+				+ " ON (e.election_id = p.election_id) "
+				+ " WHERE (e.status = ? AND e.type = ? AND p.user_id = ? AND e.election_id NOT IN (SELECT election_id FROM vote WHERE user_id = ?) )"
+				;
 
+		
 		try {
 			st = this.con.prepareStatement(query);
-			st.setInt(1, user_id);
-			st.setInt(2, ElectionStatus.OPEN.getCode());
+			st.setInt(1, ElectionStatus.OPEN.getCode());
+			st.setInt(2, ElectionType.PUBLIC.getCode());
+			st.setInt(3, user_id);
+			
+			st.setInt(4, ElectionStatus.OPEN.getCode());
+			st.setInt(5, ElectionType.PRIVATE.getCode());
+			st.setInt(6, user_id);
+			st.setInt(7, user_id);
 			ResultSet res = st.executeQuery();
 
 			while (res.next()) {
