@@ -240,14 +240,16 @@ public class DatabaseConnector
 		return userDto;
 	}
 
+	
+	
 	// Election
 	/**
-	 * @param id
-	 *            (int) - Election identification number (primary key)
+	 * This function selects an election for owner
+	 * @param id (int) - Election identification number (primary key)
 	 * @return Validator : ElectionDto - Details of a particular election
-	 * @author Hirosh Wickramasuriya
+	 * @author Hirosh Wickramasuriya, Dmitriy Karmazin
 	 */
-	public Validator selectElection(int id) {
+	public Validator selectElectionForOwner(int id) {
 		Validator validator = new Validator();
 		ElectionDto electionDto = new ElectionDto();
 
@@ -301,8 +303,78 @@ public class DatabaseConnector
 			} else {
 				validator.setStatus("Election not found");
 			}
-			
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setVerified(false);
+			validator.setStatus("Select failed");
+		}
 
+		return validator;
+	}
+
+	
+	// Election
+	/**
+	 * This function selects an election for owner
+	 * @param id (int) - Election identification number (primary key)
+	 * @return Validator : ElectionDto - Details of a particular election
+	 * @author Hirosh Wickramasuriya, Dmitriy Karmazin
+	 */
+	public Validator selectElectionForVoter(int id) {
+		Validator validator = new Validator();
+		ElectionDto electionDto = new ElectionDto();
+
+		PreparedStatement st = null;
+
+		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime, "
+				+ " status, s.code, s.description, owner_id, candidates_string, type, allowed_users_emails"
+				+ " FROM election e "
+				+ " INNER JOIN status_election s "
+				+ " ON (e.status = s.status_id) "
+				+ " WHERE election_id = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setInt(1, id);
+			ResultSet res = st.executeQuery();
+			if (res.next()) {
+				int electionId = res.getInt(1);
+				String electionName = res.getString(2);
+				String electionDescription = res.getString(3);
+				String startDatetime = res.getString(4);
+				String closeDatetime = res.getString(5);
+				int statusId = res.getInt(6);
+				String statusCode = res.getString(7);
+				String statusDescription = res.getString(8);
+				int ownerId = res.getInt(9);
+				String candidatesListString = res.getString(10);
+				int electionType = res.getInt(11);
+				String allowedUserEmails = res.getString(12);
+				
+				
+				electionDto.setElectionId(electionId);
+				electionDto.setElectionName(electionName);
+				electionDto.setElectionDescription(electionDescription);
+				electionDto.setStartDatetime(startDatetime);
+				electionDto.setCloseDatetime(closeDatetime);
+				electionDto.setStatus(statusId);
+				electionDto.setStatusCode(statusCode);
+				electionDto.setStatusDescription(statusDescription);
+				electionDto.setOwnerId(ownerId);
+				electionDto.setCandidatesListString(candidatesListString);
+				electionDto.setElectionType(electionType);
+				electionDto.setRegisteredEmailList(allowedUserEmails);
+				
+				Validator vCandidates = selectCandidatesOfElection(electionId);
+				electionDto.setCandidateList( (ArrayList<CandidateDto>) vCandidates.getObject());
+				
+				validator.setVerified(true);
+				validator.setObject(electionDto);
+				validator.setStatus("Select successful");
+			} else {
+				validator.setStatus("Election not found");
+			}
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -379,73 +451,6 @@ public class DatabaseConnector
 
 		return validator;
 	}
-	/**
-	 * @param status
-	 *            (ElectionStatus) - specific status to be searched
-	 * @return Validator : ArrayList<ElectionDto> - List of elections that
-	 *         matches a specific status
-	 * @author Hirosh Wickramasuriya
-	 */
-	public Validator selectElections(ElectionStatus electionStatus) {
-		Validator validator = new Validator();
-		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
-
-		PreparedStatement st = null;
-
-		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime,"
-				+ " status, s.code, s.description, owner_id, candidates_string "
-				+ " FROM election e"
-				+ " INNER JOIN status_election s "
-				+ " ON (e.status = s.status_id) "
-				+ " WHERE status = ?"
-				+ " ORDER BY election_id";
-
-		try {
-			st = this.con.prepareStatement(query);
-			st.setInt(1, electionStatus.getCode());
-
-			ResultSet res = st.executeQuery();
-
-			while (res.next()) {
-
-				int electionId = res.getInt(1);
-				String electionName = res.getString(2);
-				String electionDescription = res.getString(3);
-				String startDatetime = res.getString(4);
-				String closeDatetime = res.getString(5);
-				int statusId = res.getInt(6);
-				String statusCode = res.getString(7);
-				String statusDescription = res.getString(8);
-				int ownerId = res.getInt(9);
-				String candidatesListString = res.getString(10);
-				
-				ElectionDto electionDto = new ElectionDto();
-				electionDto.setElectionId(electionId);
-				electionDto.setElectionName(electionName);
-				electionDto.setElectionDescription(electionDescription);
-				electionDto.setStartDatetime(startDatetime);
-				electionDto.setCloseDatetime(closeDatetime);
-				electionDto.setStatus(statusId);
-				electionDto.setStatusCode(statusCode);
-				electionDto.setStatusDescription(statusDescription);
-				electionDto.setOwnerId(ownerId);
-				electionDto.setCandidatesListString(candidatesListString);
-
-				elections.add(electionDto);
-			}
-			validator.setVerified(true);
-			validator.setObject(elections);
-			validator.setStatus("Successfully selected");
-
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select Failed.");
-		}
-
-		return validator;
-
-	}
 
 	/**
 	 * @param status
@@ -454,10 +459,11 @@ public class DatabaseConnector
 	 *         does not match to the status
 	 * @author Hirosh Wickramasuriya
 	 */
-	public Validator selectElectionsNotInStatus(ElectionStatus electionStatus) {
+	public Validator selectElectionsForAdmin() {
 		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
-
+		ElectionStatus electionStatus = ElectionStatus.DELETED;
+		
 		PreparedStatement st = null;
 
 		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime,"
@@ -514,20 +520,21 @@ public class DatabaseConnector
 		return validator;
 
 	}
+
+	
 	/**
-	 * @param electionOwnerId
-	 *            (int) - user_id of the user who owns this election
-	 * @param status
-	 *            (ElectionStatus) - specific status to be searched
+	 * This function selects all elections owned by a given user with published results
+	 * @param userId (int) - user_id of the user who owns this election
+	 * @param status (ElectionStatus) - specific status to be searched
 	 * @return Validator : ArrayList<ElectionDto> - List of elections owned by
 	 *         the specific user, that matches a specific status
-	 * @author Hirosh Wickramasuriya
+	 * @author Hirosh Wickramasuriya, Dmitriy Karmazin
 	 */
-	public Validator selectElectionsOwnedByUser(int electionOwnerId, ElectionStatus electionStatus) {
+	public Validator selectElectionsForResults(int userId) {
 		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
-
 		PreparedStatement st = null;
+		ElectionStatus electionStatus = ElectionStatus.PUBLISHED;
 
 		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime, "
 				+ " status, s.code, s.description, owner_id, candidates_string, type "
@@ -539,7 +546,7 @@ public class DatabaseConnector
 
 		try {
 			st = this.con.prepareStatement(query);
-			st.setInt(1, electionOwnerId);
+			st.setInt(1, userId);
 			st.setInt(2, electionStatus.getCode());
 
 			ResultSet res = st.executeQuery();
@@ -583,82 +590,17 @@ public class DatabaseConnector
 		}
 
 		return validator;
-
 	}
 
-	/**
-	 * @return Validator : ArrayList<ElectionDto> - List of all the elections
-	 *         (regardless of status)
-	 * @author Hirosh Wickramasuriya
-	 */
-	public Validator selectElections() {
-		Validator validator = new Validator();
-		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
-
-		PreparedStatement st = null;
-
-		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime,"
-				+ " status, s.code, s.description, owner_id, candidates_string "
-				+ " FROM election e" 
-				+ " INNER JOIN status_election s " 
-				+ " ON (e.status = s.status_id)"
-				+ " ORDER BY  election_id";
-
-		try {
-			st = this.con.prepareStatement(query);
-
-			ResultSet res = st.executeQuery();
-
-			while (res.next()) {
-
-				int electionId = res.getInt(1);
-				String electionName = res.getString(2);
-				String electionDescription = res.getString(3);
-				String startDatetime = res.getString(4);
-				String closeDatetime = res.getString(5);
-				int statusId = res.getInt(6);
-				String statusCode = res.getString(7);
-				String statusDescription = res.getString(8);
-				int ownerId = res.getInt(9);
-				String candidatesListString = res.getString(10);
-				
-				ElectionDto electionDto = new ElectionDto();
-				electionDto.setElectionId(electionId);
-				electionDto.setElectionName(electionName);
-				electionDto.setElectionDescription(electionDescription);
-				electionDto.setStartDatetime(startDatetime);
-				electionDto.setCloseDatetime(closeDatetime);
-				electionDto.setStatus(statusId);
-				electionDto.setStatusCode(statusCode);
-				electionDto.setStatusDescription(statusDescription);
-				electionDto.setOwnerId(ownerId);
-				electionDto.setCandidatesListString(candidatesListString);
-
-				elections.add(electionDto);
-			}
-			validator.setVerified(true);
-			validator.setObject(elections);
-			validator.setStatus("Successfully selected");
-
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select failed");
-		}
-
-		return validator;
-
-	}
 	
 
 	/**
-	 * @param election_owner_id
-	 *            (int) - user_id of the user who owns elections
+	 * @param election_owner_id (int) - user_id of the user who owns elections
 	 * @return Validator : ArrayList<ElectionDto> - List of all the elections (not disabled only)
 	 *         owned by the specific user (regardless of status)
-	 * @author Hirosh Wickramasuriya
+	 * @author Hirosh Wickramasuriya, Dmitriy Karmazin
 	 */
-	public Validator selectElectionsOwnedByUser(int electionOwnerId) {
+	public Validator selectElectionsForOwner(int electionOwnerId) {
 		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
 
@@ -722,7 +664,7 @@ public class DatabaseConnector
 
 	}
 
-	public Validator selectAllElectionsForVoter(int user_id) {
+	public Validator selectElectionsForVoter(int user_id) {
 		Validator val = new Validator();
 		ArrayList<ElectionDto> elecs = new ArrayList<ElectionDto>();
 		PreparedStatement st = null;
@@ -1136,7 +1078,7 @@ public class DatabaseConnector
 		Validator val = new Validator();
 
 		// check the election status.
-		ElectionDto vElectionCurrent = (ElectionDto) selectElection(electionDto.getElectionId()).getObject();
+		ElectionDto vElectionCurrent = (ElectionDto) selectElectionForVoter(electionDto.getElectionId()).getObject();
 		if (vElectionCurrent.getStatus() == ElectionStatus.NEW.getCode())
 		{
 			// Validate Election
@@ -1272,7 +1214,7 @@ public class DatabaseConnector
 		Validator val = new Validator();
 		
 		// check the election status.
-		ElectionDto electionDtoCurrent = (ElectionDto) selectElection(electionDto.getElectionId()).getObject();
+		ElectionDto electionDtoCurrent = (ElectionDto) selectElectionForOwner(electionDto.getElectionId()).getObject();
 		if (electionDtoCurrent.getStatus() == ElectionStatus.NEW.getCode() 
 				|| electionDtoCurrent.getStatus() == ElectionStatus.OPEN.getCode() ) {
 			// Election is NEW or OPEN state
@@ -2020,7 +1962,7 @@ public class DatabaseConnector
 	private Validator compareElectionStatus(int electionId, ElectionStatus electionStatus)
 	{
 		Validator val = new Validator();
-		Validator vElection = selectElection(electionId);
+		Validator vElection = selectElectionForOwner(electionId);
 		
 		if (vElection.isVerified()) {
 			val = compareElectionStatus((ElectionDto)vElection.getObject(), electionStatus );
