@@ -596,5 +596,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         return res;
     }
     
+    @Override
+    public Validator deleteElection(int electionId, String sessionID){
+    	return dbc.deleteElection(electionId);
+    }
+    
     
 }
