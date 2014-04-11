@@ -541,7 +541,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     public Validator updateUserPassword(UserDto userDto, String sessionID){
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int requesterID = clientSessions.getSession(sessionID);
-        boolean allowed = refMonitor.gotRightsGroup1(requesterID, userDto.getUserId(), action);
+        boolean allowed = refMonitor.gotRightsGroup1(requesterID, requesterID, action);
 
         userDto.setUserId(requesterID);
         Validator res = new Validator();

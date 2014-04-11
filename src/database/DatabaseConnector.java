@@ -1470,7 +1470,7 @@ public class DatabaseConnector
 		try {
 			String query = "UPDATE election SET status=? WHERE election_id=?";
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-			st.setInt(1, ElectionStatus.CLOSED.getCode());
+			st.setInt(1, ElectionStatus.DELETED.getCode());
 			st.setInt(2, electionId);
 			
 			st.executeUpdate();
@@ -2974,6 +2974,10 @@ public class DatabaseConnector
 	//check if requesterID is invited:
 	public boolean isInvited(int requesterID, int electionID) {
 		boolean res = false;
+		
+		if(isPublicElection(electionID)) {
+			return true;
+		}
 		
 		PreparedStatement st = null;
 		String query = "SELECT * FROM participate WHERE (election_id = ?) and (user_id=?)";
