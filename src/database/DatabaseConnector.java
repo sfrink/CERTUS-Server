@@ -2931,4 +2931,27 @@ public class DatabaseConnector
 		}
 		return val;
 	}
+
+	//check if requesterID is invited:
+	public boolean isInvited(int requesterID, int electionID) {
+		boolean res = false;
+		
+		PreparedStatement st = null;
+		String query = "SELECT * FROM participate WHERE (election_id = ?) and (user_id=?)";
+
+		try {
+			st = con.prepareStatement(query);
+			st.setInt(1, electionID);
+			st.setInt(2, requesterID);
+			ResultSet rs = st.executeQuery();
+			res = (rs.next()) ? true : false;	
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res = false;
+		}		
+		
+		
+		return res;
+	}
 }
