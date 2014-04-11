@@ -30,7 +30,7 @@ public class Crypto
 			System.out.println(publicKey.toString());
 			
 			byte[] PrivateKey = (byte[])(dbc.getPrivateKey(electionId).getObject()); 
-			System.out.println(PrivateKey.toString());
+			//System.out.println(PrivateKey.toString());
 			
 			Cipher enc = Cipher.getInstance("RSA");
 			enc.init(Cipher.ENCRYPT_MODE, publicKey);
