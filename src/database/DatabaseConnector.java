@@ -393,7 +393,7 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 
 		String query = "SELECT e.election_id, election_name, e.description, start_datetime, close_datetime, "
-				+ " e.status, s.code, s.description, owner_id, candidates_string, type"
+				+ " e.status, s.code, s.description, owner_id, candidates_string, type, allowed_users_emails"
 				+ " FROM election e "
 				+ " INNER JOIN status_election s "
 				+ " ON (e.status = s.status_id) "
@@ -415,6 +415,7 @@ public class DatabaseConnector
 				int ownerId = res.getInt(9);
 				String candidatesListString = res.getString(10);
 				int electionType = res.getInt(11);
+				String allowedUserEmails = res.getString(12);
 				
 				electionDto.setElectionId(electionId);
 				electionDto.setElectionName(electionName);
@@ -427,6 +428,7 @@ public class DatabaseConnector
 				electionDto.setOwnerId(ownerId);
 				electionDto.setCandidatesListString(candidatesListString);
 				electionDto.setElectionType(electionType);
+				electionDto.setRegisteredEmailList(allowedUserEmails);
 				
 				electionDto.setCurrentEmailList(selectParticipatingVotersOfElection(electionId));
 				
@@ -1128,52 +1130,55 @@ public class DatabaseConnector
 	public Validator openElectionAndPopulateCandidates(int electionId) {
 
 		Validator val = new Validator();
+		Validator vElectionInDb = selectElectionFullDetail(electionId);
 		
-		Validator vElectionStatus = compareElectionStatus(electionId, ElectionStatus.NEW);
+		if (vElectionInDb.isVerified()) {
+			ElectionDto electionInDb = (ElectionDto)vElectionInDb.getObject();
 		
-		// Retrieve the election object in the db
-		ElectionDto electionInDb = (ElectionDto)vElectionStatus.getObject();
-		if (vElectionStatus.isVerified()) {
+			Validator vElectionStatus = compareElectionStatus(electionInDb, ElectionStatus.NEW);
+			// Retrieve the election object in the db
 			
-			// Validate the election, so that all the candidates get validated, 
-			// and also the list of email account for private election
-			Validator vElection = electionInDb.Validate();
-			if (vElection.isVerified()) {
-				// remove if there are any candidates already for this election
-				deleteCandidates( electionInDb.getElectionId() );
+			if (vElectionStatus.isVerified()) {
 				
-				// add the list of candidates 
-				Validator vAddCandidates = addCandidates(electionId, electionInDb.getCandidatesListString());
-				if (vAddCandidates.isVerified()) {
-					// add allowed users for private elections
-					if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()) {
-						Validator vAddUsers = addAllowedUsers(electionId, electionInDb.getRegisteredEmailList());
-						if (vAddUsers.isVerified()) {
-							
-						} else {
-							// remove the candidates already added
-							deleteCandidates( electionInDb.getElectionId() );
-							
-							val = vAddUsers;
-						}
-					}
+				// Validate the election, so that all the candidates get validated, 
+				// and also the list of email account for private election
+				Validator vElection = electionInDb.Validate();
+				if (vElection.isVerified()) {
+					// remove if there are any candidates already for this election
+					deleteCandidates( electionInDb.getElectionId() );
 					
-					// change the status of electio to OPEN
-					Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
-					if (vElectionStatusOpen.isVerified()) {
-						val.setVerified(true); 
-						val.setStatus("Election has been opened.");
+					// add the list of candidates 
+					Validator vAddCandidates = addCandidates(electionId, electionInDb.getCandidatesListString());
+					if (vAddCandidates.isVerified()) {
+						// add allowed users for private elections
+						if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()) {
+							Validator vAddUsers = addAllowedUsers(electionId, electionInDb.getRegisteredEmailList());
+							if (vAddUsers.isVerified()) {
+								// change the status of election to OPEN
+								Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
+								if (vElectionStatusOpen.isVerified()) {
+									val.setVerified(true); 
+									val.setStatus("Election has been opened.");
+								} else {
+									val = vElectionStatusOpen;
+								}
+							} else {
+								// remove the candidates already added
+								deleteCandidates( electionInDb.getElectionId() );
+								val = vAddUsers;
+							}
+						}
 					} else {
-						val = vElectionStatusOpen;
+						val = vAddCandidates;
 					}
 				} else {
-					val = vAddCandidates;
+					val= vElection;
 				}
 			} else {
-				val.setStatus(vElection.getStatus());
+				val = vElectionStatus;
 			}
 		} else {
-			val.setStatus(vElectionStatus.getStatus());
+			val = vElectionInDb;
 		}
 		return val;
 	}
@@ -1268,21 +1273,27 @@ public class DatabaseConnector
 	private Validator addAllowedUsers(int electionId, String emailListString) {
 		Validator val = new Validator();
 		
-		// split the list of emails by new line into an array of string
-		String[] emails = emailListString.split(newLine);
-		boolean status = true;
-		for (String email : emails) {
-			// add users to participate table 
-			Validator vAddUser = AddAllowedUser(electionId, email, UserRole.ELECTORATE);
-			
-			val.setStatus(val.getStatus() + newLine + vAddUser.getStatus());
-			status &= vAddUser.isVerified();
+		if (!emailListString.trim().isEmpty()) {
+			// split the list of emails by new line into an array of string
+			String[] emails = emailListString.split(newLine);
+			boolean status = true;
+			for (String email : emails) {
+				// add users to participate table 
+				Validator vAddUser = AddAllowedUser(electionId, email, UserRole.ELECTORATE);
+				
+				val.setStatus(val.getStatus() + newLine + vAddUser.getStatus());
+				status &= vAddUser.isVerified();
+			}
+			val.setVerified(status);
+			if (status) {
+				val.setVerified(true);
+				val.setStatus("Users have been allowed to participate the election");
+			}
+		} else {
+			val.setStatus("empty email list detected, failed to add allowed users to the election");
 		}
-		val.setVerified(status);
-		if (status) {
-			val.setVerified(true);
-			val.setStatus("Users have been allowed to participate the election");
-		}
+		
+		
 		return val;
 	}
 	private Validator AddAllowedUser(int electionId, String email, UserRole userRole) {
