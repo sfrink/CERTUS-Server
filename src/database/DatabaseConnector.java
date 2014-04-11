@@ -1029,7 +1029,8 @@ public class DatabaseConnector
 				val.setStatus("Election insert failed");
 			}
 		} else {
-			val = vElection;
+			val.setStatus( vElection.getStatus());
+			val.setObject(electionDto); 
 		}
 		
 		return val;
