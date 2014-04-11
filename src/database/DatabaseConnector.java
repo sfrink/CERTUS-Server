@@ -1739,11 +1739,13 @@ public class DatabaseConnector
 			String[] emails = electionDto.getEmailList().split(newLine);
 			for (String email : emails) {
 				String emailTrimmed = email.trim();
-				if (checkUserEmail(emailTrimmed).isVerified()) {
-					registeredEmails += emailTrimmed + newLine;
-				} else {
-					unregisteredEmails += emailTrimmed + newLine;
-					allRegisteredEmails = false;
+				if (!emailTrimmed.isEmpty()) {
+					if (checkUserEmail(emailTrimmed).isVerified()) {
+						registeredEmails += emailTrimmed + newLine;
+					} else {
+						unregisteredEmails += emailTrimmed + newLine;
+						allRegisteredEmails = false;
+					}
 				}
 			}
 		}
