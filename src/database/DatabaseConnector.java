@@ -178,7 +178,7 @@ public class DatabaseConnector
 		v.setStatus("Error, the system could not resolve the provided combination of username and password.");
 
 		PreparedStatement st = null;
-		String query = "SELECT user_id FROM users WHERE email = ?";
+		String query = "SELECT user_id FROM users WHERE email = ? AND status = 1";
 
 		try {
 			st = con.prepareStatement(query);
