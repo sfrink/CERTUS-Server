@@ -25,7 +25,8 @@ public class Election
 		//ElectionDto election = new ElectionDto();
 		
 		int electionId = 26;
-		Validator val = dbc.selectElection(electionId);
+		//Validator val = dbc.selectElection(electionId);
+		Validator val = dbc.selectElectionForOwner(electionId);
 		assertTrue("select election", val.isVerified());
 		
 		if (val.isVerified()) {
@@ -41,6 +42,7 @@ public class Election
 		election.setElectionName("automated election name");
 		election.setElectionDescription("automated election description");
 		election.setCandidatesListString("automated 1 \nautomated 2");
+		election.setElectionType(ElectionType.PUBLIC.getCode());
 		
 		Validator val = election.Validate();
 		assertTrue("validate election", val.isVerified());
@@ -74,42 +76,25 @@ public class Election
 		assertFalse("validate election failure", val.isVerified());
 	}
 	
-	@Test
-	public void testSelectElectionsByElectionStatus() {
-		Validator val = dbc.selectElections(ElectionStatus.CLOSED);
-		assertTrue("select elections by status (closed)", val.isVerified());
-	}
+	
 
 	@Test
-	public void testSelectElectionsNotInStatus() {
-		Validator val = dbc.selectElections(ElectionStatus.DELETED);
-		assertTrue("select elections not in status (deleted)", val.isVerified());
-	}
-
-	@Test
-	public void testSelectElectionsOwnedByUserIntElectionStatus() {
+	public void testSelectElectionsOwnedByUser() {
 		int ownerId = 1;
-		Validator val = dbc.selectElectionsOwnedByUser(ownerId, ElectionStatus.NEW);
-		assertTrue("select elections owned by user with status (new)", val.isVerified());
+		Validator val = dbc.selectElectionsForOwner(ownerId);
+		assertTrue("select elections owned by user ", val.isVerified());
 	}
 
 	@Test
-	public void testSelectElections() {
-		Validator val = dbc.selectElections();
+	public void testSelectElectionsForAdmin() {
+		Validator val = dbc.selectElectionsForAdmin();
 		assertTrue("select all elections", val.isVerified());
-	}
-
-	@Test
-	public void testSelectElectionsOwnedByUserInt() {
-		int ownerId = 1;
-		Validator val = dbc.selectElectionsOwnedByUser(ownerId);
-		assertTrue("select elections owned by user", val.isVerified());
 	}
 
 	@Test
 	public void testSelectAllElectionsForVoter() {
 		int userId = 1;
-		Validator val = dbc.selectAllElectionsForVoter(userId);
+		Validator val = dbc.selectElectionsForVoter(userId);
 		assertTrue("select elections owned by user", val.isVerified());
 	}
 
@@ -189,10 +174,10 @@ public class Election
 	
 
 	@Test
-	public void testEditElectionWithCandidatesString() {
+	public void testEditPrivateElection() {
 		int electionId = 16;
 		int ownerId = 1;
-		Validator val = dbc.selectElection(electionId);
+		Validator val = dbc.selectElectionFullDetail(electionId);
 		if (val.isVerified()){
 			ElectionDto election = (ElectionDto) val.getObject();
 			
@@ -220,27 +205,6 @@ public class Election
 		}
 	}
 
-	@Test
-	public void testEditElectionStatus() {
-		int electionId = 11;
-
-		Validator val = dbc.selectElection(electionId);
-		if (val.isVerified()){
-			ElectionDto election = (ElectionDto) val.getObject();
-
-			Validator valEdit = dbc.editElectionStatus(electionId, ElectionStatus.getStatus(election.getStatus()));
-			assertTrue("undo edit election status", valEdit.isVerified());
-			
-		} else {
-			assertFalse("select election failed", val.isVerified());
-		}
-	}
-
-	@Test
-	public void testEditElection() {
-		
-	}
-
 	
 	@Test
 	public void testVoteProgressStatusForElectionIntElectionId(){
@@ -256,7 +220,7 @@ public class Election
 	
 	@Test 
 	public void testSelectResults() {
-		int electionId = 9;
+		int electionId = 13;
 		Validator val = dbc.selectResults(electionId);
 		assertTrue("elections results", val.isVerified());
 		if (val.isVerified()) {
@@ -271,16 +235,17 @@ public class Election
 	
 	@Test
 	public void testOpenElectionAndPopulateCandidatesIntElectionId() {
-		int electionId = 47;
+		int electionId =74;
 		Validator val = dbc.openElectionAndPopulateCandidates(electionId);
+		
 		if (val.isVerified()) {
 			
 			System.out.println("Open Election ::::::::::::::::::");
 			System.out.println(val.getStatus());
+			System.out.println(val.isVerified());
 		}
-		
-		
-		assertTrue("elections results", val.isVerified());
+
+		assertTrue("OpenElection", val.isVerified());
 	}
 	
 	
