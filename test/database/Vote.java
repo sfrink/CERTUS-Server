@@ -28,7 +28,7 @@ public class Vote
 
 	@Test
 	public void testVoteProgressStatusForElection() {
-		int electionId = 22;
+		int electionId = 5;
 		Validator val = dbc.voteProgressStatusForElection(electionId);
 		assertTrue("vote progress", val.isVerified());
 		
