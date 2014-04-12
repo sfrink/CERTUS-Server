@@ -281,7 +281,6 @@ public class DatabaseConnector
 				int electionType = res.getInt(11);
 				String allowedUserEmails = res.getString(12);
 				
-				
 				electionDto.setElectionId(electionId);
 				electionDto.setElectionName(electionName);
 				electionDto.setElectionDescription(electionDescription);
@@ -416,7 +415,7 @@ public class DatabaseConnector
 				int ownerId = res.getInt(9);
 				String candidatesListString = res.getString(10);
 				int electionType = res.getInt(11);
-				String allowedUserEmails = res.getString(12);
+				String allowedUserEmails = (res.getString(12) == null) ? "" : res.getString(12);
 				
 				electionDto.setElectionId(electionId);
 				electionDto.setElectionName(electionName);
