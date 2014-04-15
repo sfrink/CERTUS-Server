@@ -24,11 +24,13 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
+import dto.UserDto;
+
 public class EmailExchanger {
 
 	private static String username = "Certus.Voting@gmail.com";
 	private static String password = "Deid*3@3ed";
-	
+	private static String newLine = System.getProperty("line.separator");
 
 	/**
 	 * This function sends an email to a given recipient with given subject and message and attach the byte array as a file.
@@ -111,6 +113,31 @@ public class EmailExchanger {
 		} catch (MessagingException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public static String getInvitationSubject(){
+		return "Invitation from CERTUS";
+	}
+	public static String getInvitationBody(UserDto userDto, String electionName){
+		String body = "";
+		
+		body = "Dear user," + newLine;
+		body += newLine;
+		body += "You have been invited to participate the private election '" + electionName + "'.";
+		body += newLine;
+		body += "Please use the following url to update your account information.";
+		body += newLine + "URL :" + ConfigurationProperties.emailSystemUrl();
+		body += newLine;
+		body += newLine + "Your user name \t\t:" + userDto.getEmail();
+		body += newLine + "Your temporary password :" + userDto.getTempPassword();
+		body += newLine + "Please change your password at your first login.";
+		body += newLine;
+		body += newLine + "This is a system generated message. Please do not reply this email.";
+		body += newLine;
+		body += newLine + "Thank you";
+		body += newLine + "Election Administrator";
+		body += newLine + "CERTUS Voting";
+		return body;
 	}
 
 }

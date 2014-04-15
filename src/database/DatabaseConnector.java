@@ -27,6 +27,7 @@ import javax.sql.rowset.serial.SerialBlob;
 import server.ClientsSessions;
 import server.ConfigurationProperties;
 import server.DataEncryptor;
+import server.EmailExchanger;
 import server.PasswordHasher;
 import server.RSAKeys;
 import server.SecurityValidator;
@@ -1343,6 +1344,12 @@ public class DatabaseConnector
 		
 		return val;
 	}
+	/**
+	 * @param electionId - election Id
+	 * @param email - email of the user
+	 * @param userRole - user role (ELECTORATE)
+	 * @return
+	 */
 	private Validator AddAllowedUser(int electionId, String email, UserType userRole) {
 		
 		
@@ -2269,27 +2276,121 @@ public class DatabaseConnector
 	
 	public Validator addUserInvitations(ElectionDto electionDto) {
 		Validator val = new Validator();
-		String message = "";
+		String status = "";
 		boolean valid = true;
+		
 		String[] emailList = electionDto.getEmailListInvited().split(newLine);
+		
+		//TODO: validate election
+		
+		
+		// Get the election name from the database (to include into the email)
+		ElectionDto electionInDb = (ElectionDto)selectElectionForOwner(electionDto.getElectionId()).getObject();
+		
+		if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode())
+		{
 		for (String email : emailList) {
-			Validator vInviteUser = addUserInvitation(email);
-			valid &= vInviteUser.isVerified();
-			message += vInviteUser.getStatus();
+			
+			if (email.trim().isEmpty()) { 
+				// do nothing if blank email
+				continue;
+			}
+			
+			if (checkUserEmail(email.trim()).isVerified()){ 
+				// do nothing if user already exist
+				continue;
+			}
+			
+			// add a user with a temporary password
+			Validator vInviteUser = addUserInvitation(email); 
+			
+			if (vInviteUser.isVerified()) {
+				// add this user to the participate table.
+				Validator vAddUser = AddAllowedUser(electionDto.getElectionId(), email, UserType.ELECTORATE);
+				
+				if (vAddUser.isVerified()) {
+					// send email to the user
+					UserDto user = (UserDto)vInviteUser.getObject();
+					String messageSubject = EmailExchanger.getInvitationSubject();
+					String messageBody = EmailExchanger.getInvitationBody(user, electionInDb.getElectionName());
+					
+					EmailExchanger.sendEmail(email, messageSubject, messageBody);
+				} else {
+					valid &= vAddUser.isVerified();
+					status += vAddUser.getStatus();
+				}
+			} else {
+				valid &= vInviteUser.isVerified();
+				status += vInviteUser.getStatus() + newLine;
+			}
 		}
+		if (valid) {
+			status = "Users invited for the election successfully";
+		}
+		} else {
+			valid = false;
+			status = "Election type [" + ElectionType.getStatus(electionInDb.getElectionType()).getLabel() + "] is invalid to invite users";
+		}
+		
+		val.setStatus(status);
+		val.setVerified(valid);
 		return val;
 	}
 	
 	private Validator addUserInvitation(String emailInvited) {
 		Validator val = new Validator();
 		
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		int newUserId = 0;
 		
-		// add user and with dummy password and send and email.
+		// temporary salt
+		String tempSalt = PasswordHasher.generateSalt();
+		// temporary password 
+		String tempPassword = PasswordHasher.generateRandomString();
+		//hash the password:
+		String hashedPass = PasswordHasher.sha512(tempPassword, tempSalt);
 		
-		// add user to the participate table
+		
+		// add user  with temp password and email the password.
+		String query = "INSERT INTO users (email, type, temp_password, temp_salt, status) "
+				+ " VALUES (?, ?, ?, ?, ?)";
+		try {
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, emailInvited);
+			st.setInt(2, UserType.INVITED.getCode());
+			st.setString(3, hashedPass);
+			st.setString(4, tempSalt);
+			st.setInt(5, Status.ENABLED.getCode());
+			
+			// run the query and get new user id
+			st.executeUpdate();
+			rs = st.getGeneratedKeys();
+			rs.next();
+			newUserId = rs.getInt(1);
+			if (newUserId > 0) {
+				UserDto userDto = new UserDto();
+				userDto.setTempPassword(tempPassword);
+				userDto.setEmail(emailInvited);
+				userDto.setUserId(newUserId);
+				
+				val.setVerified(true);
+				val.setStatus("User inserted successfully");
+				val.setObject(userDto);
+			} else {
+				val.setStatus("Failed to insert user");
+			}
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			
+			val.setStatus("SQL Error");
+		}
 		
 		return val;
 	}
+	
+	
 	
 	/**
 	 * @return - Validator with ArrayList<UserDto>  all the users in the system

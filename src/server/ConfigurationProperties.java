@@ -109,5 +109,7 @@ public class ConfigurationProperties {
 		return properties.getProperty("security_keystore_tallier_privatekey");
 	}
 	
-	
+	public static String emailSystemUrl(){
+		return properties.getProperty("email_system_url");
+	}
 }
