@@ -41,7 +41,7 @@ import dto.VoteDto;
 import enumeration.ElectionType;
 import enumeration.Status;
 import enumeration.ElectionStatus;
-import enumeration.UserRole;
+import enumeration.UserType;
 import enumeration.UserStatus;
 
 
@@ -99,7 +99,7 @@ public class DatabaseConnector
 				u.setTempSalt(res.getString(8));
 				u.setActivationCode(res.getString(9));
 				u.setPublicKey(res.getString(10));
-				u.setAdministratorFlag(res.getInt(11));
+				u.setType(res.getInt(11));
 				u.setStatus(res.getInt(12));
 			}
 		} catch (SQLException ex) {
@@ -205,7 +205,7 @@ public class DatabaseConnector
 
 		PreparedStatement st = null;
 
-		String query = "SELECT user_id, first_name, last_name, password, salt, status, admin FROM users WHERE email = ?";
+		String query = "SELECT user_id, first_name, last_name, password, salt, status, type FROM users WHERE email = ?";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -220,14 +220,14 @@ public class DatabaseConnector
 				String password = res.getString(4);
 				String salt = res.getString(5);
 				int statusId = res.getInt(6);
-				int admin = res.getInt(7);
+				int type = res.getInt(7);
 				userDto.setUserId(user_id);
 				userDto.setFirstName(first_name);
 				userDto.setLastName(last_name);
 				userDto.setPassword(password);
 				userDto.setSalt(salt);
 				userDto.setStatus(statusId);
-				userDto.setAdministratorFlag(admin);
+				userDto.setType(type);
 
 			} else {
 
@@ -1322,7 +1322,7 @@ public class DatabaseConnector
 			boolean status = true;
 			for (String email : emails) {
 				// add users to participate table 
-				Validator vAddUser = AddAllowedUser(electionId, email, UserRole.ELECTORATE);
+				Validator vAddUser = AddAllowedUser(electionId, email, UserType.ELECTORATE);
 				
 				val.setStatus(val.getStatus() + newLine + vAddUser.getStatus());
 				status &= vAddUser.isVerified();
@@ -1339,7 +1339,7 @@ public class DatabaseConnector
 		
 		return val;
 	}
-	private Validator AddAllowedUser(int electionId, String email, UserRole userRole) {
+	private Validator AddAllowedUser(int electionId, String email, UserType userRole) {
 		
 		
 		Validator val = new Validator();
@@ -2263,6 +2263,29 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	public Validator addUserInvitations(ElectionDto electionDto) {
+		Validator val = new Validator();
+		String message = "";
+		boolean valid = true;
+		String[] emailList = electionDto.getEmailListInvited().split(newLine);
+		for (String email : emailList) {
+			Validator vInviteUser = addUserInvitation(email);
+			valid &= vInviteUser.isVerified();
+			message += vInviteUser.getStatus();
+		}
+		return val;
+	}
+	
+	private Validator addUserInvitation(String emailInvited) {
+		Validator val = new Validator();
+		
+		
+		// add user and with dummy password and send and email.
+		
+		// add user to the participate table
+		
+		return val;
+	}
 	
 	/**
 	 * @return - Validator with ArrayList<UserDto>  all the users in the system
@@ -2437,7 +2460,7 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 		
 		try{
-			String query = "SELECT admin from users where (user_id = ?)";
+			String query = "SELECT type from users where (user_id = ?)";
 			
 			st = con.prepareStatement(query);
 			st.setInt(1, userID);
@@ -2597,7 +2620,7 @@ public class DatabaseConnector
 			if (vUser.isVerified()) {
 				// insert user
 				String query = "INSERT INTO users (first_name, last_name, email, password, salt, "
-						+ "public_key, admin, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+						+ "public_key, type, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 				try {
 					st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 					st.setString(1, newUser.getFirstName());
