@@ -286,4 +286,16 @@ public class Election
 		
 		assertTrue("add additional voters ", val.isVerified());
 	}
+	
+	@Test 
+	public void testAddUserInvitations() {
+		int electionId = 12;
+		ElectionDto electionDto = new ElectionDto();
+		electionDto.setElectionId(electionId);
+		electionDto.setEmailListInvited("sulochane@yahoo.com\nsulochane@gmail.com");
+		
+		Validator val = dbc.addUserInvitations(electionDto);
+		
+		assertTrue("user invited ", val.isVerified());
+	}
 }
