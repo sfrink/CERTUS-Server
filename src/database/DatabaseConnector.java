@@ -537,20 +537,37 @@ public class DatabaseConnector
 		Validator validator = new Validator();
 		ArrayList<ElectionDto> elections = new ArrayList<ElectionDto>();
 		PreparedStatement st = null;
-		ElectionStatus electionStatus = ElectionStatus.PUBLISHED;
-
-		String query = "SELECT election_id, election_name, e.description, start_datetime, close_datetime, "
-				+ " status, s.code, s.description, owner_id, candidates_string, type "
-				+ " FROM election e"
-				+ " INNER JOIN status_election s "
-				+ " ON (e.status = s.status_id) "
-				+ " WHERE owner_id = ?" + " AND status = ?"
-				+ " ORDER BY election_id DESC";
+		int electionStatus = ElectionStatus.PUBLISHED.getCode();
+		
+		String query = "";
+		query += "SELECT election_id, election_name, e.description, start_datetime, close_datetime, status, s.code, s.description, owner_id, candidates_string, type";
+		query += " FROM election e";
+		query += " INNER JOIN status_election s ON (e.status = s.status_id) WHERE owner_id = ? AND status = ?";
+		query += " UNION";
+		query += " SELECT election_id, election_name, e.description, start_datetime, close_datetime, status, s.code, s.description, owner_id, candidates_string, type";
+		query += " FROM election e";
+		query += " INNER JOIN status_election s ON (e.status = s.status_id) WHERE e.type=? AND status = ?";
+		query += " UNION";
+		query += " SELECT e.election_id, election_name, e.description, start_datetime, close_datetime, status, s.code, s.description, owner_id, candidates_string, type";
+		query += " FROM election e";
+		query += " INNER JOIN status_election s ON (e.status = s.status_id)";
+		query += " INNER JOIN participate p";
+		query += " ON (e.election_id = p.election_id)";
+		query += " WHERE (e.status = ? AND e.type = ? AND p.user_id = ? AND e.election_id NOT IN (SELECT e.election_id FROM vote WHERE user_id = ?) )";
+		query += " GROUP BY election_id";
+		query += " ORDER BY election_id DESC";
 
 		try {
 			st = this.con.prepareStatement(query);
+
 			st.setInt(1, userId);
-			st.setInt(2, electionStatus.getCode());
+			st.setInt(2, electionStatus);
+			st.setInt(3, ElectionType.PUBLIC.getCode());
+			st.setInt(4, electionStatus);
+			st.setInt(5, electionStatus);
+			st.setInt(6, ElectionType.PRIVATE.getCode());
+			st.setInt(7, userId);
+			st.setInt(8, userId);
 
 			ResultSet res = st.executeQuery();
 
