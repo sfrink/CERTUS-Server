@@ -20,6 +20,8 @@ import java.util.logging.Logger;
 import server.Authoriser;
 import server.ClientsSessions;
 import server.ConfigurationProperties;
+import server.EmailExchanger;
+import server.PasswordHasher;
 import server.SecurityValidator;
 import database.DatabaseConnector;
 import dto.ActionDto;
@@ -606,6 +608,58 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }
 
     }
+
+
+
+	@Override
+	public Validator sendTempPassword(UserDto u, String sessionID) throws RemoteException {
+		//String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	//int requesterID = clientSessions.getSession(sessionID);
+        //boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
+        Validator val=new Validator();
+        
+        /*if (!allowed){
+        	val.setVerified(false);
+        	val.setStatus("Permission denied.");
+        }else{*/
+        	String temp=PasswordHasher.generateRandomString();
+        	String salt=PasswordHasher.generateSalt();
+        	String tempHash=PasswordHasher.sha512(temp, salt);
+        	Validator set=dbc.setTempPassword(u,tempHash,salt);
+        	if(set.isVerified()){
+        		String url="";
+        		String message="Your temporary CERTUS password is: "+temp+".\n"+
+        				"Click here to login with the temporary password and reset your password: "+
+        				url+"\nIf you have received this email in error, you can continue to "+
+        				"login with your usual password.";
+        		EmailExchanger.sendEmail(u.getEmail(), "Temporary CERTUS Password", message);
+        		val.setStatus("Sent temp password email");
+        		val.setVerified(true);
+        	}
+        	else{
+        		val=set;
+        	}
+        //}
+        return val;
+	}
+
+
+
+	@Override
+	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass) 
+			throws RemoteException {
+		//Look up username in db, get salt, password hash
+    	//DatabaseConnector db = new DatabaseConnector();
+    	Validator validator = dbc.checkIfUsernameTempPasswordMatch(email, plainPass);
+    	if (validator.isVerified()){
+    		UserDto user = (UserDto) validator.getObject();
+    		
+    		user.setSessionId(clientSessions.addNewClient(user));
+
+    		validator.setObject(user);    		
+    	}
+    	return validator;
+	}
     
     
 }

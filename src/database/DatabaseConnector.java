@@ -205,7 +205,9 @@ public class DatabaseConnector
 
 		PreparedStatement st = null;
 
-		String query = "SELECT user_id, first_name, last_name, password, salt, status, type FROM users WHERE email = ?";
+		String query = "SELECT user_id, first_name, last_name, password, salt, status, type, "
+				+ "temp_password, temp_salt"
+				+ " FROM users WHERE email = ?";
 
 		try {
 			st = this.con.prepareStatement(query);
@@ -228,6 +230,8 @@ public class DatabaseConnector
 				userDto.setSalt(salt);
 				userDto.setStatus(statusId);
 				userDto.setType(type);
+				userDto.setTempPassword(res.getString(8));
+				userDto.setTempSalt(res.getString(9));
 
 			} else {
 
@@ -3078,14 +3082,64 @@ public class DatabaseConnector
 		return vKey;
 	}
 	
+	public Validator setTempPassword(UserDto u, String temp, String salt){
+		Validator val = new Validator();
+		
+		PreparedStatement st = null;
+		try {
+			String query = "UPDATE users SET temp_password = ?,"
+					+ " temp_salt=?";
+			st = this.con.prepareStatement(query);
+			st.setString(1, temp);
+			st.setString(2, salt);
+			st.execute();
+			val.setStatus("Updated temp password");
+			val.setVerified(true);
+		}
+		catch(SQLException ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("Failed to add temp password");
+		}
+		return val;
+	}
+	
+	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass){
+		// 1. validate input
+		Validator result = validateEmailAndPlainInput(email, plainPass);
+		if (!result.isVerified()) {
+			return result;
+		}
 
-	
-	
-	
-	
-	
-	
-	
-	
+		// 2. validate email
+		result = checkUserEmail(email);
+		if (!result.isVerified()) {
+			return result;
+		}
+
+		// get this user limited info from the database
+		UserDto userDto = selectUserByEmailLimited(email);
+
+		String dbHash = userDto.getTempPassword();
+		String dbSalt = userDto.getTempSalt();
+
+
+		String plainHash = PasswordHasher.sha512(plainPass, dbSalt);
+
+		// 3. if entered password is correct, return true with welcome message
+		if (plainHash.equals(dbHash)) {
+			
+			result.setObject(userDto);
+			result.setVerified(true);
+			result.setStatus("Welcome to Certus");
+
+			return result;
+		} else {
+			result.setVerified(false);
+			result.setStatus("Error, the system could not resolve the provided combination of username and password.");
+			return result;
+		}
+	}
 	
 }
