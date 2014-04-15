@@ -20,7 +20,7 @@ public class ClientsSessions {
 		String userSession = "";
 		
 		int userID = user.getUserId();
-		int isAdmin = user.getAdministratorFlag();
+		int isAdmin = user.getType();
 		
 		if (isLoggedIn(userID)){
 			userSession = getSession(userID);
