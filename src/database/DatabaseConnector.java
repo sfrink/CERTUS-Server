@@ -2223,56 +2223,6 @@ public class DatabaseConnector
 		return val;
 	}
 
-	// User
-	
-	/**
-	 * @param userDto
-	 * @return Validator with the userDto including the primary key assigned by the db.
-	 */
-	public Validator addUser(UserDto userDto) {
-		Validator val = new Validator();
-		
-		PreparedStatement st = null;
-		ResultSet rs = null;
-		int newUserId = 0;
-		// Validate the user
-		Validator vUser = userDto.Validate();
-		
-		if (vUser.isVerified()) {
-			// insert user
-			String query = "INSERT INTO users (first_name, last_name, email) "
-					+ " VALUES (?, ?, ?)";
-			try {
-				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-				st.setString(1, userDto.getFirstName());
-				st.setString(2, userDto.getLastName());
-				st.setString(3, userDto.getEmail());
-				
-	
-				// run the query and get new user id
-				st.executeUpdate();
-				rs = st.getGeneratedKeys();
-				rs.next();
-				newUserId = rs.getInt(1);
-				if (newUserId > 0) {
-					userDto.setUserId(newUserId);
-					val.setVerified(true);
-					val.setStatus("User inserted successfully");
-					val.setObject(userDto);
-				} else {
-					val.setStatus("Failed to insert user");
-				}
-			} catch (SQLException ex) {
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-				val.setVerified(false);
-				val.setStatus("SQL Error");
-			}
-		} else {
-			val = vUser;
-		}
-		return val;
-	}
 	
 	public Validator addUserInvitations(ElectionDto electionDto) {
 		Validator val = new Validator();
@@ -2690,8 +2640,8 @@ public class DatabaseConnector
 		return val;						
 	}
 	
-	//register new user:
-	public Validator registerNewUser(UserDto newUser){
+	//register new user with basic information (Firstname, Lastname, Email, Password):
+	public Validator addUser(UserDto newUser){
 		Validator res = new Validator();
 		if (checkUserEmail(newUser.getEmail()).isVerified()){
 			//email found, cannot add user:
@@ -2706,8 +2656,9 @@ public class DatabaseConnector
 			//hash the password:
 			String hashedPass = PasswordHasher.sha512(newUser.getPassword(), salt);
 			
-			//let's generate the keys and protect the private key with the users protecion password:
-			String keyPass = newUser.getTempPassword();
+			//let's generate the keys and protect the 
+			//private key with the users login password:
+			String keyPass = newUser.getPassword();
 			RSAKeys rsaKeys = new RSAKeys();
 			rsaKeys.generateKeys(keyPass);
 			
@@ -2957,6 +2908,12 @@ public class DatabaseConnector
 		if (keyBytes == null){
 			res.setVerified(false);
 			res.setStatus("Empty input");
+			return res;
+		}
+		
+		if(!RSAKeys.isValidPublicKey(keyBytes)){
+			res.setVerified(false);
+			res.setStatus("Invalid public key");
 			return res;
 		}
 		
@@ -3242,5 +3199,159 @@ public class DatabaseConnector
 			return result;
 		}
 	}
+
+	//register new user with basic information 
+	//(Firstname, Lastname, Email, Password)
+	//and with a dedicated password to protect the private key:
+	public Validator addUserWithPP(UserDto newUser){
+		Validator res = new Validator();
+		if (checkUserEmail(newUser.getEmail()).isVerified()){
+			//email found, cannot add user:
+			res.setVerified(false);
+			res.setStatus("E-mail address is used.");
+		}else{
+			//email address is not found, let's add it:
+			
+			//first we need to generate some salt to hash the password:
+			String salt = PasswordHasher.generateSalt();
+			
+			//hash the password:
+			String hashedPass = PasswordHasher.sha512(newUser.getPassword(), salt);
+			
+			//let's generate the keys and protect the 
+			//private key with the users protection password:
+			String keyPass = newUser.getTempPassword();
+			RSAKeys rsaKeys = new RSAKeys();
+			rsaKeys.generateKeys(keyPass);
+			
+			//get the public key to be saved at the DB:
+			PublicKey pubKey = rsaKeys.getPublicKey();
+			
+			
+			//ready to push to DB:
+			PreparedStatement st = null;
+			ResultSet rs = null;
+			int newUserId = 0;
+			// Validate the user
+			Validator vUser = newUser.Validate();
+			
+			if (vUser.isVerified()) {
+				// insert user
+				String query = "INSERT INTO users (first_name, last_name, email, password, salt, "
+						+ "public_key, type, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+				try {
+					st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+					st.setString(1, newUser.getFirstName());
+					st.setString(2, newUser.getLastName());
+					st.setString(3, newUser.getEmail());
+					st.setString(4, hashedPass);
+					st.setString(5, salt);
+					Blob pubKeyBlob = new SerialBlob(pubKey.getEncoded());
+					st.setBlob(6, pubKeyBlob);
+					st.setInt(7, 0);
+					st.setInt(8, 1);
+		
+					// run the query and get new user id
+					st.executeUpdate();
+					rs = st.getGeneratedKeys();
+					rs.next();
+					newUserId = rs.getInt(1);
+					if (newUserId > 0) {
+						newUser.setUserId(newUserId);
+						res.setVerified(true);
+						res.setStatus("User inserted successfully");
+						
+						//send the private key as an email:
+						rsaKeys.sendProtectedPrivateKey(newUser.getEmail());
+					} else {
+						res.setStatus("Failed to insert user");
+					}
+				} catch (SQLException ex) {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					res.setVerified(false);
+					res.setStatus("SQL Error");
+				}
+			} else {
+				res = vUser;
+			}
+		}
+		return res;
+	}
+
+	//register new user with basic information 
+	//(Firstname, Lastname, Email, Password)
+	//and with the user uploaded public key:
+	public Validator addUserWithKey(UserDto newUser){
+		Validator res = new Validator();
+		if (checkUserEmail(newUser.getEmail()).isVerified()){
+			//email found, cannot add user:
+			res.setVerified(false);
+			res.setStatus("E-mail address is used.");
+		}else{
+			//email address is not found, let's add it:
+			
+			//let's check if the attached public key is valid or not:
+			if(!RSAKeys.isValidPublicKey(newUser.getPublicKeyBytes())){
+				res.setVerified(false);
+				res.setStatus("Invalid public key");
+				return res;
+			}
+			
+			//first we need to generate some salt to hash the password:
+			String salt = PasswordHasher.generateSalt();
+			
+			//hash the password:
+			String hashedPass = PasswordHasher.sha512(newUser.getPassword(), salt);
+						
+			//ready to push to DB:
+			PreparedStatement st = null;
+			ResultSet rs = null;
+			int newUserId = 0;
+			// Validate the user
+			Validator vUser = newUser.Validate();
+			
+			if (vUser.isVerified()) {
+				// insert user
+				String query = "INSERT INTO users (first_name, last_name, email, password, salt, "
+						+ "public_key, type, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+				try {
+					st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+					st.setString(1, newUser.getFirstName());
+					st.setString(2, newUser.getLastName());
+					st.setString(3, newUser.getEmail());
+					st.setString(4, hashedPass);
+					st.setString(5, salt);
+					Blob pubKeyBlob = new SerialBlob(newUser.getPublicKeyBytes());
+					st.setBlob(6, pubKeyBlob);
+					st.setInt(7, 0);
+					st.setInt(8, 1);
+		
+					// run the query and get new user id
+					st.executeUpdate();
+					rs = st.getGeneratedKeys();
+					rs.next();
+					newUserId = rs.getInt(1);
+					if (newUserId > 0) {
+						newUser.setUserId(newUserId);
+						res.setVerified(true);
+						res.setStatus("User inserted successfully");
+						
+					} else {
+						res.setStatus("Failed to insert user");
+					}
+				} catch (SQLException ex) {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					res.setVerified(false);
+					res.setStatus("SQL Error");
+				}
+			} else {
+				res = vUser;
+			}
+		}
+		return res;
+	}
+	
 	
 }

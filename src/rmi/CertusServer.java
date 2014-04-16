@@ -22,6 +22,7 @@ import server.ClientsSessions;
 import server.ConfigurationProperties;
 import server.EmailExchanger;
 import server.PasswordHasher;
+import server.RSAKeys;
 import server.SecurityValidator;
 import database.DatabaseConnector;
 import dto.ActionDto;
@@ -106,10 +107,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	return validator;
     }
     
-    public Validator addUser(UserDto userDto) throws RemoteException {
-    	//anyone can invoke this method.
-    	return dbc.addUser(userDto); 
-    }
+//    public Validator addUser(UserDto userDto) throws RemoteException {
+//    	//anyone can invoke this method.
+//    	return dbc.addUser(userDto); 
+//    }
     
     public Validator selectUser(int userId, String sessionID) throws RemoteException {
     	
@@ -497,8 +498,27 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override
-    public Validator registerNewUser (UserDto userDto){
-    	return dbc.registerNewUser(userDto);
+    public Validator addUser (UserDto userDto){
+    	return dbc.addUser(userDto);
+    }
+    
+    @Override
+    public Validator addUserWithPP (UserDto userDto){
+    	return dbc.addUserWithPP(userDto);
+    }
+    
+    @Override
+    public Validator addUserWithKey (UserDto userDto){
+    	
+    	Validator res = new Validator();
+        
+        if (userDto.getPublicKeyBytes().length > 10240){
+        	res.setVerified(false);
+        	res.setStatus("Large file");
+        	return res;
+        }else{
+        	return dbc.addUserWithKey(userDto);
+        }
     }
     
     @Override
@@ -679,5 +699,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	return validator;
 	}
     
-    
+
+	
+	
 }

@@ -13,6 +13,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 import dto.Validator;
 
@@ -104,5 +105,21 @@ public class RSAKeys {
 		}
 		
 		return vKey;
+	}
+	
+	public static boolean isValidPublicKey(byte[] key){
+		boolean res = false;
+		
+		try {
+			
+			EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(key);
+	        KeyFactory generator = KeyFactory.getInstance("RSA");
+	        generator.generatePublic(publicKeySpec);
+			res = true;
+		} catch (Exception e) {
+			res = false;
+		}		
+		
+		return res;
 	}
 }
