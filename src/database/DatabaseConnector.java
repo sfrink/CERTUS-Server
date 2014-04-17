@@ -3146,10 +3146,11 @@ public class DatabaseConnector
 		PreparedStatement st = null;
 		try {
 			String query = "UPDATE users SET temp_password = ?,"
-					+ " temp_salt=?";
+					+ " temp_salt=? WHERE email=?";
 			st = this.con.prepareStatement(query);
 			st.setString(1, temp);
 			st.setString(2, salt);
+			st.setString(3,u.getEmail());
 			st.execute();
 			val.setStatus("Updated temp password");
 			val.setVerified(true);
@@ -3191,7 +3192,7 @@ public class DatabaseConnector
 			result.setObject(userDto);
 			result.setVerified(true);
 			result.setStatus("Welcome to Certus");
-
+			removeTempPassword(userDto);
 			return result;
 		} else {
 			result.setVerified(false);
@@ -3353,5 +3354,27 @@ public class DatabaseConnector
 		return res;
 	}
 	
+	private Validator removeTempPassword(UserDto u){
+		PreparedStatement st = null;
+		Validator val = new Validator();
+		String query = "UPDATE users SET temp_password=?, temp_salt=? WHERE user_id=?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setString(1,"");
+			st.setString(2, "");
+			st.setInt(3, u.getUserId());
+			st.execute();
+			val.setVerified(true);
+			val.setStatus("Temporary password removed");
+		}
+		catch(SQLException ex){
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("SQL Error");
+		}
+		return val;
+	}
 	
 }
