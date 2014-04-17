@@ -123,14 +123,14 @@ public class EmailExchanger {
 		
 		body = "Dear user," + newLine;
 		body += newLine;
-		body += "You have been invited to participate the private election '" + electionName + "'.";
+		body += "You have been invited to vote the private election '" + electionName + "'.";
 		body += newLine;
-		body += "Please use the following url to update your account information.";
+		body += "Please use the following url to access the system.";
 		body += newLine + "URL :" + ConfigurationProperties.emailSystemUrl();
 		body += newLine;
 		body += newLine + "Your user name \t\t:" + userDto.getEmail();
 		body += newLine + "Your temporary password :" + userDto.getTempPassword();
-		body += newLine + "Please change your password at your first login.";
+		body += newLine + "You must change your password at your first login.";
 		body += newLine;
 		body += newLine + "This is a system generated message. Please do not reply this email.";
 		body += newLine;
