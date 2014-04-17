@@ -2231,52 +2231,52 @@ public class DatabaseConnector
 		
 		String[] emailList = electionDto.getEmailListInvited().split(newLine);
 		
-		//TODO: validate election
+		//TODO: validate election, Check with Dmitriy when this method would called.
 		
 		
 		// Get the election name from the database (to include into the email)
 		ElectionDto electionInDb = (ElectionDto)selectElectionForOwner(electionDto.getElectionId()).getObject();
 		
-		if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode())
-		{
-		for (String email : emailList) {
-			
-			if (email.trim().isEmpty()) { 
-				// do nothing if blank email
-				continue;
-			}
-			
-			if (checkUserEmail(email.trim()).isVerified()){ 
-				// do nothing if user already exist
-				continue;
-			}
-			
-			// add a user with a temporary password
-			Validator vInviteUser = addUserInvitation(email); 
-			
-			if (vInviteUser.isVerified()) {
-				// add this user to the participate table.
-				Validator vAddUser = AddAllowedUser(electionDto.getElectionId(), email, UserType.ELECTORATE);
+		if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()){
+			for (String email : emailList) {
 				
-				if (vAddUser.isVerified()) {
-					// send email to the user
-					UserDto user = (UserDto)vInviteUser.getObject();
-					String messageSubject = EmailExchanger.getInvitationSubject();
-					String messageBody = EmailExchanger.getInvitationBody(user, electionInDb.getElectionName());
-					
-					EmailExchanger.sendEmail(email, messageSubject, messageBody);
-				} else {
-					valid &= vAddUser.isVerified();
-					status += vAddUser.getStatus();
+				if (email.trim().isEmpty()) { 
+					// do nothing if blank email
+					continue;
 				}
-			} else {
-				valid &= vInviteUser.isVerified();
-				status += vInviteUser.getStatus() + newLine;
+				
+				if (checkUserEmail(email.trim()).isVerified()){ 
+					// do nothing if user already exist
+					continue;
+				}
+				
+				// add a user with a temporary password
+				Validator vInviteUser = addUserInvitation(email); 
+				
+				if (vInviteUser.isVerified()) {
+					// add this user to the participate table.
+					Validator vAddUser = AddAllowedUser(electionDto.getElectionId(), email, UserType.ELECTORATE);
+					
+					if (vAddUser.isVerified()) {
+						// send email to the user
+						UserDto user = (UserDto)vInviteUser.getObject();
+						String messageSubject = EmailExchanger.getInvitationSubject();
+						String messageBody = EmailExchanger.getInvitationBody(user, electionInDb.getElectionName());
+						
+						EmailExchanger.sendEmail(email, messageSubject, messageBody);
+					} else {
+						valid &= vAddUser.isVerified();
+						status += vAddUser.getStatus();
+					}
+				} else {
+					valid &= vInviteUser.isVerified();
+					status += vInviteUser.getStatus() + newLine;
+				}
 			}
-		}
-		if (valid) {
-			status = "Users invited for the election successfully";
-		}
+			
+			if (valid) {
+				status = "Users invited for the election successfully";
+			}
 		} else {
 			valid = false;
 			status = "Election type [" + ElectionType.getStatus(electionInDb.getElectionType()).getLabel() + "] is invalid to invite users";
@@ -2303,7 +2303,7 @@ public class DatabaseConnector
 		
 		
 		// add user  with temp password and email the password.
-		String query = "INSERT INTO users (email, type, temp_password, temp_salt, status) "
+		String query = "INSERT INTO users (email, type, password, salt, status) "
 				+ " VALUES (?, ?, ?, ?, ?)";
 		try {
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
