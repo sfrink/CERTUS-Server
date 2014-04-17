@@ -3374,5 +3374,246 @@ public class DatabaseConnector
 		}
 		return val;
 	}
+
+	//Update temp user with basic information:
+	//Firstname, lastname, password:
+	public Validator updateTempUser(UserDto user, String tempPassword){
+		Validator res = new Validator();
+		
+		//First we need to check if the temp password match:
+		Validator vTemp = checkIfUsernamePasswordMatch(user.getEmail(), tempPassword);
+		
+		if (!vTemp.isVerified()){
+			//Temporary password is wrong:
+			res.setVerified(false);
+			res.setStatus("Temporary password is wrong");
+			return res;
+		}
+		
+		
+		//We need to generate some salt to hash the new password:
+		String salt = PasswordHasher.generateSalt();
+		
+		//hash the new password:
+		String hashedPass = PasswordHasher.sha512(user.getPassword(), salt);
+		
+		//let's generate the keys and protect the 
+		//private key with the users login password:
+		String keyPass = user.getPassword();
+		RSAKeys rsaKeys = new RSAKeys();
+		rsaKeys.generateKeys(keyPass);
+		
+		//get the public key to be saved at the DB:
+		PublicKey pubKey = rsaKeys.getPublicKey();
+		
+		
+		//ready to update the DB:
+		PreparedStatement st = null;
+		
+		// Validate the user
+		Validator vUser = user.Validate();
+		
+		if (vUser.isVerified()) {
+			// Update user
+			String query = "UPDATE users SET first_name=?, last_name=?, password=?, salt=?, public_key=?, type='0' WHERE user_id=?;";
+			try {
+				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+				st.setString(1, user.getFirstName());
+				st.setString(2, user.getLastName());
+				st.setString(3, hashedPass);
+				st.setString(4, salt);
+				Blob pubKeyBlob = new SerialBlob(pubKey.getEncoded());
+				st.setBlob(5, pubKeyBlob);
+				st.setInt(6, user.getUserId());
+	
+				// run the query and get new user id
+				st.executeUpdate();
+				
+				int updateCount = st.getUpdateCount();
+				if (updateCount > 0) {
+					res.setVerified(true);
+					res.setStatus("User inserted successfully");
+					
+					//send the private key as an email:
+					rsaKeys.sendProtectedPrivateKey(user.getEmail());
+				} else {
+					res.setStatus("Failed to update user");
+				}
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				res.setVerified(false);
+				res.setStatus("SQL Error");
+			}
+		} else {
+			res = vUser;
+		}
+	
+	return res;
+
+	}
+
+	
+	//Update temp user with basic information:
+	//Firstname, lastname, password.
+	//and the user specific password to protect the private key:
+	public Validator UpdateTempUserWithPP(UserDto user, String tempPassword){
+		Validator res = new Validator();
+				
+		//First we need to check if the temp password match:
+		Validator vTemp = checkIfUsernamePasswordMatch(user.getEmail(), tempPassword);
+		
+		if (!vTemp.isVerified()){
+			//Temporary password is wrong:
+			res.setVerified(false);
+			res.setStatus("Temporary password is wrong");
+			return res;
+		}
+		
+		
+		//We need to generate some salt to hash the new password:
+		String salt = PasswordHasher.generateSalt();
+		
+		//hash the new password:
+		String hashedPass = PasswordHasher.sha512(user.getPassword(), salt);
+		
+		//let's generate the keys and protect the 
+		//private key with the users protection password:
+		String keyPass = user.getTempPassword();
+		RSAKeys rsaKeys = new RSAKeys();
+		rsaKeys.generateKeys(keyPass);
+		
+		//get the public key to be saved at the DB:
+		PublicKey pubKey = rsaKeys.getPublicKey();
+		
+		
+		//ready to update the DB:
+		PreparedStatement st = null;
+		
+		// Validate the user
+		Validator vUser = user.Validate();
+		
+		if (vUser.isVerified()) {
+			// Update user
+			String query = "UPDATE users SET first_name=?, last_name=?, password=?, salt=?, public_key=?, type='0' WHERE user_id=?;";
+			try {
+				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+				st.setString(1, user.getFirstName());
+				st.setString(2, user.getLastName());
+				st.setString(3, hashedPass);
+				st.setString(4, salt);
+				Blob pubKeyBlob = new SerialBlob(pubKey.getEncoded());
+				st.setBlob(5, pubKeyBlob);
+				st.setInt(6, user.getUserId());
+	
+				// run the query and get new user id
+				st.executeUpdate();
+				
+				int updateCount = st.getUpdateCount();
+				if (updateCount > 0) {
+					res.setVerified(true);
+					res.setStatus("User inserted successfully");
+					
+					//send the private key as an email:
+					rsaKeys.sendProtectedPrivateKey(user.getEmail());
+				} else {
+					res.setStatus("Failed to update user");
+				}
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				res.setVerified(false);
+				res.setStatus("SQL Error");
+			}
+		} else {
+			res = vUser;
+		}
+	
+	return res;
+
+	}
+	
+
+	//Update temp user with basic information:
+	//Firstname, lastname, password.
+	//and the user public key:
+	public Validator UpdateTempUserWithKey(UserDto user, String tempPassword){
+		Validator res = new Validator();
+	
+		System.out.println("First Name: " + user.getFirstName());
+		System.out.println("Last Name: " + user.getLastName());
+		System.out.println("Email: " + user.getEmail());
+		System.out.println("Password: " + user.getPassword());
+		System.out.println("Temp Password: " + tempPassword);
+		
+		//First we need to check if the temp password match:
+		Validator vTemp = checkIfUsernamePasswordMatch(user.getEmail(), tempPassword);
+		
+		if (!vTemp.isVerified()){
+			//Temporary password is wrong:
+			res.setVerified(false);
+			res.setStatus("Temporary password is wrong");
+			return res;
+		}
+		
+		//Check if the attached public key is in the right format:
+		if(!RSAKeys.isValidPublicKey(user.getPublicKeyBytes())){
+			res.setVerified(false);
+			res.setStatus("Invalid public key");
+			return res;
+		}
+		
+		
+		//We need to generate some salt to hash the new password:
+		String salt = PasswordHasher.generateSalt();
+		
+		//hash the new password:
+		String hashedPass = PasswordHasher.sha512(user.getPassword(), salt);
+		
+				
+		//ready to update the DB:
+		PreparedStatement st = null;
+		
+		// Validate the user
+		Validator vUser = user.Validate();
+		
+		if (vUser.isVerified()) {
+			// Update user
+			String query = "UPDATE users SET first_name=?, last_name=?, password=?, salt=?, public_key=?, type='0' WHERE user_id=?;";
+			try {
+				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+				st.setString(1, user.getFirstName());
+				st.setString(2, user.getLastName());
+				st.setString(3, hashedPass);
+				st.setString(4, salt);
+				Blob pubKeyBlob = new SerialBlob(user.getPublicKeyBytes());
+				st.setBlob(5, pubKeyBlob);
+				st.setInt(6, user.getUserId());
+	
+				// run the query and get new user id
+				st.executeUpdate();
+				
+				int updateCount = st.getUpdateCount();
+				if (updateCount > 0) {
+					res.setVerified(true);
+					res.setStatus("User inserted successfully");
+				} else {
+					res.setStatus("Failed to update user");
+				}
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				res.setVerified(false);
+				res.setStatus("SQL Error");
+			}
+		} else {
+			res = vUser;
+		}
+	
+	return res;
+
+	}
+	
+	
 	
 }

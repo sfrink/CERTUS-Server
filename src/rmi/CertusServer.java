@@ -521,6 +521,77 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }
     }
     
+    @Override 
+    public Validator updateTempUser (UserDto userDto, String tempPassword, String sessionID){
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int requesterID = clientSessions.getSession(sessionID);
+    	userDto.setUserId(requesterID);
+        boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
+
+        Validator res = new Validator();
+        if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	res = dbc.updateTempUser(userDto, tempPassword);
+        	if (res.isVerified()){
+        		clientSessions.removeClient(sessionID);
+
+        	}
+        	return res;
+        }
+    	
+    }
+    
+      
+    @Override 
+    public Validator UpdateTempUserWithPP (UserDto userDto, String tempPassword, String sessionID){
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int requesterID = clientSessions.getSession(sessionID);
+    	userDto.setUserId(requesterID);
+        boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
+
+        Validator res = new Validator();
+        if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	res = dbc.UpdateTempUserWithPP(userDto, tempPassword);
+        	if (res.isVerified()){
+        		clientSessions.removeClient(sessionID);
+
+        	}
+        	return res;
+        }
+    	
+    }
+       
+    @Override 
+    public Validator UpdateTempUserWithKey(UserDto userDto, String tempPassword, String sessionID){
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int requesterID = clientSessions.getSession(sessionID);
+    	userDto.setUserId(requesterID);
+        boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
+
+        Validator res = new Validator();
+        if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	res = dbc.UpdateTempUserWithKey(userDto, tempPassword);
+        	if (res.isVerified()){
+        		clientSessions.removeClient(sessionID);
+        	}
+        	return res;
+        }
+    	
+    }    
+    
+    
+    
     @Override
     public Validator generateNewKeys(int userID, String newKeyPass, String sessionID) {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
