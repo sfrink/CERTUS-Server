@@ -698,8 +698,5 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	}
     	return validator;
 	}
-    
-
-	
 	
 }
