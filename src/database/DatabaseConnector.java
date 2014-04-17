@@ -2686,8 +2686,8 @@ public class DatabaseConnector
 					st.setString(5, salt);
 					Blob pubKeyBlob = new SerialBlob(pubKey.getEncoded());
 					st.setBlob(6, pubKeyBlob);
-					st.setInt(7, 0);
-					st.setInt(8, 1);
+					st.setInt(7, UserType.ELECTORATE.getCode());
+					st.setInt(8, UserStatus.ACTIVE.getCode());
 		
 					// run the query and get new user id
 					st.executeUpdate();
@@ -3249,9 +3249,8 @@ public class DatabaseConnector
 					st.setString(5, salt);
 					Blob pubKeyBlob = new SerialBlob(pubKey.getEncoded());
 					st.setBlob(6, pubKeyBlob);
-					st.setInt(7, 0);
-					st.setInt(8, 1);
-		
+					st.setInt(7, UserType.ELECTORATE.getCode());
+					st.setInt(8, UserStatus.ACTIVE.getCode());
 					// run the query and get new user id
 					st.executeUpdate();
 					rs = st.getGeneratedKeys();
@@ -3325,9 +3324,8 @@ public class DatabaseConnector
 					st.setString(5, salt);
 					Blob pubKeyBlob = new SerialBlob(newUser.getPublicKeyBytes());
 					st.setBlob(6, pubKeyBlob);
-					st.setInt(7, 0);
-					st.setInt(8, 1);
-		
+					st.setInt(7, UserType.ELECTORATE.getCode());
+					st.setInt(8, UserStatus.ACTIVE.getCode());
 					// run the query and get new user id
 					st.executeUpdate();
 					rs = st.getGeneratedKeys();
