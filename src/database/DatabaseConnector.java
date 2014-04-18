@@ -2771,12 +2771,22 @@ public class DatabaseConnector
 	
 	
 	//generate new keys for a user:
-	public Validator generateNewKeys(int userID, String newKeyPass){
-		Validator res = null;
+	public Validator generateNewKeys(int userID, String newKeyPass, String userPassword){
+		Validator res = new Validator();
+		
+		//Check if the userPassword is correct:
+		if (!checkCorrectPassword(userID, userPassword)){
+			res.setVerified(false);
+			res.setStatus("Wrong password");
+			return res;
+		}
+		
+		
 		res = getUesrEmail(userID);
 		
 		if (res.isVerified()){
 			String email = res.getStatus();
+			
 			//let's generate the keys and protect the private key with the users protecion password:
 			RSAKeys rsaKeys = new RSAKeys();
 			rsaKeys.generateKeys(newKeyPass);
@@ -2900,9 +2910,19 @@ public class DatabaseConnector
 	}
 	
 
-	public Validator uploadPubKey(byte[] keyBytes, int userID) {
+	public Validator uploadPubKey(byte[] keyBytes, int userID, String userPassword) {
 		Validator res = new Validator();
 		
+		System.out.println("User password: " + userPassword);
+		System.out.println("User ID: " + userID);
+		
+		//Check if the userPassword is correct:
+		if (!checkCorrectPassword(userID, userPassword)){
+			res.setVerified(false);
+			res.setStatus("Wrong password");
+			return res;
+		}
+
 		PreparedStatement st = null;
 		
 		if (keyBytes == null){

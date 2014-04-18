@@ -593,7 +593,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     
     
     @Override
-    public Validator generateNewKeys(int userID, String newKeyPass, String sessionID) {
+    public Validator generateNewKeys(int userID, String newKeyPass, String userPassword, String sessionID) {
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int requesterID = clientSessions.getSession(sessionID);
         boolean allowed = refMonitor.gotRightsGroup1(requesterID, userID, action);
@@ -604,7 +604,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setStatus("Permission denied.");
         	return res;
         }else{
-        	return dbc.generateNewKeys(userID, newKeyPass);
+        	return dbc.generateNewKeys(userID, newKeyPass, userPassword);
         	
         }
     }
@@ -681,7 +681,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
 
     @Override
-    public Validator uploadPubKey(byte[] keyBytes, String sessionID){
+    public Validator uploadPubKey(byte[] keyBytes, String userPassword, String sessionID){
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int requesterID = clientSessions.getSession(sessionID);
         boolean allowed = refMonitor.gotRightsGroup1(requesterID, requesterID, action);    
@@ -695,7 +695,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setVerified(false);
         	res.setStatus("Permission denied.");
         }else{
-        	res = dbc.uploadPubKey(keyBytes, requesterID);        	
+        	res = dbc.uploadPubKey(keyBytes, requesterID, userPassword);        	
         }    	
         
         return res;
