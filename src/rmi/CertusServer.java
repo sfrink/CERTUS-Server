@@ -678,26 +678,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	return res;
         }    	
     }
-    
-    @Override
-    public Validator updateUserPasswordTemp(UserDto userDto, String sessionID){
-    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int requesterID = clientSessions.getSession(sessionID);
-        //boolean allowed = refMonitor.gotRightsGroup1(requesterID, requesterID, action);
-
-        userDto.setUserId(requesterID);
-        Validator res = new Validator();
-        /*if (!allowed){
-        	res.setVerified(false);
-        	res.setStatus("Permission denied.");
-        	return res;
-        }else{*/
-        	//check if the current password is correct for the user:        	
-        	res = dbc.updateUserPassword(userDto);
-        	
-        	return res;
-        //}    	
-    }
 
 
     @Override
@@ -775,11 +755,11 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
 
 	@Override
-	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass) 
+	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass, String newPassword) 
 			throws RemoteException {
 		//Look up username in db, get salt, password hash
     	//DatabaseConnector db = new DatabaseConnector();
-    	Validator validator = dbc.checkIfUsernameTempPasswordMatch(email, plainPass);
+    	Validator validator = dbc.checkIfUsernameTempPasswordMatch(email, plainPass, newPassword);
     	if (validator.isVerified()){
     		UserDto user = (UserDto) validator.getObject();
     		

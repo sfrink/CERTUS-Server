@@ -3184,7 +3184,7 @@ public class DatabaseConnector
 		return val;
 	}
 	
-	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass){
+	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass, String newPassword){
 		// 1. validate input
 		Validator result = validateEmailAndPlainInput(email, plainPass);
 		if (!result.isVerified()) {
@@ -3202,13 +3202,18 @@ public class DatabaseConnector
 
 		String dbHash = userDto.getTempPassword();
 		String dbSalt = userDto.getTempSalt();
-
-
+		if(dbHash==""||dbHash==null){
+			result.setVerified(false);
+			result.setStatus("No temporary password in the database");
+			return result;
+		}
+		
 		String plainHash = PasswordHasher.sha512(plainPass, dbSalt);
 
 		// 3. if entered password is correct, return true with welcome message
 		if (plainHash.equals(dbHash)) {
-			
+			userDto.setTempPassword(newPassword);
+			updateUserPassword(userDto);
 			result.setObject(userDto);
 			result.setVerified(true);
 			result.setStatus("Welcome to Certus");
