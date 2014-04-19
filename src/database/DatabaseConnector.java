@@ -1014,7 +1014,7 @@ public class DatabaseConnector
 		
 		// Validate the election
 		Validator vElection = electionDto.Validate();
-		
+		boolean valid = true;
 		if (vElection.isVerified()) {
 			
 			int electionId = 0;
@@ -1031,8 +1031,15 @@ public class DatabaseConnector
 				
 				if (!electionDtoEmailChecked.isEmailListError()) {
 					electionId = addElectionWithCandidatesString(electionDto);
-				}
 				
+					if ((electionId > 0 ) && (!electionDto.getEmailListInvited().trim().isEmpty())) {
+						// add invited users
+						electionDto.setElectionId(electionId);
+						Validator vAddInvitations = addUserInvitations(electionDto);
+						valid &= vAddInvitations.isVerified();
+						
+					}
+				}
 			} else if (electionDto.getElectionType() == ElectionType.PUBLIC.getCode()) {
 				electionId = addElectionWithCandidatesString(electionDto);
 			}
@@ -1043,7 +1050,7 @@ public class DatabaseConnector
 				electionDto.setElectionId(electionId);
 				
 				val.setObject(electionDto);
-				val.setVerified(true & !electionDto.isEmailListError());
+				val.setVerified(valid & !electionDto.isEmailListError());
 				val.setStatus("Election has been inserted");	
 			} else {
 				val.setObject(electionDto);
@@ -2224,18 +2231,15 @@ public class DatabaseConnector
 	}
 
 	
-	public Validator addUserInvitations(ElectionDto electionDto) {
+	private Validator addUserInvitations(ElectionDto electionDto) {
 		Validator val = new Validator();
 		String status = "";
 		boolean valid = true;
 		
 		String[] emailList = electionDto.getEmailListInvited().split(newLine);
-		
-		//TODO: validate election, Check with Dmitriy when this method would called.
-		
-		
+		String 	addedEmails = "";
 		// Get the election name from the database (to include into the email)
-		ElectionDto electionInDb = (ElectionDto)selectElectionForOwner(electionDto.getElectionId()).getObject();
+		ElectionDto electionInDb = (ElectionDto)selectElectionFullDetail(electionDto.getElectionId()).getObject();
 		
 		if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()){
 			for (String email : emailList) {
@@ -2254,24 +2258,44 @@ public class DatabaseConnector
 				Validator vInviteUser = addUserInvitation(email); 
 				
 				if (vInviteUser.isVerified()) {
-					// add this user to the participate table.
-					Validator vAddUser = AddAllowedUser(electionDto.getElectionId(), email, UserType.ELECTORATE);
+					// add this user to the addedEmail list, so that the candidates_string could be updated.
+					addedEmails += email + newLine;
 					
-					if (vAddUser.isVerified()) {
-						// send email to the user
-						UserDto user = (UserDto)vInviteUser.getObject();
-						String messageSubject = EmailExchanger.getInvitationSubject();
-						String messageBody = EmailExchanger.getInvitationBody(user, electionInDb.getElectionName());
-						
-						EmailExchanger.sendEmail(email, messageSubject, messageBody);
-					} else {
-						valid &= vAddUser.isVerified();
-						status += vAddUser.getStatus();
-					}
+					// send email to the user
+					UserDto user = (UserDto)vInviteUser.getObject();
+					String messageSubject = EmailExchanger.getInvitationSubject();
+					String messageBody = EmailExchanger.getInvitationBody(user, electionInDb.getElectionName());
+					
+					EmailExchanger.sendEmail(email, messageSubject, messageBody);			
+					//Validator vAddUser = AddAllowedUser(electionDto.getElectionId(), email, UserType.ELECTORATE);
+					
+//					if (vAddUser.isVerified()) {
+//						// send email to the user
+//						UserDto user = (UserDto)vInviteUser.getObject();
+//						String messageSubject = EmailExchanger.getInvitationSubject();
+//						String messageBody = EmailExchanger.getInvitationBody(user, electionInDb.getElectionName());
+//						
+//						EmailExchanger.sendEmail(email, messageSubject, messageBody);
+//					} else {
+//						valid &= vAddUser.isVerified();
+//						status += vAddUser.getStatus();
+//					}
 				} else {
 					valid &= vInviteUser.isVerified();
 					status += vInviteUser.getStatus() + newLine;
 				}
+			}
+
+			// update the election.candidates_string with new list of emails
+			if (!addedEmails.trim().isEmpty()) {
+				String newEmailList = electionInDb.getRegisteredEmailList() + newLine;
+				newEmailList += addedEmails;
+				
+				ElectionDto electionDtoUpdate = electionInDb;
+				electionDtoUpdate.setEmailList(newEmailList);
+				Validator vUpdateElection = editElection(electionDtoUpdate);
+				valid &= vUpdateElection.isVerified();
+				status += vUpdateElection.getStatus() + newLine;
 			}
 			
 			if (valid) {
