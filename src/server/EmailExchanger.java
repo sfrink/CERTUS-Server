@@ -118,7 +118,30 @@ public class EmailExchanger {
 	public static String getInvitationSubject(){
 		return "Invitation from CERTUS";
 	}
-	public static String getInvitationBody(UserDto userDto, String electionName){
+	public static String getInvitationBody(UserDto userDto){
+		String body = "";
+		
+		body = "Dear user," + newLine;
+		body += newLine;
+		body += "You have been invited to register the CERTUS voting system.";
+		body += newLine;
+		body += "Please use the following url to access the system.";
+		body += newLine + "URL :" + ConfigurationProperties.emailSystemUrl();
+		body += newLine;
+		body += newLine + "Your user name \t\t:" + userDto.getEmail();
+		body += newLine + "Your temporary password :" + userDto.getPassword();
+		body += newLine + "You must change your password at your first login.";
+		body += newLine;
+		body += newLine + "Thank you";
+		body += newLine + "Election Administrator";
+		body += newLine + "CERTUS Voting";
+		body += newLine;
+		body += newLine;
+		body += newLine + "NOTE: This is a system generated message. Please do not reply this email.";
+		return body;
+	}
+	
+	public static String getNotificationBody(String email, String electionName){
 		String body = "";
 		
 		body = "Dear user," + newLine;
@@ -128,15 +151,15 @@ public class EmailExchanger {
 		body += "Please use the following url to access the system.";
 		body += newLine + "URL :" + ConfigurationProperties.emailSystemUrl();
 		body += newLine;
-		body += newLine + "Your user name \t\t:" + userDto.getEmail();
-		body += newLine + "Your temporary password :" + userDto.getTempPassword();
-		body += newLine + "You must change your password at your first login.";
-		body += newLine;
-		body += newLine + "This is a system generated message. Please do not reply this email.";
+		body += newLine + "Your user name \t\t:" + email;
 		body += newLine;
 		body += newLine + "Thank you";
-		body += newLine + "Election Administrator";
+		body += newLine + "Election Administrator ";
 		body += newLine + "CERTUS Voting";
+		body += newLine;
+		body += newLine;
+		body += newLine + "NOTE: This is a system generated message. Please do not reply this email.";
+		body += newLine;
 		return body;
 	}
 

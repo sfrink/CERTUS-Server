@@ -1033,8 +1033,9 @@ public class DatabaseConnector
 					electionId = addElectionWithCandidatesString(electionDto);
 				
 					if ((electionId > 0 ) && (!electionDto.getEmailListInvited().trim().isEmpty())) {
-						// add invited users
 						electionDto.setElectionId(electionId);
+						
+						// add invited users to the user table
 						Validator vAddInvitations = addUserInvitations(electionDto);
 						valid &= vAddInvitations.isVerified();
 						
@@ -1197,6 +1198,8 @@ public class DatabaseConnector
 						// add allowed users for private elections
 						if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()) {
 							// private election
+							
+							// add allowed users to the participate table
 							Validator vAddUsers = addAllowedUsers(electionId, electionInDb.getRegisteredEmailList());
 							if (vAddUsers.isVerified()) {
 								// change the status of election to OPEN
@@ -1207,6 +1210,9 @@ public class DatabaseConnector
 								} else {
 									val = vElectionStatusOpen;
 								}
+								
+								// notify users
+								notifyUsers(electionInDb);
 							} else {
 								// remove the candidates already added
 								deleteCandidates( electionInDb.getElectionId() );
@@ -1236,6 +1242,25 @@ public class DatabaseConnector
 			val = vElectionInDb;
 		}
 		return val;
+	}
+	
+	private void notifyUsers(ElectionDto electionDto){
+		
+		// send email to the user
+		String[] emailList = electionDto.getRegisteredEmailList().split(newLine);
+		for (String email : emailList){
+			if (email.trim().isEmpty()) {
+				continue;
+			}
+			Validator vCheckEmail = checkUserEmail(email);
+			if (vCheckEmail.isVerified()) {
+			
+				String messageSubject = EmailExchanger.getInvitationSubject();
+				String messageBody = EmailExchanger.getNotificationBody(email, electionDto.getElectionName());
+			
+				EmailExchanger.sendEmail(email, messageSubject, messageBody);	
+			}
+		}
 	}
 	
 	private Validator addCandidates(int electionId, String candidatesListString)
@@ -1333,6 +1358,10 @@ public class DatabaseConnector
 			String[] emails = emailListString.split(newLine);
 			boolean status = true;
 			for (String email : emails) {
+				if (email.trim().isEmpty()) {
+					continue;
+				}
+				
 				// add users to participate table 
 				Validator vAddUser = AddAllowedUser(electionId, email, UserType.ELECTORATE);
 				
@@ -1373,7 +1402,7 @@ public class DatabaseConnector
 								+ " , ?"
 								+ " , ? "
 								+ ")";
-	
+	System.out.println(query);
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setString(1, email);
 			st.setInt(2, electionId);
@@ -2264,7 +2293,7 @@ public class DatabaseConnector
 					// send email to the user
 					UserDto user = (UserDto)vInviteUser.getObject();
 					String messageSubject = EmailExchanger.getInvitationSubject();
-					String messageBody = EmailExchanger.getInvitationBody(user, electionInDb.getElectionName());
+					String messageBody = EmailExchanger.getInvitationBody(user);
 					
 					EmailExchanger.sendEmail(email, messageSubject, messageBody);			
 					//Validator vAddUser = AddAllowedUser(electionDto.getElectionId(), email, UserType.ELECTORATE);
@@ -2319,11 +2348,11 @@ public class DatabaseConnector
 		int newUserId = 0;
 		
 		// temporary salt
-		String tempSalt = PasswordHasher.generateSalt();
+		String salt = PasswordHasher.generateSalt();
 		// temporary password 
-		String tempPassword = PasswordHasher.generateRandomString();
+		String password = PasswordHasher.generateRandomString();
 		//hash the password:
-		String hashedPass = PasswordHasher.sha512(tempPassword, tempSalt);
+		String hashedPass = PasswordHasher.sha512(password, salt);
 		
 		
 		// add user  with temp password and email the password.
@@ -2334,7 +2363,7 @@ public class DatabaseConnector
 			st.setString(1, emailInvited);
 			st.setInt(2, UserType.INVITED.getCode());
 			st.setString(3, hashedPass);
-			st.setString(4, tempSalt);
+			st.setString(4, salt);
 			st.setInt(5, Status.ENABLED.getCode());
 			
 			// run the query and get new user id
@@ -2344,7 +2373,7 @@ public class DatabaseConnector
 			newUserId = rs.getInt(1);
 			if (newUserId > 0) {
 				UserDto userDto = new UserDto();
-				userDto.setTempPassword(tempPassword);
+				userDto.setPassword(password);
 				userDto.setEmail(emailInvited);
 				userDto.setUserId(newUserId);
 				
