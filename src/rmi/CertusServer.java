@@ -678,6 +678,26 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	return res;
         }    	
     }
+    
+    @Override
+    public Validator updateUserPasswordTemp(UserDto userDto, String sessionID){
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int requesterID = clientSessions.getSession(sessionID);
+        //boolean allowed = refMonitor.gotRightsGroup1(requesterID, requesterID, action);
+
+        userDto.setUserId(requesterID);
+        Validator res = new Validator();
+        /*if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{*/
+        	//check if the current password is correct for the user:        	
+        	res = dbc.updateUserPassword(userDto);
+        	
+        	return res;
+        //}    	
+    }
 
 
     @Override
@@ -736,10 +756,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	String tempHash=PasswordHasher.sha512(temp, salt);
         	Validator set=dbc.setTempPassword(u,tempHash,salt);
         	if(set.isVerified()){
-        		String url="";
         		String message="Your temporary CERTUS password is: "+temp+".\n"+
-        				"Click here to login with the temporary password and reset your password: "+
-        				url+"\nIf you have received this email in error, you can continue to "+
+        				"Use this password with your email address.  This password will only "
+        				+ "work one time, so be sure to change your password once you log in.\n "+
+        				"\n\nIf you have received this email in error, you can continue to "+
         				"login with your usual password.";
         		EmailExchanger.sendEmail(u.getEmail(), "Temporary CERTUS Password", message);
         		val.setStatus("Sent temp password email");
