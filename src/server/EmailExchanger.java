@@ -141,17 +141,21 @@ public class EmailExchanger {
 		return body;
 	}
 	
-	public static String getNotificationBody(String email, String electionName){
+	public static String getNotificationBody(UserDto userDto, String electionName){
 		String body = "";
+		String name = "user,";
+		if ((userDto.getFirstName() != null ) && (userDto.getLastName() != null )){
+			name = userDto.getFirstName() + " " + userDto.getLastName() +",";
+		}
 		
-		body = "Dear user," + newLine;
+		body = "Dear "+ name + newLine;
 		body += newLine;
 		body += "You have been invited to vote the private election '" + electionName + "'.";
 		body += newLine;
 		body += "Please use the following url to access the system.";
 		body += newLine + "URL :" + ConfigurationProperties.emailSystemUrl();
 		body += newLine;
-		body += newLine + "Your user name \t\t:" + email;
+		body += newLine + "Your user name \t\t:" + userDto.getEmail();
 		body += newLine;
 		body += newLine + "Thank you";
 		body += newLine + "Election Administrator ";

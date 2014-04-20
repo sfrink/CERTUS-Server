@@ -46,6 +46,22 @@ import enumeration.UserType;
 import enumeration.UserStatus;
 
 
+/**
+ * @author sulo
+ *
+ */
+/**
+ * @author sulo
+ *
+ */
+/**
+ * @author sulo
+ *
+ */
+/**
+ * @author sulo
+ *
+ */
 public class DatabaseConnector
 {
 	private static String	dbHost;
@@ -111,6 +127,12 @@ public class DatabaseConnector
 		return u;
 	}
 
+	/**
+	 * Checks whether the given password is correct for the specified user account (email address)
+	 * @param email
+	 * @param plainPass
+	 * @return Validator
+	 */
 	public Validator checkIfUsernamePasswordMatch(String email, String plainPass) {
 		// 1. validate input
 		Validator result = validateEmailAndPlainInput(email, plainPass);
@@ -132,7 +154,6 @@ public class DatabaseConnector
 		int statusId = userDto.getStatus();
 		int id = userDto.getUserId();
 
-
 		String plainHash = PasswordHasher.sha512(plainPass, dbSalt);
 
 		// 3. if entered password is correct, return true with welcome message
@@ -151,6 +172,12 @@ public class DatabaseConnector
 
 	}
 
+	/**
+	 * Validates password against email address. 
+	 * @param email
+	 * @param plainPass
+	 * @return Validator
+	 */
 	public Validator validateEmailAndPlainInput(String email, String plainPass) {
 		InputValidation iv = new InputValidation();
 		Validator vResult = new Validator();
@@ -177,7 +204,7 @@ public class DatabaseConnector
 	private Validator checkUserEmail(String emailToSelect) {
 		Validator v = new Validator();
 		v.setVerified(false);
-		v.setStatus("Error, the system could not resolve the provided combination of username and password.");
+		v.setStatus("Error, the system could not resolve the provided email.");
 
 		PreparedStatement st = null;
 		String query = "SELECT user_id FROM users WHERE email = ? AND status = 1";
@@ -201,6 +228,11 @@ public class DatabaseConnector
 		return v;
 	}
 
+	/**
+	 * Selects only a limited user information of a given email address
+	 * @param emailToSelect
+	 * @return UserDto
+	 */
 	public UserDto selectUserByEmailLimited(String emailToSelect) {
 		UserDto userDto = new UserDto();
 
@@ -213,7 +245,7 @@ public class DatabaseConnector
 		try {
 			st = this.con.prepareStatement(query);
 			st.setString(1, emailToSelect);
-
+			
 			ResultSet res = st.executeQuery();
 
 			if (res.next()) {
@@ -224,6 +256,8 @@ public class DatabaseConnector
 				String salt = res.getString(5);
 				int statusId = res.getInt(6);
 				int type = res.getInt(7);
+				
+				userDto.setEmail(emailToSelect);
 				userDto.setUserId(user_id);
 				userDto.setFirstName(first_name);
 				userDto.setLastName(last_name);
@@ -233,9 +267,9 @@ public class DatabaseConnector
 				userDto.setType(type);
 				userDto.setTempPassword(res.getString(8));
 				userDto.setTempSalt(res.getString(9));
-
+				
 			} else {
-
+					
 			}
 
 		} catch (SQLException ex) {
@@ -321,7 +355,7 @@ public class DatabaseConnector
 	
 	// Election
 	/**
-	 * This function selects an election for owner
+	 * This function selects an election for Voter
 	 * @param id (int) - Election identification number (primary key)
 	 * @return Validator : ElectionDto - Details of a particular election
 	 * @author Hirosh Wickramasuriya, Dmitriy Karmazin
@@ -391,6 +425,12 @@ public class DatabaseConnector
 	}
 
 	
+	/**
+	 * Selects elections full details including list of candidates (new line separated string) 
+	 * and allowed user emails (new line separated string)
+	 * @param id
+	 * @return Validator
+	 */
 	public Validator selectElectionFullDetail(int id) {
 		Validator validator = new Validator();
 		ElectionDto electionDto = new ElectionDto();
@@ -460,6 +500,7 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * Select list of elections which are available to Administrator
 	 * @param status
 	 *            (ElectionStatus) - specific status to be searched
 	 * @return Validator : ArrayList<ElectionDto> - List of elections that
@@ -619,6 +660,7 @@ public class DatabaseConnector
 	
 
 	/**
+	 * Select list of elections which are owned by a specific owner id
 	 * @param election_owner_id (int) - user_id of the user who owns elections
 	 * @return Validator : ArrayList<ElectionDto> - List of all the elections (not disabled only)
 	 *         owned by the specific user (regardless of status)
@@ -688,6 +730,14 @@ public class DatabaseConnector
 
 	}
 
+	/**
+	 * This function selects all elections which are available to vote for a given user
+	 * @param userId (int) - user_id of the user who owns this election
+	 * @param status (ElectionStatus) - specific status to be searched
+	 * @return Validator : ArrayList<ElectionDto> - List of elections owned by
+	 *         the specific user, that matches a specific status
+	 * @author Hirosh Wickramasuriya, Dmitriy Karmazin
+	 */
 	public Validator selectElectionsForVoter(int user_id) {
 		Validator val = new Validator();
 		ArrayList<ElectionDto> elecs = new ArrayList<ElectionDto>();
@@ -748,6 +798,7 @@ public class DatabaseConnector
 
 	// Candidates
 	/**
+	 * Selects a specific candidate
 	 * @param id
 	 *            - candidate identification number (primary key)
 	 * @return Validator :CandidateDto - Details of a particular candidate
@@ -798,6 +849,7 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * Selects list of candidates of a given election
 	 * @param electionIdKey
 	 *            - election identification number
 	 * @return Validator : ArrayList<CandidateDto>- list of all the candidates
@@ -849,6 +901,7 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * Selects list of candidates of an election whose status matches to the given status
 	 * @param electionIdKey
 	 *            - election identification number
 	 * @param candidateStatus
@@ -1005,6 +1058,7 @@ public class DatabaseConnector
 	}
 	
 	/**
+	 * Adds election record to the election table
 	 * @param electionDto   - election details
 	 * @return Validator 	- with ElectionDto object with primary key assigned by the db, upon successful insert
 	 * @author Hirosh Wickramasuriya
@@ -1115,6 +1169,7 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * Updates an election 
 	 * @param electionDto
 	 *            - election data object
 	 * @return validator - status of election update operation
@@ -1167,6 +1222,8 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * open the election while populating the candidates table and participate table with candidates and
+	 * invited users respectively
 	 * @param electionDto
 	 *            - election data object
 	 * @return validator - status of election update operation
@@ -1178,13 +1235,11 @@ public class DatabaseConnector
 		Validator vElectionInDb = selectElectionFullDetail(electionId);
 		
 		if (vElectionInDb.isVerified()) {
+			// Retrieve the election object in the db
 			ElectionDto electionInDb = (ElectionDto)vElectionInDb.getObject();
 		
 			Validator vElectionStatus = compareElectionStatus(electionInDb, ElectionStatus.NEW);
-			// Retrieve the election object in the db
-			
 			if (vElectionStatus.isVerified()) {
-				
 				// Validate the election, so that all the candidates get validated, 
 				// and also the list of email account for private election
 				Validator vElection = electionInDb.Validate();
@@ -1195,40 +1250,7 @@ public class DatabaseConnector
 					// add the list of candidates 
 					Validator vAddCandidates = addCandidates(electionId, electionInDb.getCandidatesListString());
 					if (vAddCandidates.isVerified()) {
-						// add allowed users for private elections
-						if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()) {
-							// private election
-							
-							// add allowed users to the participate table
-							Validator vAddUsers = addAllowedUsers(electionId, electionInDb.getRegisteredEmailList());
-							if (vAddUsers.isVerified()) {
-								// change the status of election to OPEN
-								Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
-								if (vElectionStatusOpen.isVerified()) {
-									val.setVerified(true); 
-									val.setStatus("Election has been opened.");
-								} else {
-									val = vElectionStatusOpen;
-								}
-								
-								// notify users
-								notifyUsers(electionInDb);
-							} else {
-								// remove the candidates already added
-								deleteCandidates( electionInDb.getElectionId() );
-								val = vAddUsers;
-							}
-						} else if (electionInDb.getElectionType() == ElectionType.PUBLIC.getCode()){
-							// public election
-							// change the status of election to OPEN
-							Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
-							if (vElectionStatusOpen.isVerified()) {
-								val.setVerified(true); 
-								val.setStatus("Election has been opened.");
-							} else {
-								val = vElectionStatusOpen;
-							}
-						}
+						val = addAllowedUsersAndOpenElection(electionInDb);
 					} else {
 						val = vAddCandidates;
 					}
@@ -1244,19 +1266,65 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	private Validator addAllowedUsersAndOpenElection(ElectionDto electionInDb){
+		Validator val = new Validator();
+		// add allowed users for private elections
+		int electionId = electionInDb.getElectionId();
+		boolean isOpen = false;
+		if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()) {
+			// private election
+			// add allowed users to the participate table
+			Validator vAddUsers = addAllowedUsers(electionId, electionInDb.getRegisteredEmailList());
+			if (vAddUsers.isVerified()) {
+				
+				isOpen = true;	// can change the status of election to OPEN
+			} else {
+				// remove the candidates already added
+				deleteCandidates( electionInDb.getElectionId() );
+				val = vAddUsers;
+			}
+		} else if (electionInDb.getElectionType() == ElectionType.PUBLIC.getCode()){
+			// public election, 
+			isOpen = true;		// can change the status of election to OPEN
+		}
+		
+		if (isOpen) {
+			// change the status of election to OPEN
+			Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
+			if (vElectionStatusOpen.isVerified()) {
+				notifyUsers(electionInDb); // notify all the users
+				
+				val.setVerified(true); 
+				val.setStatus("Election has been opened.");
+			} else {
+				val = vElectionStatusOpen;
+			}
+		}
+		return val;
+	}
+	
+	
+	/** send email to all the users associated with this eleciton
+	 * @param electionDto 
+	 */
 	private void notifyUsers(ElectionDto electionDto){
 		
-		// send email to the user
+		// send email to all the users associated with this eleciton
 		String[] emailList = electionDto.getRegisteredEmailList().split(newLine);
 		for (String email : emailList){
 			if (email.trim().isEmpty()) {
 				continue;
 			}
-			Validator vCheckEmail = checkUserEmail(email);
-			if (vCheckEmail.isVerified()) {
+			UserDto userDto  = selectUserByEmailLimited(email);
+			if (userDto.getUserId() == 0) {
+				// no user found
+				continue;
+			}
 			
+			if (userDto.getStatus() == UserStatus.ACTIVE.getCode()) {
+				// Only the active users should receive the email to vote
 				String messageSubject = EmailExchanger.getInvitationSubject();
-				String messageBody = EmailExchanger.getNotificationBody(email, electionDto.getElectionName());
+				String messageBody = EmailExchanger.getNotificationBody(userDto, electionDto.getElectionName());
 			
 				EmailExchanger.sendEmail(email, messageSubject, messageBody);	
 			}
@@ -1380,6 +1448,7 @@ public class DatabaseConnector
 		
 		return val;
 	}
+	
 	/**
 	 * @param electionId - election Id
 	 * @param email - email of the user
@@ -1429,6 +1498,13 @@ public class DatabaseConnector
 
 		return val;
 	}
+	
+	
+	/**
+	 * Updates the candidate status
+	 * @param CandidateDto cand
+	 * @return Validator
+	 */
 	public Validator editCandidateStatus(CandidateDto cand) {
 		PreparedStatement st = null;
 		//InputValidation iv = new InputValidation();
@@ -1488,6 +1564,7 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * Updates an election status
 	 * @param electionId
 	 *            - the election id to update the status Delete an election
 	 * @param electionStatus
@@ -1528,6 +1605,11 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	/**
+	 * Mark election for deletion
+	 * @param electionId
+	 * @return Validator
+	 */
 	public Validator deleteElection(int electionId) {
 		PreparedStatement st = null;
 		Validator val = new Validator();
@@ -1608,8 +1690,10 @@ public class DatabaseConnector
 	// Vote
 
 	/**
+	 * Records the vote 
 	 * @param voteDto
 	 *            - the vote to submit Submit a vote
+	 * @return Validator
 	 * @author Steven Frink
 	 */
 
@@ -1663,13 +1747,14 @@ public class DatabaseConnector
 		return val;
 	}
 
-	/**
+/*	*//**
+	 * Updates the users public key
 	 * @param userDto
 	 *            - userDetails with public key
 	 * @return Validator - status of the public key update operation
 	 * @author Hirosh Wickramasuriya
 	 * This function can be called only by admins.
-	 */
+	 *//*
 	public Validator editUserPublicKey(UserDto userDto) {
 		PreparedStatement st = null;
 		Validator val = new Validator();
@@ -1701,9 +1786,10 @@ public class DatabaseConnector
 			val = vUserDto;
 		}
 		return val;
-	}
+	}*/
 
 	/**
+	 * Selects users public key
 	 * @param userDto
 	 *            - userDto with the userId
 	 * @return Validator - with user's public key
@@ -1747,6 +1833,11 @@ public class DatabaseConnector
 		return val;
 	}
 
+	/**
+	 * Selects votes by election Id
+	 * @param election_id
+	 * @return Validator
+	 */
 	public Validator selectVotesByElectionId(int election_id) {
 		Validator val = new Validator();
 		InputValidation iv = new InputValidation();
@@ -1789,20 +1880,20 @@ public class DatabaseConnector
 		return val;
 	}
 
-	public Validator checkCandidateInElection(int electionId, int cand_id){
-		Validator val=new Validator();
-		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
-				selectCandidatesOfElection(electionId, Status.ENABLED).getObject();
-		boolean validCand = false;
-		for (int j = 0; j < candidatesOfElection.size(); j++) {
-			if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
-				validCand = true;
-				break;
-			}
-		}
-		val.setVerified(validCand);
-		return val;
-	}
+//	public Validator checkCandidateInElection(int electionId, int cand_id){
+//		Validator val=new Validator();
+//		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
+//				selectCandidatesOfElection(electionId, Status.ENABLED).getObject();
+//		boolean validCand = false;
+//		for (int j = 0; j < candidatesOfElection.size(); j++) {
+//			if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
+//				validCand = true;
+//				break;
+//			}
+//		}
+//		val.setVerified(validCand);
+//		return val;
+//	}
 	
 	private Validator checkUserEmails(ElectionDto electionDto){
 		Validator val=new Validator();
@@ -1816,7 +1907,8 @@ public class DatabaseConnector
 			for (String email : emails) {
 				String emailTrimmed = email.trim();
 				if (!emailTrimmed.isEmpty()) {
-					if (checkUserEmail(emailTrimmed).isVerified()) {
+					UserDto userDto = selectUserByEmailLimited(emailTrimmed);
+					if (userDto.getUserId() > 0) {
 						registeredEmails += emailTrimmed + newLine;
 					} else {
 						unregisteredEmails += emailTrimmed + newLine;
@@ -1903,6 +1995,7 @@ public class DatabaseConnector
 	}
 	
 	/**
+	 * tally the election results
 	 * @param electionId
 	 * @return Validator with ElectionDto that has results
 	 * @author Steven Frink/Hirosh Wickramasuriya
@@ -1950,6 +2043,7 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * Returns the Number of votes collected
 	 * @param electionId
 	 * @return Validator with ElectionProgressDto
 	 * @author Hirosh Wickramasuriya
@@ -1998,6 +2092,12 @@ public class DatabaseConnector
 		return val;
 	}
 
+	/**
+	 * publish election results - populate the results table and change the election status to PUBLISHED
+	 * @param electionId
+	 * @param password
+	 * @return
+	 */
 	public Validator publishResults(int electionId, String password) {
 		Validator val = new Validator();
 		Validator vElectionStatus = compareElectionStatus(electionId, ElectionStatus.CLOSED);
@@ -2184,6 +2284,7 @@ public class DatabaseConnector
 	}
 
 	/**
+	 * selects elections results from the results table
 	 * @param electionId 	- election identification number
 	 * @return Validator 	- with ElectionDto having results of each candidates
 	 * @author Hirosh Wickramasuriya
@@ -2278,7 +2379,7 @@ public class DatabaseConnector
 					continue;
 				}
 				
-				if (checkUserEmail(email.trim()).isVerified()){ 
+				if (selectUserByEmailLimited( email.trim()).getUserId() > 0){ 
 					// do nothing if user already exist
 					continue;
 				}
@@ -2396,6 +2497,7 @@ public class DatabaseConnector
 	
 	
 	/**
+	 * Selects all the users in teh system
 	 * @return - Validator with ArrayList<UserDto>  all the users in the system
 	 * @author Hirosh Wickramasuriya
 	 */
@@ -2441,6 +2543,7 @@ public class DatabaseConnector
 	}
 	
 	/**
+	 * Retrieve user information by user id
 	 * @param - userId - user identificaiton number 
 	 * @return - Validator with UserDto containing user information for the given user id
 	 * @author Hirosh Wickramasuriya
@@ -2490,6 +2593,7 @@ public class DatabaseConnector
 	}
 	
 	/**
+	 * Updates user details
 	 * @param userDto
 	 * @return with the verified status true upon successful update, false otherwise
 	 * @author Hirosh Wickramasuriya
@@ -2561,7 +2665,12 @@ public class DatabaseConnector
 		return val;
 	}
 	
-	// get user role by the user id:
+	
+	/**
+	 * get user role by the user id
+	 * @param userID
+	 * @return Validator
+	 */
 	public Validator getUserRoleByID(int userID){
 		
 		Validator val = new Validator();
@@ -2591,8 +2700,13 @@ public class DatabaseConnector
 		return val;
 	}
 	
-	
-	// check if a user role is permitted to do an action:
+ 
+	/**
+	 * check if a user role is permitted to do an action:
+	 * @param roleID
+	 * @param actionID
+	 * @return Validator
+	 */
 	public Validator checkRoleRight(int roleID, int actionID){
 		
 		Validator val = new Validator();
@@ -2622,8 +2736,12 @@ public class DatabaseConnector
 		return val;		
 	}
 	
-	
-	//get action id by the method name:
+
+	/**
+	 * get action id by the method name
+	 * @param methodName
+	 * @return Validator
+	 */
 	public Validator getActionIDbyMethod(String methodName){
 		Validator val = new Validator();
 		PreparedStatement st = null;
@@ -2653,7 +2771,12 @@ public class DatabaseConnector
 		return val;				
 	}
 	
-	//get all the rights allowed for a user role:
+	
+	/**
+	 * get all the rights allowed for a user role
+	 * @param roleID
+	 * @return Validator
+	 */
 	public Validator getRoleRights(int roleID){
 		Validator val = new Validator();
 		PreparedStatement st = null;
@@ -2693,7 +2816,12 @@ public class DatabaseConnector
 		return val;						
 	}
 	
-	//register new user with basic information (Firstname, Lastname, Email, Password):
+
+	/**
+	 * register new user with basic information (Firstname, Lastname, Email, Password):
+	 * @param UserDto - newUser object
+	 * @return Validator
+	 */
 	public Validator addUser(UserDto newUser){
 		Validator res = new Validator();
 		if (checkUserEmail(newUser.getEmail()).isVerified()){
@@ -2771,7 +2899,7 @@ public class DatabaseConnector
 	}
 
 	
-	//get the public key for a user:
+/*	//get the public key for a user:
 	public byte[] getPublicKeyFromBlob(int userID){
 		byte [] res = null;
 		PreparedStatement st = null;
@@ -2792,9 +2920,14 @@ public class DatabaseConnector
 			ex.printStackTrace();
 		}
 		return res;
-	}
-
-	//get email address by user ID:
+	}*/
+	
+	/**
+	 * get email address by user ID
+	 * Validator
+	 * @param userID
+	 * @return Validator
+	 */
 	public Validator getUesrEmail (int userID){
 		Validator res = new Validator();
 		PreparedStatement st = null;
@@ -2822,8 +2955,15 @@ public class DatabaseConnector
 		return res;
 	}
 	
-	
-	//generate new keys for a user:
+
+	/**
+	 * Generates pair of keys for a specific user and updates the user table with public key and 
+	 * email the private key to the user
+	 * @param userID
+	 * @param newKeyPass
+	 * @param userPassword
+	 * @return Validator
+	 */
 	public Validator generateNewKeys(int userID, String newKeyPass, String userPassword){
 		Validator res = new Validator();
 		
@@ -2881,7 +3021,12 @@ public class DatabaseConnector
 		return res;
 	}
 	
-	//Update user information - this function to be invked only by the users:		
+	
+	/**
+	 * Update user information - this function to be invked only by the users
+	 * @param userDto
+	 * @return Validator
+	 */
 	public Validator updateUser(UserDto userDto) {
 		Validator val = new Validator();
 		
@@ -2911,6 +3056,12 @@ public class DatabaseConnector
 		return val;
 	}
 
+	/**
+	 * Checks whether the password is correct for the given userID
+	 * @param userID
+	 * @param password
+	 * @return boolean - true or false
+	 */
 	public boolean checkCorrectPassword(int userID, String password){		
 		UserDto dbUser = new UserDto();
 		dbUser = selectUserById(userID);
@@ -2921,6 +3072,11 @@ public class DatabaseConnector
 		return newHash.equals(dbHash);
 	}
 
+	/**
+	 * Updates the user password
+	 * @param UserDto - userInfo user object
+	 * @return Validator
+	 */
 	public Validator updateUserPassword(UserDto userInfo){
 		Validator res = new Validator();
 		
@@ -2963,6 +3119,13 @@ public class DatabaseConnector
 	}
 	
 
+	/**
+	 * Upload public keys for user
+	 * @param keyBytes
+	 * @param userID
+	 * @param userPassword
+	 * @return Validator
+	 */
 	public Validator uploadPubKey(byte[] keyBytes, int userID, String userPassword) {
 		Validator res = new Validator();
 		
@@ -3017,7 +3180,12 @@ public class DatabaseConnector
 		return res;
 	}
 
-	//Check if election is public:
+	
+	/**
+	 * Check if election is public
+	 * @param electionID
+	 * @return
+	 */
 	public boolean isPublicElection(int electionID){
 		boolean res = false;
 		
@@ -3043,8 +3211,12 @@ public class DatabaseConnector
 		return res;
 	}
 	
-	
-	//Check if userID got access to elecionID:
+	/**
+	 * Check if userID got access to elecionID
+	 * @param userID
+	 * @param electionID
+	 * @return boolean
+	 */
 	public boolean gotAccessToElection(int userID, int electionID){
 		boolean res = false;
 		
@@ -3074,7 +3246,13 @@ public class DatabaseConnector
 		return res;
 	}
 	
-	//Check if userID is election authority on electionID:
+	
+	/**
+	 * Check if userID is election authority on electionID
+	 * @param userID
+	 * @param electionID
+	 * @return boolean
+	 */
 	public boolean isElectionAuth(int userID, int electionID){
 		boolean res = false;
 		
@@ -3096,6 +3274,11 @@ public class DatabaseConnector
 		return res;
 	}
 	
+	/**
+	 * Gets the public key of the election for tallying 
+	 * @param electionId
+	 * @return
+	 */
 	public Validator getTallierPublicKey(int electionId){
 		Validator val=new Validator();
 		PreparedStatement st = null;
@@ -3131,6 +3314,11 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	/**
+	 * Gets the private key of the election
+	 * @param electionId
+	 * @return Validator
+	 */
 	public Validator getPrivateKey(int electionId){
 		Validator val=new Validator();
 		PreparedStatement st=null;
@@ -3160,7 +3348,13 @@ public class DatabaseConnector
 		return val;
 	}
 
-	//check if requesterID is invited:
+	
+	/**
+	 * check if requesterID is invited
+	 * @param requesterID
+	 * @param electionID
+	 * @return boolean
+	 */
 	public boolean isInvited(int requesterID, int electionID) {
 		boolean res = false;
 		
@@ -3189,6 +3383,12 @@ public class DatabaseConnector
 	
 	
 	
+	/**
+	 * Gets the private key of the election
+	 * @param electionId
+	 * @param password
+	 * @return Validator
+	 */
 	public Validator getElectionPrivateKey(int electionId, String password) {
 		Validator vKey = new Validator();
 		Validator vKeyDb = getPrivateKey(electionId);
@@ -3213,6 +3413,13 @@ public class DatabaseConnector
 		return vKey;
 	}
 	
+	/**
+	 * Sets temporary password for user
+	 * @param u
+	 * @param temp
+	 * @param salt
+	 * @return
+	 */
 	public Validator setTempPassword(UserDto u, String temp, String salt){
 		Validator val = new Validator();
 		
@@ -3237,6 +3444,14 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	/**
+	 * Checks whether the temporary password is correct for the specified user account
+	 * then change the users curren password to a newPassword
+	 * @param email
+	 * @param plainPass
+	 * @param newPassword
+	 * @return Validator
+	 */
 	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass, String newPassword){
 		// 1. validate input
 		Validator result = validateEmailAndPlainInput(email, plainPass);
@@ -3279,9 +3494,12 @@ public class DatabaseConnector
 		}
 	}
 
-	//register new user with basic information 
-	//(Firstname, Lastname, Email, Password)
-	//and with a dedicated password to protect the private key:
+	/**
+	 * register new user with basic information (Firstname, Lastname, Email, Password)
+	 * and with a dedicated password to protect the private key:
+	 * @param UserDto - newUser object
+	 * @return Validator 
+	 */
 	public Validator addUserWithPP(UserDto newUser){
 		Validator res = new Validator();
 		if (checkUserEmail(newUser.getEmail()).isVerified()){
@@ -3357,9 +3575,13 @@ public class DatabaseConnector
 		return res;
 	}
 
-	//register new user with basic information 
-	//(Firstname, Lastname, Email, Password)
-	//and with the user uploaded public key:
+
+	/**
+	 * register new user with basic information(Firstname, Lastname, Email, Password) 
+	 * and with the user uploaded public key:
+	 * @param UserDto - newUser object
+	 * @return Validator 
+	 */
 	public Validator addUserWithKey(UserDto newUser){
 		Validator res = new Validator();
 		if (checkUserEmail(newUser.getEmail()).isVerified()){
@@ -3453,8 +3675,13 @@ public class DatabaseConnector
 		return val;
 	}
 
-	//Update temp user with basic information:
-	//Firstname, lastname, password:
+
+	/**
+	 * Update temp user with basic information Firstname, lastname, password
+	 * @param user
+	 * @param tempPassword
+	 * @return Validator
+	 */
 	public Validator updateTempUser(UserDto user, String tempPassword){
 		Validator res = new Validator();
 		
@@ -3532,9 +3759,14 @@ public class DatabaseConnector
 	}
 
 	
-	//Update temp user with basic information:
-	//Firstname, lastname, password.
-	//and the user specific password to protect the private key:
+	
+	/**
+	 * Update temp user with basic information:Firstname, lastname, password.
+	 * and the user specific password to protect the private key
+	 * @param user
+	 * @param tempPassword
+	 * @return Validator
+	 */
 	public Validator UpdateTempUserWithPP(UserDto user, String tempPassword){
 		Validator res = new Validator();
 				
@@ -3612,9 +3844,17 @@ public class DatabaseConnector
 	}
 	
 
-	//Update temp user with basic information:
-	//Firstname, lastname, password.
-	//and the user public key:
+	//:
+	//.
+	//:
+	/**
+	 * Update temp user with basic information Firstname, lastname, password
+	 * and the user public key
+	 * 
+	 * @param user
+	 * @param tempPassword
+	 * @return Validator
+	 */
 	public Validator UpdateTempUserWithKey(UserDto user, String tempPassword){
 		Validator res = new Validator();
 	
