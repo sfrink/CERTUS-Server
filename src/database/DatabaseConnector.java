@@ -1202,6 +1202,12 @@ public class DatabaseConnector
 					if (!electionDtoEmailChecked.isEmailListError()) {
 						// Update the election details if all email good for private election
 						vEditElection = editElectionWithCandidatesString(electionDto);
+						
+						if (!electionDto.getEmailListInvited().trim().isEmpty()) {
+							// add invited users to the user table
+							Validator vAddInvitations = addUserInvitations(electionDto);
+							vEditElection = vAddInvitations;
+						}
 					}
 					
 				} else if (electionDto.getElectionType() == ElectionType.PUBLIC.getCode()) {
