@@ -1285,7 +1285,8 @@ public class DatabaseConnector
 			// change the status of election to OPEN
 			Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
 			if (vElectionStatusOpen.isVerified()) {
-				notifyUsers(electionInDb); // notify all the users
+				
+				notifyUsers(electionInDb.getElectionName(), electionInDb.getRegisteredEmailList()); // notify all the users
 				
 				val.setVerified(true); 
 				val.setStatus("Election has been opened.");
@@ -1300,10 +1301,10 @@ public class DatabaseConnector
 	/** send email to all the users associated with this eleciton
 	 * @param electionDto 
 	 */
-	private void notifyUsers(ElectionDto electionDto){
+	private void notifyUsers(String electionName, String emailListString){
 		
 		// send email to all the users associated with this eleciton
-		String[] emailList = electionDto.getRegisteredEmailList().split(newLine);
+		String[] emailList = emailListString.split(newLine);
 		for (String email : emailList){
 			if (email.trim().isEmpty()) {
 				continue;
@@ -1317,7 +1318,7 @@ public class DatabaseConnector
 			if (userDto.getStatus() == UserStatus.ACTIVE.getCode()) {
 				// Only the active users should receive the email to vote
 				String messageSubject = EmailExchanger.getInvitationSubject();
-				String messageBody = EmailExchanger.getNotificationBody(userDto, electionDto.getElectionName());
+				String messageBody = EmailExchanger.getNotificationBody(userDto, electionName);
 			
 				EmailExchanger.sendEmail(email, messageSubject, messageBody);	
 			}
@@ -1366,15 +1367,15 @@ public class DatabaseConnector
 		
 		// check the election status.
 		ElectionDto electionDtoCurrent = (ElectionDto) selectElectionForOwner(electionDto.getElectionId()).getObject();
-		if (electionDtoCurrent.getStatus() == ElectionStatus.NEW.getCode() 
-				|| electionDtoCurrent.getStatus() == ElectionStatus.OPEN.getCode() ) {
-			// Election is NEW or OPEN state
+		if (electionDtoCurrent.getStatus() == ElectionStatus.OPEN.getCode() ) {
+			// Election is in OPEN state
 			
 			// These properties are set from the db, in order to pass the validation.
 			electionDto.setElectionName(electionDtoCurrent.getElectionName());
 			electionDto.setElectionDescription(electionDtoCurrent.getElectionDescription());
 			electionDto.setElectionType(electionDtoCurrent.getElectionType());
 			electionDto.setCandidatesListString(electionDtoCurrent.getCandidatesListString());
+			electionDto.setStatus(electionDtoCurrent.getStatus());
 			
 			// Validate Election
 			Validator vElection = electionDto.Validate();
@@ -1389,6 +1390,7 @@ public class DatabaseConnector
 					electionDto.setUnregisteredEmailList(electionDtoEmailChecked.getUnregisteredEmailList());	
 					electionDto.setEmailListError(electionDtoEmailChecked.isEmailListError());
 					electionDto.setEmailListMessage(electionDtoEmailChecked.getEmailListMessage());
+					
 					
 					val = addAdditionalUserInvitations(electionDto);
 					
@@ -1420,7 +1422,7 @@ public class DatabaseConnector
 				if (vAddInvitations.isVerified()) {
 					// consider invited users as registered users
 					String registeredUserEmails = electionDto.getRegisteredEmailList();
-					registeredUserEmails += electionDto.getEmailListInvited().trim();
+					registeredUserEmails += newLine + electionDto.getEmailListInvited().trim();
 					electionDto.setRegisteredEmailList(registeredUserEmails);
 				}
 				isOk = vAddInvitations.isVerified();
@@ -2335,6 +2337,7 @@ public class DatabaseConnector
 		
 		String[] emailList = electionDto.getEmailListInvited().split(newLine);
 		String 	addedEmails = "";
+	
 		// Get the election name from the database (to include into the email)
 		ElectionDto electionInDb = (ElectionDto)selectElectionFullDetail(electionDto.getElectionId()).getObject();
 		
@@ -2355,7 +2358,7 @@ public class DatabaseConnector
 				Validator vInviteUser = addUserInvitation(email); 
 				
 				if (vInviteUser.isVerified()) {
-					// add this user to the addedEmail list, so that the candidates_string could be updated.
+					// add this user to the addedEmail list, so that the election.allowed_users_email could be updated.
 					addedEmails += email + newLine;
 					
 					// send email to the user
@@ -2371,16 +2374,23 @@ public class DatabaseConnector
 				}
 			}
 
-			// update the election.candidates_string with new list of emails
-			if (!addedEmails.trim().isEmpty()) {
-				String newEmailList = electionInDb.getRegisteredEmailList() + newLine;
-				newEmailList += addedEmails;
+			if (electionDto.getStatus() == ElectionStatus.NEW.getCode()) {
+				// update the election.allowed_users_email with new list of emails
+				if (!addedEmails.trim().isEmpty()) {
+					String newEmailList = electionInDb.getRegisteredEmailList() + newLine;
+					newEmailList += addedEmails;
+					
+					ElectionDto electionDtoUpdate = electionInDb;
+					electionDtoUpdate.setEmailList(newEmailList);
+					Validator vUpdateElection = editElection(electionDtoUpdate);
+					valid &= vUpdateElection.isVerified();
+					status += vUpdateElection.getStatus() + newLine;
+				}
+			} else if (electionDto.getStatus() == ElectionStatus.OPEN.getCode()){
+				// send notifications to the newly added users
 				
-				ElectionDto electionDtoUpdate = electionInDb;
-				electionDtoUpdate.setEmailList(newEmailList);
-				Validator vUpdateElection = editElection(electionDtoUpdate);
-				valid &= vUpdateElection.isVerified();
-				status += vUpdateElection.getStatus() + newLine;
+				notifyUsers(electionDto.getElectionName(), addedEmails);
+				
 			}
 			
 			if (valid) {

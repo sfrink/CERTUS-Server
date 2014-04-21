@@ -314,8 +314,8 @@ public class Election
 		
 		int electionId = 34;
 		electionDto.setElectionId(electionId);
-		electionDto.setEmailList("sulochane@yahoo.com");
-		electionDto.setEmailListInvited("sulochane@somewhere.com");
+		electionDto.setEmailList("sulochane1@gmail.com");
+		electionDto.setEmailListInvited("sulochane@gmail.com");
 		Validator val = dbc.addAdditionalUsersToElection(electionDto);
 		assertTrue("add additional users to election ", val.isVerified());
 	}
