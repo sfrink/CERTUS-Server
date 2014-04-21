@@ -46,22 +46,6 @@ import enumeration.UserType;
 import enumeration.UserStatus;
 
 
-/**
- * @author sulo
- *
- */
-/**
- * @author sulo
- *
- */
-/**
- * @author sulo
- *
- */
-/**
- * @author sulo
- *
- */
 public class DatabaseConnector
 {
 	private static String	dbHost;
@@ -1477,7 +1461,7 @@ public class DatabaseConnector
 								+ " , ?"
 								+ " , ? "
 								+ ")";
-	System.out.println(query);
+	
 			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 			st.setString(1, email);
 			st.setInt(2, electionId);
@@ -1753,47 +1737,6 @@ public class DatabaseConnector
 		return val;
 	}
 
-/*	*//**
-	 * Updates the users public key
-	 * @param userDto
-	 *            - userDetails with public key
-	 * @return Validator - status of the public key update operation
-	 * @author Hirosh Wickramasuriya
-	 * This function can be called only by admins.
-	 *//*
-	public Validator editUserPublicKey(UserDto userDto) {
-		PreparedStatement st = null;
-		Validator val = new Validator();
-
-		String query = "UPDATE users SET public_key = ? WHERE user_id = ?";
-
-		Validator vUserDto = userDto.Validate();
-
-		if (vUserDto.isVerified()) {
-			try {
-				st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-				st.setString(1, userDto.getPublicKey());
-				st.setInt(2, userDto.getUserId());
-				int updateCount = st.executeUpdate();
-				if (updateCount > 0) {
-					val.setStatus("User's public key updated successfully");
-					val.setVerified(true);
-				} else {
-					val.setStatus("Failed to update the user's public key");
-				}
-
-			} catch (SQLException ex) {
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-				val.setStatus("SQL Error");
-			}
-
-		} else {
-			val = vUserDto;
-		}
-		return val;
-	}*/
-
 	/**
 	 * Selects users public key
 	 * @param userDto
@@ -1885,21 +1828,6 @@ public class DatabaseConnector
 		}
 		return val;
 	}
-
-//	public Validator checkCandidateInElection(int electionId, int cand_id){
-//		Validator val=new Validator();
-//		ArrayList<CandidateDto> candidatesOfElection = (ArrayList<CandidateDto>)
-//				selectCandidatesOfElection(electionId, Status.ENABLED).getObject();
-//		boolean validCand = false;
-//		for (int j = 0; j < candidatesOfElection.size(); j++) {
-//			if (candidatesOfElection.get(j).getCandidateId() == cand_id) {
-//				validCand = true;
-//				break;
-//			}
-//		}
-//		val.setVerified(validCand);
-//		return val;
-//	}
 	
 	private Validator checkUserEmails(ElectionDto electionDto){
 		Validator val=new Validator();
@@ -1915,10 +1843,14 @@ public class DatabaseConnector
 				if (!emailTrimmed.isEmpty()) {
 					UserDto userDto = selectUserByEmailLimited(emailTrimmed);
 					if (userDto.getUserId() > 0) {
-						registeredEmails += emailTrimmed + newLine;
+						if (registeredEmails.indexOf(emailTrimmed) == -1) {
+							registeredEmails += emailTrimmed + newLine;
+						}
 					} else {
-						unregisteredEmails += emailTrimmed + newLine;
-						allRegisteredEmails = false;
+						if (unregisteredEmails.indexOf(emailTrimmed) == -1) {
+							unregisteredEmails += emailTrimmed + newLine;
+							allRegisteredEmails = false;
+						}
 					}
 				}
 			}
@@ -2403,19 +2335,7 @@ public class DatabaseConnector
 					String messageBody = EmailExchanger.getInvitationBody(user);
 					
 					EmailExchanger.sendEmail(email, messageSubject, messageBody);			
-					//Validator vAddUser = AddAllowedUser(electionDto.getElectionId(), email, UserType.ELECTORATE);
-					
-//					if (vAddUser.isVerified()) {
-//						// send email to the user
-//						UserDto user = (UserDto)vInviteUser.getObject();
-//						String messageSubject = EmailExchanger.getInvitationSubject();
-//						String messageBody = EmailExchanger.getInvitationBody(user, electionInDb.getElectionName());
-//						
-//						EmailExchanger.sendEmail(email, messageSubject, messageBody);
-//					} else {
-//						valid &= vAddUser.isVerified();
-//						status += vAddUser.getStatus();
-//					}
+
 				} else {
 					valid &= vInviteUser.isVerified();
 					status += vInviteUser.getStatus() + newLine;
@@ -2903,30 +2823,6 @@ public class DatabaseConnector
 		}
 		return res;
 	}
-
-	
-/*	//get the public key for a user:
-	public byte[] getPublicKeyFromBlob(int userID){
-		byte [] res = null;
-		PreparedStatement st = null;
-		ResultSet rs = null;
-
-		String query = "select public_key from users WHERE user_id=?";
-		try {
-			
-			st = con.prepareStatement(query);
-			st.setInt(1, userID);
-			rs = st.executeQuery();
-			if(rs.next()){
-				Blob b = rs.getBlob(1);
-				int blobLength = (int) b.length();
-				res = b.getBytes(1, blobLength);
-			}
-		} catch (SQLException ex) {
-			ex.printStackTrace();
-		}
-		return res;
-	}*/
 	
 	/**
 	 * get email address by user ID
@@ -3848,11 +3744,7 @@ public class DatabaseConnector
 	return res;
 
 	}
-	
 
-	//:
-	//.
-	//:
 	/**
 	 * Update temp user with basic information Firstname, lastname, password
 	 * and the user public key
