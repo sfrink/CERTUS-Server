@@ -753,4 +753,18 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	return validator;
 	}
 	
+    public Validator selectUserByEmail(String email, String sessionID) throws RemoteException{
+    	UserDto u=dbc.selectUserByEmailLimited(email);
+    	Validator val=new Validator();
+    	val.setObject(u);
+    	val.setVerified(true);
+    	val.setStatus("Retrieved user");
+    	return val;
+    }
+
+    public void resendInvitation(UserDto u, String sessionID) throws RemoteException{
+    	Validator val=new Validator();
+    	EmailExchanger.sendEmail(u.getEmail(), EmailExchanger.getInvitationSubject(), 
+    			EmailExchanger.getInvitationBody(u));
+    }
 }
