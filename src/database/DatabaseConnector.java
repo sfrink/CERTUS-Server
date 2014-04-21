@@ -1169,6 +1169,7 @@ public class DatabaseConnector
 		{
 			// Validate Election
 			Validator vElection = electionDto.Validate();
+
 			if (vElection.isVerified()) {
 				// For private elections, check whether the given email addresses are registered 
 				
@@ -1204,8 +1205,10 @@ public class DatabaseConnector
 				val.setVerified(vEditElection.isVerified() & !electionDto.isEmailListError());
 			} else {
 				val = vElection;
+				val.setObject(electionDto);
 			}
 		} else { 
+			val.setObject(electionDto);
 			val.setStatus("Election status is " + vElectionCurrent.getStatusCode() + ", does not allow to modify.");
 		}
 		return val;
