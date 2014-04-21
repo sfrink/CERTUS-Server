@@ -2859,7 +2859,7 @@ public class DatabaseConnector
 	 * @param userID
 	 * @return Validator
 	 */
-	public Validator getUesrEmail (int userID){
+	public Validator getUserEmail (int userID){
 		Validator res = new Validator();
 		PreparedStatement st = null;
 		ResultSet rs = null;
@@ -2906,7 +2906,7 @@ public class DatabaseConnector
 		}
 		
 		
-		res = getUesrEmail(userID);
+		res = getUserEmail(userID);
 		
 		if (res.isVerified()){
 			String email = res.getStatus();
@@ -3249,6 +3249,7 @@ public class DatabaseConnector
 	 * Gets the private key of the election
 	 * @param electionId
 	 * @return Validator
+	 * @author Steven
 	 */
 	public Validator getPrivateKey(int electionId){
 		Validator val=new Validator();
@@ -3377,11 +3378,13 @@ public class DatabaseConnector
 	
 	/**
 	 * Checks whether the temporary password is correct for the specified user account
-	 * then change the users curren password to a newPassword
+	 * then change the users current password to a newPassword.
+	 * If the password is correct then the temp password is removed from DB.
 	 * @param email
 	 * @param plainPass
 	 * @param newPassword
 	 * @return Validator
+	 * @author Steven
 	 */
 	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass, String newPassword){
 		// 1. validate input
@@ -3583,6 +3586,11 @@ public class DatabaseConnector
 		return res;
 	}
 	
+	/**
+	 * @author Steven
+	 * @param u User to have temp password deleted
+	 * Deletes temp password from database for specified user
+	 */
 	private Validator removeTempPassword(UserDto u){
 		PreparedStatement st = null;
 		Validator val = new Validator();

@@ -287,7 +287,17 @@ public class Election
 		assertTrue("add additional voters ", val.isVerified());
 	}
 	
-	@Test 
+	@Test
+	public void testGetPrivateKey(){
+		Validator val=dbc.getPrivateKey(12);
+		if(val.isVerified()){
+			System.out.println("Get private key");
+			System.out.println(val.getStatus());
+		}
+		assertTrue("get private key", val.isVerified());
+	}
+	
+	/*@Test 
 	public void testAddUserInvitations() {
 		int electionId = 12;
 		ElectionDto electionDto = new ElectionDto();
@@ -297,5 +307,5 @@ public class Election
 		Validator val = dbc.addUserInvitations(electionDto);
 		
 		assertTrue("user invited ", val.isVerified());
-	}
+	}*/
 }
