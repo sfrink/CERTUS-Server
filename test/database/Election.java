@@ -289,8 +289,24 @@ public class Election
 		assertTrue("add additional voters ", val.isVerified());
 	}
 	
+<<<<<<< HEAD
+	@Test
+	public void testGetPrivateKey(){
+		Validator val=dbc.getPrivateKey(12);
+		if(val.isVerified()){
+			System.out.println("Get private key");
+			System.out.println(val.getStatus());
+		}
+		assertTrue("get private key", val.isVerified());
+	}
+	
+	/*@Test 
+	public void testAddUserInvitations() {
+		int electionId = 12;
+=======
 	//@Test
 	public void testAddPrivateElectionWithInvitations() {
+>>>>>>> 44ea2a0a7159cf9bd0252ccbbf8b8d989ec8e1e1
 		ElectionDto electionDto = new ElectionDto();
 		
 		int ownerId = 1;
@@ -306,6 +322,10 @@ public class Election
 		Validator val = dbc.addElection(electionDto);
 		assertTrue("add eleciton with invitations ", val.isVerified());
 		
+<<<<<<< HEAD
+		assertTrue("user invited ", val.isVerified());
+	}*/
+=======
 	}
 
 	@Test
@@ -319,4 +339,5 @@ public class Election
 		Validator val = dbc.addAdditionalUsersToElection(electionDto);
 		assertTrue("add additional users to election ", val.isVerified());
 	}
+>>>>>>> 44ea2a0a7159cf9bd0252ccbbf8b8d989ec8e1e1
 }
