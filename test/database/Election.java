@@ -41,7 +41,7 @@ public class Election
 		
 		election.setElectionName("automated election name");
 		election.setElectionDescription("automated election description");
-		election.setCandidatesListString("automated 1 \nautomated 2");
+		election.setCandidatesListString("xxx\nxxx");
 		election.setElectionType(ElectionType.PUBLIC.getCode());
 		
 		Validator val = election.Validate();
@@ -109,6 +109,7 @@ public class Election
 		election.setElectionDescription("automated test PRIVATE election description");
 		election.setCandidatesListString("automated test 1 \nautomated test 2");
 		election.setOwnerId(ownerId);
+		election.setPassword("junit");
 		Timestamp start = new Timestamp(System.currentTimeMillis());
 		election.setStartDatetime(start.toString());
 		
@@ -147,6 +148,7 @@ public class Election
 		election.setElectionDescription("automated test PUBLIC election description");
 		election.setCandidatesListString("automated test 1 \nautomated test 2");
 		election.setOwnerId(ownerId);
+		election.setPassword("junit");
 		Timestamp start = new Timestamp(System.currentTimeMillis());
 		election.setStartDatetime(start.toString());
 		
@@ -287,15 +289,34 @@ public class Election
 		assertTrue("add additional voters ", val.isVerified());
 	}
 	
-	@Test 
-	public void testAddUserInvitations() {
-		int electionId = 12;
+	//@Test
+	public void testAddPrivateElectionWithInvitations() {
 		ElectionDto electionDto = new ElectionDto();
+		
+		int ownerId = 1;
+		electionDto.setOwnerId(ownerId);
+		electionDto.setElectionName("Unit Testing");
+		electionDto.setElectionDescription("Created by Unit testing");
+		electionDto.setElectionType(ElectionType.PRIVATE.getCode());
+		electionDto.setPassword("junit");
+		electionDto.setCandidatesListString("choice A\nchoiceB\n");
+		electionDto.setEmailList("hirosh@gwmail.gwu.edu\ndkarmazi@gwu.edu\n");
+		electionDto.setEmailListInvited("sulochane@yahoo.com\nsulochane@gmail.com\n");
+		
+		Validator val = dbc.addElection(electionDto);
+		assertTrue("add eleciton with invitations ", val.isVerified());
+		
+	}
+
+	@Test
+	public void testAddAdditionalUserInvitations(){
+		ElectionDto electionDto = new ElectionDto();
+		
+		int electionId = 34;
 		electionDto.setElectionId(electionId);
-		electionDto.setEmailListInvited("sulochane@yahoo.com\nsulochane@gmail.com");
-		
-		Validator val = dbc.addUserInvitations(electionDto);
-		
-		assertTrue("user invited ", val.isVerified());
+		electionDto.setEmailList("sulochane@yahoo.com");
+		electionDto.setEmailListInvited("sulochane@somewhere.com");
+		Validator val = dbc.addAdditionalUsersToElection(electionDto);
+		assertTrue("add additional users to election ", val.isVerified());
 	}
 }
