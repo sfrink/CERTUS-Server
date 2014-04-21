@@ -582,7 +582,7 @@ public class DatabaseConnector
 		query += " INNER JOIN status_election s ON (e.status = s.status_id)";
 		query += " INNER JOIN participate p";
 		query += " ON (e.election_id = p.election_id)";
-		query += " WHERE (e.status = ? AND e.type = ? AND p.user_id = ? AND e.election_id NOT IN (SELECT e.election_id FROM vote WHERE user_id = ?) )";
+		query += " WHERE (e.status = ? AND e.type = ? AND p.user_id = ? AND e.election_id IN (SELECT e.election_id FROM vote WHERE user_id = ?) )";
 		query += " GROUP BY election_id";
 		query += " ORDER BY election_id DESC";
 
