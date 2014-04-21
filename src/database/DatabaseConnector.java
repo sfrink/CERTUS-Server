@@ -1353,6 +1353,11 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	/**
+	 * Adds additional users to the election while it is opened for vote
+	 * @param electionDto
+	 * @return
+	 */
 	public Validator addAdditionalUsersToElection(ElectionDto electionDto) {
 		Validator val = new Validator();
 		
@@ -1372,7 +1377,6 @@ public class DatabaseConnector
 			Validator vElection = electionDto.Validate();
 			if (vElection.isVerified()) {
 				// For private elections, check whether the given email addresses are registered 
-				Validator vEditElection = new Validator();
 				if (electionDtoCurrent.getElectionType() == ElectionType.PRIVATE.getCode()) {
 					// private election - check all the emails
 					Validator vEmailList = checkUserEmails(electionDto);
@@ -1383,20 +1387,14 @@ public class DatabaseConnector
 					electionDto.setEmailListError(electionDtoEmailChecked.isEmailListError());
 					electionDto.setEmailListMessage(electionDtoEmailChecked.getEmailListMessage());
 					
-					if (!electionDtoEmailChecked.isEmailListError()) {
-						// add new users to the participate table if all email good for private election
-						Validator vAddUsers = addAllowedUsers(electionDto.getElectionId(), electionDto.getRegisteredEmailList());
-						
-						val = vAddUsers; // Verified status is set to true or false by the previous statement
-					} else {
-						val.setStatus(electionDtoEmailChecked.getEmailListMessage());
-					}
+					val = addAdditionalUserInvitations(electionDto);
+					
 					// get the current users' email list
 					electionDto.setCurrentEmailList(selectParticipatingVotersOfElection(electionDto.getElectionId()));
 					val.setObject(electionDto);
 				} else {
 					// not a private election, do not add users
-					vEditElection.setStatus("This is not a private election, cannot add new users to this election");
+					val.setStatus("This is not a private election, cannot add new users to this election");
 				}
 			} else {
 				val = vElection;
@@ -1408,6 +1406,34 @@ public class DatabaseConnector
 
 	}
 
+	private Validator addAdditionalUserInvitations(ElectionDto electionDto) {
+		Validator val = new Validator();
+		
+		if (!electionDto.isEmailListError()) {
+			boolean isOk = true;
+			if (!electionDto.getEmailListInvited().trim().isEmpty()) {
+				// add invited users to the user table
+				Validator vAddInvitations = addUserInvitations(electionDto);
+				if (vAddInvitations.isVerified()) {
+					// consider invited users as registered users
+					String registeredUserEmails = electionDto.getRegisteredEmailList();
+					registeredUserEmails += electionDto.getEmailListInvited().trim();
+					electionDto.setRegisteredEmailList(registeredUserEmails);
+				}
+				isOk = vAddInvitations.isVerified();
+			}
+			
+			if (isOk) {
+				// add new users to the participate table if all email good for private election
+				Validator vAddUsers = addAllowedUsers(electionDto.getElectionId(), electionDto.getRegisteredEmailList());
+				val = vAddUsers; // Verified status is set to true or false by the previous statement
+			}
+		} else {
+			val.setStatus(electionDto.getEmailListMessage());
+		}
+		return val;
+	}
+	
 	private Validator addAllowedUsers(int electionId, String emailListString) {
 		Validator val = new Validator();
 		
