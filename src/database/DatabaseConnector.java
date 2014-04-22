@@ -264,9 +264,6 @@ public class DatabaseConnector
 		return userDto;
 	}
 
-	
-	
-	// Election
 	/**
 	 * This function selects an election for owner
 	 * @param id (int) - Election identification number (primary key)
@@ -414,6 +411,7 @@ public class DatabaseConnector
 	 * and allowed user emails (new line separated string)
 	 * @param id
 	 * @return Validator
+	 * @author Hirosh Wickramasuriya
 	 */
 	public Validator selectElectionFullDetail(int id) {
 		Validator validator = new Validator();
@@ -1259,18 +1257,25 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	/**
+	 * If Private election add users to participate table
+	 * change the election status  to OPEN
+	 * @param ElectionDto 
+	 * @return Validator
+	 * @author Hirosh Wickramasuriya
+	 */
 	private Validator addAllowedUsersAndOpenElection(ElectionDto electionInDb){
 		Validator val = new Validator();
 		// add allowed users for private elections
 		int electionId = electionInDb.getElectionId();
-		boolean isOpen = false;
+		boolean isGoodToOpen = false;
 		if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()) {
 			// private election
 			// add allowed users to the participate table
-			Validator vAddUsers = addAllowedUsers(electionId, electionInDb.getRegisteredEmailList());
+			Validator vAddUsers = addAllowedUsers(electionInDb);
 			if (vAddUsers.isVerified()) {
 				
-				isOpen = true;	// can change the status of election to OPEN
+				isGoodToOpen = true;	// can change the status of election to OPEN
 			} else {
 				// remove the candidates already added
 				deleteCandidates( electionInDb.getElectionId() );
@@ -1278,32 +1283,26 @@ public class DatabaseConnector
 			}
 		} else if (electionInDb.getElectionType() == ElectionType.PUBLIC.getCode()){
 			// public election, 
-			isOpen = true;		// can change the status of election to OPEN
+			isGoodToOpen = true;		// can change the status of election to OPEN
 		}
 		
-		if (isOpen) {
+		if (isGoodToOpen) {
 			// change the status of election to OPEN
-			Validator vElectionStatusOpen = editElectionStatus(electionId, ElectionStatus.OPEN);
-			if (vElectionStatusOpen.isVerified()) {
-				
-				notifyUsers(electionInDb.getElectionName(), electionInDb.getRegisteredEmailList()); // notify all the users
-				
-				val.setVerified(true); 
-				val.setStatus("Election has been opened.");
-			} else {
-				val = vElectionStatusOpen;
-			}
+			val = editElectionStatus(electionId, ElectionStatus.OPEN);
+			val.setStatus("Election has been opened.");
 		}
 		return val;
 	}
 	
 	
-	/** send email to all the users associated with this eleciton
-	 * @param electionDto 
+	/** send email to all the users associated with this election
+	 * @param String electionName
+	 * @param String emailListString 
+	 * @author Hirosh Wickramasuriya
 	 */
-	private void notifyUsers(String electionName, String emailListString){
+	private void notifyUsersByEmail(String electionName, String emailListString){
 		
-		// send email to all the users associated with this eleciton
+		// send email to all the users associated with this election
 		String[] emailList = emailListString.split(newLine);
 		for (String email : emailList){
 			if (email.trim().isEmpty()) {
@@ -1317,7 +1316,7 @@ public class DatabaseConnector
 			
 			if (userDto.getStatus() == UserStatus.ACTIVE.getCode()) {
 				// Only the active users should receive the email to vote
-				String messageSubject = EmailExchanger.getInvitationSubject();
+				String messageSubject = EmailExchanger.getNotificationSubject();
 				String messageBody = EmailExchanger.getNotificationBody(userDto, electionName);
 			
 				EmailExchanger.sendEmail(email, messageSubject, messageBody);	
@@ -1325,6 +1324,12 @@ public class DatabaseConnector
 		}
 	}
 	
+	/**
+	 * @param int electionId
+	 * @param String candidatesListString seperated by newLine 
+	 * @return Validator
+	 * @author Hirosh Wickramasuriya
+	 */
 	private Validator addCandidates(int electionId, String candidatesListString)
 	{
 		Validator val = new Validator();
@@ -1360,7 +1365,8 @@ public class DatabaseConnector
 	/**
 	 * Adds additional users to the election while it is opened for vote
 	 * @param electionDto
-	 * @return
+	 * @return Validator
+	 * @author Hirosh Wickramasuriya
 	 */
 	public Validator addAdditionalUsersToElection(ElectionDto electionDto) {
 		Validator val = new Validator();
@@ -1411,6 +1417,11 @@ public class DatabaseConnector
 
 	}
 
+	/**
+	 * invite additional users to vote
+	 * @param electionDto
+	 * @return
+	 */
 	private Validator addAdditionalUserInvitations(ElectionDto electionDto) {
 		Validator val = new Validator();
 		
@@ -1430,7 +1441,7 @@ public class DatabaseConnector
 			
 			if (isOk) {
 				// add new users to the participate table if all email good for private election
-				Validator vAddUsers = addAllowedUsers(electionDto.getElectionId(), electionDto.getRegisteredEmailList());
+				Validator vAddUsers = addAllowedUsers(electionDto);
 				val = vAddUsers; // Verified status is set to true or false by the previous statement
 			}
 		} else {
@@ -1439,15 +1450,22 @@ public class DatabaseConnector
 		return val;
 	}
 	
-	private Validator addAllowedUsers(int electionId, String emailListString) {
+	private Validator addAllowedUsers(ElectionDto electionDto) {
 		Validator val = new Validator();
+		
+		
+		String emailListString = electionDto.getRegisteredEmailList();
 		
 		if (!emailListString.trim().isEmpty()) {
 			// split the list of emails by new line into an array of string
 			String[] emails = emailListString.split(newLine);
+			int electionId = electionDto.getElectionId();
+			String electionName = electionDto.getElectionName();
+			
 			boolean status = true;
 			for (String email : emails) {
-				if (email.trim().isEmpty()) {
+				email = email.trim();
+				if (email.isEmpty()) {
 					continue;
 				}
 				
@@ -1456,6 +1474,13 @@ public class DatabaseConnector
 				
 				val.setStatus(val.getStatus() + newLine + vAddUser.getStatus());
 				status &= vAddUser.isVerified();
+				
+				// invite existing users to vote
+				UserDto userDto = selectUserByEmailLimited(email);
+				if (userDto.getUserId() > 0) {
+					// user exist
+					notifyUsersByEmail(electionName, email);
+				}
 			}
 			val.setVerified(status);
 			if (status) {
@@ -1474,7 +1499,8 @@ public class DatabaseConnector
 	 * @param electionId - election Id
 	 * @param email - email of the user
 	 * @param userRole - user role (ELECTORATE)
-	 * @return
+	 * @return Validator
+	 * @author Hirosh Wickramasuriya
 	 */
 	private Validator AddAllowedUser(int electionId, String email, UserType userRole) {
 		
@@ -1525,6 +1551,7 @@ public class DatabaseConnector
 	 * Updates the candidate status
 	 * @param CandidateDto cand
 	 * @return Validator
+	 * @author Hirosh Wickramasuriya
 	 */
 	public Validator editCandidateStatus(CandidateDto cand) {
 		PreparedStatement st = null;
@@ -1630,6 +1657,7 @@ public class DatabaseConnector
 	 * Mark election for deletion
 	 * @param electionId
 	 * @return Validator
+	 * @author Hirosh 
 	 */
 	public Validator deleteElection(int electionId) {
 		PreparedStatement st = null;
@@ -1708,7 +1736,6 @@ public class DatabaseConnector
 		return val;
 	}
 
-	// Vote
 
 	/**
 	 * Records the vote 
@@ -1817,6 +1844,7 @@ public class DatabaseConnector
 	 * Selects votes by election Id
 	 * @param election_id
 	 * @return Validator
+	 * 
 	 */
 	public Validator selectVotesByElectionId(int election_id) {
 		Validator val = new Validator();
@@ -1860,6 +1888,14 @@ public class DatabaseConnector
 		return val;
 	}
 	
+	/**
+	 * Emails addresses (separated by new line) in ElectionDto.emailList are verified,
+	 * registered  emails are saved to ElectionDto.registeredEmails
+	 * unregistered emails are saved to ElectionDto.unregisteredEmails
+	 * @param electionDto
+	 * @return Validator with electionDto object
+	 * @author Hirosh Wickramasuriya
+	 */
 	private Validator checkUserEmails(ElectionDto electionDto){
 		Validator val=new Validator();
 		
@@ -1989,7 +2025,7 @@ public class DatabaseConnector
 					if (cand_id!=-1) {
 						map=addToMap(map, cand_id);
 					} else {
-						System.out.println("Partially computed");
+						System.out.println("Election Results partially computed");
 					}
 				}
 				// attach the candidates list with results to the ElectionDto
@@ -2065,7 +2101,8 @@ public class DatabaseConnector
 	 * publish election results - populate the results table and change the election status to PUBLISHED
 	 * @param electionId
 	 * @param password
-	 * @return
+	 * @return Validator
+	 * @author Steven / Hirosh
 	 */
 	public Validator publishResults(int electionId, String password) {
 		Validator val = new Validator();
@@ -2330,6 +2367,12 @@ public class DatabaseConnector
 	}
 
 	
+	/**
+	 * add invited users to the user table and update the election with 
+	 * @param electionDto
+	 * @return Validator
+	 * @author Hirosh Wickramasuriya
+	 */
 	private Validator addUserInvitations(ElectionDto electionDto) {
 		Validator val = new Validator();
 		String status = "";
@@ -2343,16 +2386,11 @@ public class DatabaseConnector
 		
 		if (electionInDb.getElectionType() == ElectionType.PRIVATE.getCode()){
 			for (String email : emailList) {
+				// do nothing if blank email
+				if (email.trim().isEmpty()) { continue; }
 				
-				if (email.trim().isEmpty()) { 
-					// do nothing if blank email
-					continue;
-				}
-				
-				if (selectUserByEmailLimited( email.trim()).getUserId() > 0){ 
-					// do nothing if user already exist
-					continue;
-				}
+				// do nothing if user already exist
+				if (selectUserByEmailLimited( email.trim()).getUserId() > 0){ continue; }
 				
 				// add a user with a temporary password
 				Validator vInviteUser = addUserInvitation(email); 
@@ -2361,12 +2399,10 @@ public class DatabaseConnector
 					// add this user to the addedEmail list, so that the election.allowed_users_email could be updated.
 					addedEmails += email + newLine;
 					
-					// send email to the user
+					// send email invitation to the user
 					UserDto user = (UserDto)vInviteUser.getObject();
-					String messageSubject = EmailExchanger.getInvitationSubject();
-					String messageBody = EmailExchanger.getInvitationBody(user);
-					
-					EmailExchanger.sendEmail(email, messageSubject, messageBody);			
+					user.setEmail(email);
+					inviteUserByEmail(user);	
 
 				} else {
 					valid &= vInviteUser.isVerified();
@@ -2374,24 +2410,9 @@ public class DatabaseConnector
 				}
 			}
 
-			if (electionDto.getStatus() == ElectionStatus.NEW.getCode()) {
-				// update the election.allowed_users_email with new list of emails
-				if (!addedEmails.trim().isEmpty()) {
-					String newEmailList = electionInDb.getRegisteredEmailList() + newLine;
-					newEmailList += addedEmails;
-					
-					ElectionDto electionDtoUpdate = electionInDb;
-					electionDtoUpdate.setEmailList(newEmailList);
-					Validator vUpdateElection = editElection(electionDtoUpdate);
-					valid &= vUpdateElection.isVerified();
-					status += vUpdateElection.getStatus() + newLine;
-				}
-			} else if (electionDto.getStatus() == ElectionStatus.OPEN.getCode()){
-				// send notifications to the newly added users
-				
-				notifyUsers(electionDto.getElectionName(), addedEmails);
-				
-			}
+			Validator vUpdateElection = editElectionWithNewlyAddedEmails(electionInDb, addedEmails);
+			valid &= vUpdateElection.isVerified();
+			status += vUpdateElection.getStatus() + newLine;
 			
 			if (valid) {
 				status = "Users invited for the election successfully";
@@ -2404,6 +2425,32 @@ public class DatabaseConnector
 		val.setStatus(status);
 		val.setVerified(valid);
 		return val;
+	}
+	
+	
+	private Validator editElectionWithNewlyAddedEmails(ElectionDto electionDto, String addedEmails) {
+		Validator val = new Validator();
+		if (electionDto.getStatus() == ElectionStatus.NEW.getCode()) {
+			// update the election.allowed_users_email with new list of emails
+			if (!addedEmails.trim().isEmpty()) {
+				String newEmailList = electionDto.getRegisteredEmailList() + newLine;
+				newEmailList += addedEmails;
+				
+				ElectionDto electionDtoUpdate = electionDto;
+				electionDtoUpdate.setEmailList(newEmailList);
+				val = editElection(electionDtoUpdate);
+			}
+		}
+		
+		return val;
+	}
+	
+	private void inviteUserByEmail(UserDto user) {
+		// send email invitation to the user
+		String messageSubject = EmailExchanger.getInvitationSubject();
+		String messageBody = EmailExchanger.getInvitationBody(user);
+		
+		EmailExchanger.sendEmail(user.getEmail(), messageSubject, messageBody);	
 	}
 	
 	private Validator addUserInvitation(String emailInvited) {
@@ -2458,8 +2505,6 @@ public class DatabaseConnector
 		
 		return val;
 	}
-	
-	
 	
 	/**
 	 * Selects all the users in teh system
