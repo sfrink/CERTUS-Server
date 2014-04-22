@@ -118,6 +118,9 @@ public class EmailExchanger {
 	public static String getInvitationSubject(){
 		return "Invitation from CERTUS";
 	}
+	public static String getNotificationSubject(){
+		return "You can cast your vote in CERTUS";
+	}
 	public static String getInvitationBody(UserDto userDto){
 		String body = "";
 		
