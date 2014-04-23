@@ -685,8 +685,10 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	UserDto u=dbc.selectUserByEmailLimited(email);
     	Validator val=new Validator();
     	val.setObject(u);
-    	val.setVerified(true);
-    	val.setStatus("Retrieved user");
+    	if(u!=null){
+    		val.setVerified(true);
+    		val.setStatus("Retrieved user");
+    	}
     	return val;
     }
 

@@ -3699,7 +3699,7 @@ public class DatabaseConnector
 		if (!result.isVerified()) {
 			return result;
 		}
-
+		
 		// 2. validate email
 		result = checkUserEmail(email);
 		if (!result.isVerified()) {
