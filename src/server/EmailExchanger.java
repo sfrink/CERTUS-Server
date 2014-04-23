@@ -131,8 +131,8 @@ public class EmailExchanger {
 		body += "Please use the following url to access the system.";
 		body += newLine + "URL :" + ConfigurationProperties.emailSystemUrl();
 		body += newLine;
-		body += newLine + "Your user name \t\t:" + userDto.getEmail();
-		body += newLine + "Your temporary password :" + userDto.getPassword();
+		body += newLine + "Your user name : " + userDto.getEmail();
+		body += newLine + "Your temporary password : " + userDto.getPassword();
 		body += newLine + "You must change your password at your first login.";
 		body += newLine;
 		body += newLine + "Thank you";
@@ -158,7 +158,7 @@ public class EmailExchanger {
 		body += "Please use the following url to access the system.";
 		body += newLine + "URL :" + ConfigurationProperties.emailSystemUrl();
 		body += newLine;
-		body += newLine + "Your user name \t\t:" + userDto.getEmail();
+		body += newLine + "Your user name : " + userDto.getEmail();
 		body += newLine;
 		body += newLine + "Thank you";
 		body += newLine + "Election Administrator ";
