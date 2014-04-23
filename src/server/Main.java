@@ -18,6 +18,11 @@ public class Main {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
+//		DatabaseConnector dbc = new DatabaseConnector();
+//		
+//		System.out.println(dbc.selectAllUsers().getObject().toString());
+		
+		
 	}
 
 }

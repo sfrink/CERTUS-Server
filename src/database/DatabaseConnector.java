@@ -21,6 +21,9 @@ import java.util.logging.Logger;
 
 import javax.sql.rowset.serial.SerialBlob;
 
+import com.mysql.jdbc.exceptions.jdbc4.CommunicationsException;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLNonTransientConnectionException;
+
 import server.ConfigurationProperties;
 import server.DataEncryptor;
 import server.EmailExchanger;
@@ -74,6 +77,19 @@ public class DatabaseConnector
 
 	}
 
+	
+	public void reconnectToDb() {
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			String url = "jdbc:mysql://" + dbHost + ":" + dbPort + "/" + dbName;
+			con = DriverManager.getConnection(url, dbUser, dbPassword);
+			this.con = con;
+		} catch (Exception e) {
+			System.out.println("Db connection failed");
+			e.printStackTrace();
+		}
+	}
+	
 	public UserDto selectUserById(int userId) {
 		UserDto u = new UserDto();
 
@@ -198,7 +214,13 @@ public class DatabaseConnector
 				v.setStatus("");
 				return v;
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			System.out.println("DB FAIL");
+			reconnectToDb();
+			System.out.println("DB FAIL");
+			
 		} catch (SQLException ex) {
+
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
@@ -251,6 +273,10 @@ public class DatabaseConnector
 			}
 
 		} catch (SQLException ex) {
+			System.out.println("DB FAIL1");
+			reconnectToDb();
+			System.out.println("DB FAIL2");
+
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
