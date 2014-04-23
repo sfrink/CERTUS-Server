@@ -730,8 +730,19 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
 
     public void resendInvitation(UserDto u, String sessionID) throws RemoteException{
+    
+    	String temp=PasswordHasher.generateRandomString();
+    	String salt=PasswordHasher.generateSalt();
+    	String tempHash=PasswordHasher.sha512(temp, salt);
     	
-    	EmailExchanger.sendEmail(u.getEmail(), EmailExchanger.getInvitationSubject(), 
-    			EmailExchanger.getInvitationBody(u));
+    	u.setTempPassword(tempHash);
+    	u.setTempSalt(salt);
+    	Validator set=dbc.setTempPassword(u,tempHash,salt);
+    	if(set.isVerified()){
+    		EmailExchanger.sendEmail( u.getEmail()
+    								, EmailExchanger.getInvitationSubject()
+    								, EmailExchanger.getInvitationBody(u)
+    								);
+    	}
     }
 }
