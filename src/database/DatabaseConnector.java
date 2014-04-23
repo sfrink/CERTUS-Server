@@ -115,6 +115,10 @@ public class DatabaseConnector
 				u.setType(res.getInt(11));
 				u.setStatus(res.getInt(12));
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -270,8 +274,11 @@ public class DatabaseConnector
 				userDto=null;
 			}
 
-		} catch (SQLException ex) {
+		} catch (MySQLNonTransientConnectionException ex) {
 			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
@@ -338,11 +345,17 @@ public class DatabaseConnector
 			} else {
 				validator.setStatus("Election not found");
 			}
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (MySQLNonTransientConnectionException ex) {
 			validator.setVerified(false);
 			validator.setStatus("Select failed");
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (SQLException ex) {
+			validator.setVerified(false);
+			validator.setStatus("Select failed");
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 
 		return validator;
@@ -410,13 +423,19 @@ public class DatabaseConnector
 			} else {
 				validator.setStatus("Election not found");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setVerified(false);
+			validator.setStatus("Select failed");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			validator.setVerified(false);
 			validator.setStatus("Select failed");
 		}
-
+		
 		return validator;
 	}
 
@@ -486,6 +505,12 @@ public class DatabaseConnector
 			}
 			
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setVerified(false);
+			validator.setStatus("Select failed");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -556,6 +581,11 @@ public class DatabaseConnector
 			validator.setObject(elections);
 			validator.setStatus("Successfully selected");
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select Failed.");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -645,6 +675,11 @@ public class DatabaseConnector
 			validator.setObject(elections);
 			validator.setStatus("Successfully selected");
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select failed");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -717,6 +752,11 @@ public class DatabaseConnector
 			validator.setObject(elections);
 			validator.setStatus("Successfully selected");
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select failed");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -783,14 +823,20 @@ public class DatabaseConnector
 			val.setStatus("Retrieved Elections");
 			val.setVerified(true);
 			val.setObject(elecs);
-			return val;
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("Select failed");
+			val.setVerified(false);
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("Select failed");
 			val.setVerified(false);
-			return val;
 		}
+		return val;
+
 	}
 
 	// Candidates
@@ -836,6 +882,11 @@ public class DatabaseConnector
 				validator.setStatus("Candidate not found");
 			}
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select failed");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -888,6 +939,11 @@ public class DatabaseConnector
 			validator.setObject(candidates);
 			validator.setStatus("Successfully selected");
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setStatus("Select failed");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -944,6 +1000,12 @@ public class DatabaseConnector
 			validator.setObject(candidates);
 			validator.setStatus("Successfully selected");
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			validator.setVerified(false);
+			validator.setStatus("Database Connection Failed");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -982,10 +1044,13 @@ public class DatabaseConnector
 				currentEmailList += res.getString(3) + newLine;
 			}
 
-		} catch (SQLException ex) {
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);			
 		}
 
 		return currentEmailList;
@@ -1042,6 +1107,10 @@ public class DatabaseConnector
 				}
 			}
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);	
@@ -1155,6 +1224,12 @@ public class DatabaseConnector
 				val.setStatus("Failed to insert candidate");
 			}
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("SQL Error");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -1551,6 +1626,12 @@ public class DatabaseConnector
 				val.setStatus("Failed to insert user : " + email);
 			}
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("SQL Error");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -1587,6 +1668,11 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Status failed to verify");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -1619,6 +1705,10 @@ public class DatabaseConnector
 				status = true;
 			}
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -1660,6 +1750,10 @@ public class DatabaseConnector
 				val.setStatus("Failed to update the election status");
 			}
 			
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -1693,6 +1787,10 @@ public class DatabaseConnector
 				val.setStatus("Failed to delete the election");
 			}
 			
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -1742,6 +1840,10 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to update the election");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -1798,6 +1900,11 @@ public class DatabaseConnector
 					val.setObject(voteDto);
 					val.setStatus("invalid signature for this vote");
 				}
+			} catch (MySQLNonTransientConnectionException ex) {
+				reconnectToDb();
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				val.setStatus("SQL Error");
 			} catch (SQLException ex) {
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -1843,6 +1950,11 @@ public class DatabaseConnector
 					val.setStatus("No public key for this user id");
 				}
 
+			} catch (MySQLNonTransientConnectionException ex) {
+				reconnectToDb();
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				val.setStatus("SQL Error");
 			} catch (SQLException ex) {
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -1895,6 +2007,11 @@ public class DatabaseConnector
 			} else {
 				val = vElection; // Failed to validate the election id
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2263,6 +2380,10 @@ public class DatabaseConnector
 			rs.next();
 			newId = rs.getInt(1);
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2295,6 +2416,10 @@ public class DatabaseConnector
 				status = true;
 			}
 
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2368,6 +2493,11 @@ public class DatabaseConnector
 				val.setObject(electionDto);
 				val.setStatus("Results selected successfully");
 
+			} catch (MySQLNonTransientConnectionException ex) {
+				reconnectToDb();
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				val.setStatus("Select failed");
 			} catch (SQLException ex) {
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2512,6 +2642,11 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to insert user");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2559,6 +2694,11 @@ public class DatabaseConnector
 			val.setStatus("Retrieved Users");
 			val.setVerified(true);
 			val.setObject(users);
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("Select failed");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2609,6 +2749,11 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("User not found ");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("Select failed");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2648,6 +2793,11 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to update the user");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2682,11 +2832,15 @@ public class DatabaseConnector
 				val.setStatus("Failed to update the user status");
 			}
 			
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
-
 		}
 		return val;
 	}
@@ -2717,7 +2871,12 @@ public class DatabaseConnector
 				val.setVerified(false);
 				val.setStatus("User not found.");
 			}
-		}catch (SQLException ex){
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");			
+		} catch (SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");			
@@ -2753,7 +2912,12 @@ public class DatabaseConnector
 				val.setVerified(false);
 				val.setStatus("User role is not allowed to invoke action.");
 			}
-		}catch (SQLException ex){
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");			
+		} catch (SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");			
@@ -2788,7 +2952,12 @@ public class DatabaseConnector
 				val.setVerified(false);
 				val.setStatus("Method name is not found.");
 			}
-		}catch (SQLException ex){
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");			
+		} catch (SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");			
@@ -2833,7 +3002,12 @@ public class DatabaseConnector
 				val.setStatus("No rights found.");
 			}
 			
-		}catch (SQLException ex){
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");			
+		} catch (SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");			
@@ -2911,6 +3085,11 @@ public class DatabaseConnector
 					} else {
 						res.setStatus("Failed to insert user");
 					}
+				} catch (MySQLNonTransientConnectionException ex) {
+					reconnectToDb();
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					res.setStatus("SQL Error");
 				} catch (SQLException ex) {
 					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 					lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2950,8 +3129,13 @@ public class DatabaseConnector
 				res.setVerified(false);
 				res.setStatus("User not found");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
-			ex.printStackTrace();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
 		
 		return res;
@@ -3012,8 +3196,13 @@ public class DatabaseConnector
 				//send the private key as an email:
 				rsaKeys.sendProtectedPrivateKey(email);				
 				
+			} catch (MySQLNonTransientConnectionException ex) {
+				reconnectToDb();
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
 			} catch (SQLException ex) {
-				ex.printStackTrace();
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
 			}
 		}else{
 			res.setVerified(false);
@@ -3050,6 +3239,11 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to update the user");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setStatus("SQL Error");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3110,6 +3304,11 @@ public class DatabaseConnector
 			} else {
 				res.setStatus("Failed to update password");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res.setStatus("SQL Error");
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3171,6 +3370,11 @@ public class DatabaseConnector
 				res.setStatus("Failed to update public key");
 			}
 			
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res.setStatus("SQL Exception");
 		} catch (SQLException ex) {
 			ex.printStackTrace();
 			res.setVerified(false);
@@ -3200,6 +3404,11 @@ public class DatabaseConnector
 				int type = rs.getInt(1);
 				res = (type == 1) ? true : false;
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res = false;
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3236,6 +3445,11 @@ public class DatabaseConnector
 			st.setInt(2, electionID);
 			ResultSet rs = st.executeQuery();
 			res = (rs.next()) ? true : false;	
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res = false;
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3264,6 +3478,11 @@ public class DatabaseConnector
 			st.setInt(2, userID);
 			ResultSet rs = st.executeQuery();
 			res = (rs.next()) ? true : false;	
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res = false;
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3299,6 +3518,12 @@ public class DatabaseConnector
 				val.setVerified(false);
 				val.setStatus("Public key does not exist for this election");
 			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("Failed to retrieve public key");
 		} catch(SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3338,8 +3563,13 @@ public class DatabaseConnector
 				val.setVerified(false);
 				val.setStatus("Private key does not exist for this election");
 			}
-		}
-		catch(SQLException ex){
+		} catch(MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("Failed to retrieve private key");
+		} catch(SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setVerified(false);
@@ -3371,12 +3601,16 @@ public class DatabaseConnector
 			st.setInt(2, requesterID);
 			ResultSet rs = st.executeQuery();
 			res = (rs.next()) ? true : false;	
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res = false;
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			res = false;
 		}		
-		
 		
 		return res;
 	}
@@ -3434,8 +3668,13 @@ public class DatabaseConnector
 			st.execute();
 			val.setStatus("Updated temp password");
 			val.setVerified(true);
-		}
-		catch(SQLException ex){
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("Failed to add temp password");
+		} catch(SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setVerified(false);
@@ -3564,6 +3803,12 @@ public class DatabaseConnector
 					} else {
 						res.setStatus("Failed to insert user");
 					}
+				} catch (MySQLNonTransientConnectionException ex) {
+					reconnectToDb();
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					res.setVerified(false);
+					res.setStatus("SQL Error");
 				} catch (SQLException ex) {
 					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 					lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3641,6 +3886,12 @@ public class DatabaseConnector
 					} else {
 						res.setStatus("Failed to insert user");
 					}
+				} catch (MySQLNonTransientConnectionException ex) {
+					reconnectToDb();
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					res.setVerified(false);
+					res.setStatus("SQL Error");
 				} catch (SQLException ex) {
 					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 					lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3672,8 +3923,13 @@ public class DatabaseConnector
 			st.execute();
 			val.setVerified(true);
 			val.setStatus("Temporary password removed");
-		}
-		catch(SQLException ex){
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			val.setVerified(false);
+			val.setStatus("SQL Error");
+		} catch(SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setVerified(false);
@@ -3740,11 +3996,15 @@ public class DatabaseConnector
 				} else {
 					res.setStatus("Failed to update user");
 				}
-			} catch (SQLException ex) {
+			} catch (MySQLNonTransientConnectionException ex) {
+				reconnectToDb();
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
 				res.setVerified(false);
 				res.setStatus("SQL Error");
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
 			}
 		} else {
 			res = vUser;
@@ -3814,6 +4074,12 @@ public class DatabaseConnector
 				} else {
 					res.setStatus("Failed to update user");
 				}
+			} catch (MySQLNonTransientConnectionException ex) {
+				reconnectToDb();
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				res.setVerified(false);
+				res.setStatus("SQL Error");
 			} catch (SQLException ex) {
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3883,6 +4149,12 @@ public class DatabaseConnector
 				} else {
 					res.setStatus("Failed to update user");
 				}
+			} catch (MySQLNonTransientConnectionException ex) {
+				reconnectToDb();
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				res.setVerified(false);
+				res.setStatus("SQL Error");
 			} catch (SQLException ex) {
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3896,7 +4168,4 @@ public class DatabaseConnector
 	return res;
 
 	}
-	
-	
-	
 }
