@@ -215,12 +215,10 @@ public class DatabaseConnector
 				return v;
 			}
 		} catch (MySQLNonTransientConnectionException ex) {
-			System.out.println("DB FAIL");
 			reconnectToDb();
-			System.out.println("DB FAIL");
-			
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		} catch (SQLException ex) {
-
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
