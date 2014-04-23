@@ -271,10 +271,7 @@ public class DatabaseConnector
 			}
 
 		} catch (SQLException ex) {
-			System.out.println("DB FAIL1");
 			reconnectToDb();
-			System.out.println("DB FAIL2");
-
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
 		}
@@ -2042,8 +2039,6 @@ public class DatabaseConnector
 					int cand_id=getDecryptedCandId(votes.get(i), privateKey);	
 					if (cand_id!=-1) {
 						map=addToMap(map, cand_id);
-					} else {
-						System.out.println("Election Results partially computed");
 					}
 				}
 				// attach the candidates list with results to the ElectionDto

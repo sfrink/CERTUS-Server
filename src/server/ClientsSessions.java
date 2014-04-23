@@ -30,10 +30,7 @@ public class ClientsSessions {
 			usersRole.add(isAdmin);
 			sessionsID.add(userSession);
 		}
-		
-		System.out.println("Session Added:");
-		System.out.println(this.toString());
-		
+				
 		return userSession;
 	}
 	
@@ -74,10 +71,7 @@ public class ClientsSessions {
 		usersID.remove(index);
 		usersRole.remove(index);
 		sessionsID.remove(index);
-		
-		System.out.println("Session Removed:");
-		System.out.println(this.toString());
-		
+				
 		return true;
 	}
 	

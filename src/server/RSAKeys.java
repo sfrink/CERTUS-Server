@@ -41,11 +41,8 @@ public class RSAKeys {
 			byte[] plainPvkBytes = pvkKey.getEncoded();
 			protectedPrivateKey = DataEncryptor.AESEncrypt(plainPvkBytes, password);
 			
-			System.out.println("RSA key pair are generated.");
-			
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("RSA key pair generation failed");
 		}
 
 		return;

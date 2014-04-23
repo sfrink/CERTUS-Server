@@ -172,13 +172,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	
     	
     }
-  
-    
-    public String sayHello(String name) {
-		System.out.println("Request received from the client: " + name);
-		return "Hello Certus Client: " + name;
-    }
-    
+      
     
     @Override
     public Validator selectElectionForOwner(int electionId, String sessionID) throws RemoteException{
@@ -431,7 +425,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	return res;
         }else{
         	Validator v = dbc.publishResults(electionId, password);
-        	System.out.println(v);
         	return v;
         }
     	
