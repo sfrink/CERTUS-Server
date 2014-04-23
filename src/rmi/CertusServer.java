@@ -1,38 +1,22 @@
 package rmi;
 
 
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.security.cert.Certificate;
-import java.security.Key;
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import server.Authoriser;
 import server.ClientsSessions;
 import server.ConfigurationProperties;
 import server.EmailExchanger;
 import server.PasswordHasher;
-import server.RSAKeys;
 import server.SecurityValidator;
 import database.DatabaseConnector;
-import dto.ActionDto;
-import dto.CandidateDto;
 import dto.ElectionDto;
-import dto.RightsListDto;
 import dto.UserDto;
 import dto.Validator;
 import dto.VoteDto;
-import enumeration.Status;
 import enumeration.ElectionStatus;
 import enumeration.UserStatus;
 
@@ -106,11 +90,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	}
     	return validator;
     }
-    
-//    public Validator addUser(UserDto userDto) throws RemoteException {
-//    	//anyone can invoke this method.
-//    	return dbc.addUser(userDto); 
-//    }
     
     public Validator selectUser(int userId, String sessionID) throws RemoteException {
     	
@@ -233,11 +212,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }    	
     }
 
-    
-    
-    
-    
-    
     @Override
     public Validator selectElectionFullDetail (int electionId, String sessionID) throws RemoteException{
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
@@ -505,7 +479,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
     
     @Override 
-    public Validator updateTempUser (UserDto userDto, String tempPassword, String sessionID){
+    public Validator updateTempUser (UserDto userDto, String sessionID){
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int requesterID = clientSessions.getSession(sessionID);
     	userDto.setUserId(requesterID);
@@ -517,7 +491,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setStatus("Permission denied.");
         	return res;
         }else{
-        	res = dbc.updateTempUser(userDto, tempPassword);
+        	res = dbc.updateTempUser(userDto);
         	if (res.isVerified()){
         		clientSessions.removeClient(sessionID);
 
@@ -529,7 +503,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     
       
     @Override 
-    public Validator UpdateTempUserWithPP (UserDto userDto, String tempPassword, String sessionID){
+    public Validator UpdateTempUserWithPP (UserDto userDto, String sessionID){
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int requesterID = clientSessions.getSession(sessionID);
     	userDto.setUserId(requesterID);
@@ -541,7 +515,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setStatus("Permission denied.");
         	return res;
         }else{
-        	res = dbc.UpdateTempUserWithPP(userDto, tempPassword);
+        	res = dbc.UpdateTempUserWithPP(userDto);
         	if (res.isVerified()){
         		clientSessions.removeClient(sessionID);
 
@@ -552,7 +526,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
        
     @Override 
-    public Validator UpdateTempUserWithKey(UserDto userDto, String tempPassword, String sessionID){
+    public Validator UpdateTempUserWithKey(UserDto userDto, String sessionID){
     	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
     	int requesterID = clientSessions.getSession(sessionID);
     	userDto.setUserId(requesterID);
@@ -564,7 +538,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	res.setStatus("Permission denied.");
         	return res;
         }else{
-        	res = dbc.UpdateTempUserWithKey(userDto, tempPassword);
+        	res = dbc.UpdateTempUserWithKey(userDto);
         	if (res.isVerified()){
         		clientSessions.removeClient(sessionID);
         	}
@@ -763,7 +737,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     }
 
     public void resendInvitation(UserDto u, String sessionID) throws RemoteException{
-    	Validator val=new Validator();
+    	
     	EmailExchanger.sendEmail(u.getEmail(), EmailExchanger.getInvitationSubject(), 
     			EmailExchanger.getInvitationBody(u));
     }

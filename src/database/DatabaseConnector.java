@@ -1,10 +1,8 @@
 package database;
 
-import java.io.InputStream;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.sql.Blob;
 import java.sql.Connection;
@@ -21,10 +19,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.crypto.AEADBadTagException;
 import javax.sql.rowset.serial.SerialBlob;
 
-import server.ClientsSessions;
 import server.ConfigurationProperties;
 import server.DataEncryptor;
 import server.EmailExchanger;
@@ -135,8 +131,6 @@ public class DatabaseConnector
 
 		String dbHash = userDto.getPassword();
 		String dbSalt = userDto.getSalt();
-		int statusId = userDto.getStatus();
-		int id = userDto.getUserId();
 
 		String plainHash = PasswordHasher.sha512(plainPass, dbSalt);
 
@@ -3114,10 +3108,7 @@ public class DatabaseConnector
 	 */
 	public Validator uploadPubKey(byte[] keyBytes, int userID, String userPassword) {
 		Validator res = new Validator();
-		
-		System.out.println("User password: " + userPassword);
-		System.out.println("User ID: " + userID);
-		
+				
 		//Check if the userPassword is correct:
 		if (!checkCorrectPassword(userID, userPassword)){
 			res.setVerified(false);
@@ -3676,19 +3667,8 @@ public class DatabaseConnector
 	 * @param tempPassword
 	 * @return Validator
 	 */
-	public Validator updateTempUser(UserDto user, String tempPassword){
+	public Validator updateTempUser(UserDto user){
 		Validator res = new Validator();
-		
-		//First we need to check if the temp password match:
-		Validator vTemp = checkIfUsernamePasswordMatch(user.getEmail(), tempPassword);
-		
-		if (!vTemp.isVerified()){
-			//Temporary password is wrong:
-			res.setVerified(false);
-			res.setStatus("Temporary password is wrong");
-			return res;
-		}
-		
 		
 		//We need to generate some salt to hash the new password:
 		String salt = PasswordHasher.generateSalt();
@@ -3761,19 +3741,8 @@ public class DatabaseConnector
 	 * @param tempPassword
 	 * @return Validator
 	 */
-	public Validator UpdateTempUserWithPP(UserDto user, String tempPassword){
+	public Validator UpdateTempUserWithPP(UserDto user){
 		Validator res = new Validator();
-				
-		//First we need to check if the temp password match:
-		Validator vTemp = checkIfUsernamePasswordMatch(user.getEmail(), tempPassword);
-		
-		if (!vTemp.isVerified()){
-			//Temporary password is wrong:
-			res.setVerified(false);
-			res.setStatus("Temporary password is wrong");
-			return res;
-		}
-		
 		
 		//We need to generate some salt to hash the new password:
 		String salt = PasswordHasher.generateSalt();
@@ -3845,24 +3814,8 @@ public class DatabaseConnector
 	 * @param tempPassword
 	 * @return Validator
 	 */
-	public Validator UpdateTempUserWithKey(UserDto user, String tempPassword){
+	public Validator UpdateTempUserWithKey(UserDto user){
 		Validator res = new Validator();
-	
-		System.out.println("First Name: " + user.getFirstName());
-		System.out.println("Last Name: " + user.getLastName());
-		System.out.println("Email: " + user.getEmail());
-		System.out.println("Password: " + user.getPassword());
-		System.out.println("Temp Password: " + tempPassword);
-		
-		//First we need to check if the temp password match:
-		Validator vTemp = checkIfUsernamePasswordMatch(user.getEmail(), tempPassword);
-		
-		if (!vTemp.isVerified()){
-			//Temporary password is wrong:
-			res.setVerified(false);
-			res.setStatus("Temporary password is wrong");
-			return res;
-		}
 		
 		//Check if the attached public key is in the right format:
 		if(!RSAKeys.isValidPublicKey(user.getPublicKeyBytes())){
