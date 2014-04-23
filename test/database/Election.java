@@ -339,4 +339,14 @@ public class Election
 		Validator val = dbc.addAdditionalUsersToElection(electionDto);
 		assertTrue("add additional users to election ", val.isVerified());
 	}
+	
+	
+	@Test 
+	public void testselectElectionFullDetail(){
+		Validator val = dbc.selectElectionFullDetail(1);
+		if (!val.isVerified()) {
+			System.out.println(val.toString());
+		}
+		assertTrue("select user", val.isVerified());
+	}
 }

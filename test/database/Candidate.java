@@ -17,7 +17,7 @@ public class Candidate
 	
 	@Test
 	public void testSelectCandidate() {
-		int candiateId = 80;
+		int candiateId = 5;
 		Validator val = dbc.selectCandidate(candiateId);
 		assertTrue("select candidate", val.isVerified());
 		

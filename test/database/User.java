@@ -96,6 +96,17 @@ public class User
 	}
 	
 	@Test
+	public void testcheckIfUsernamePasswordMatch(){
+		Validator val = dbc.checkIfUsernamePasswordMatch("hirosh@gwmail.gwu.edu", "test");
+	
+		if (!val.isVerified()) {
+			System.out.println(val.toString());
+		}
+		assertTrue("select users", val.isVerified());
+	}
+	
+	
+	@Test
 	public void selectUser() {
 		Validator val = dbc.selectUser(4);
 		assertTrue("select user", val.isVerified());
@@ -106,6 +117,52 @@ public class User
 		assertTrue("selected user - last name ", user.getLastName().equals("Test Last") );
 		assertTrue("selected user - email ", user.getEmail().equals("user@somewhere.com") );
 		assertTrue("selected user - status ", user.getStatus() == 2);
+	}
+	
+	
+	@Test 
+	public void testselectElectionForOwner(){
+		Validator val = dbc.selectElectionForOwner(2);
+		if (!val.isVerified()) {
+			System.out.println(val.toString());
+		}
+		assertTrue("select user", val.isVerified());
+	}
+	
+	@Test 
+	public void testselectElectionForVoter(){
+		Validator val = dbc.selectElectionForVoter(2);
+		if (!val.isVerified()) {
+			System.out.println(val.toString());
+		}
+		assertTrue("select user", val.isVerified());
+	}
+	
+	@Test 
+	public void testselectElectionsForResults(){
+		Validator val = dbc.selectElectionsForResults(2);
+		if (!val.isVerified()) {
+			System.out.println(val.toString());
+		}
+		assertTrue("select user", val.isVerified());
+	}
+	
+	@Test 
+	public void testselectElectionsForOwner(){
+		Validator val = dbc.selectElectionsForOwner(2);
+		if (!val.isVerified()) {
+			System.out.println(val.toString());
+		}
+		assertTrue("select user", val.isVerified());
+	}
+	
+	@Test 
+	public void testselectElectionsForVoter(){
+		Validator val = dbc.selectElectionsForVoter(2);
+		if (!val.isVerified()) {
+			System.out.println(val.toString());
+		}
+		assertTrue("select user", val.isVerified());
 	}
 	
 }
