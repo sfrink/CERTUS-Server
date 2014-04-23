@@ -267,7 +267,7 @@ public class DatabaseConnector
 				userDto.setTempSalt(res.getString(9));
 				
 			} else {
-					
+				userDto=null;
 			}
 
 		} catch (SQLException ex) {
