@@ -2909,7 +2909,7 @@ public class DatabaseConnector
 					rs.next();
 					newUserId = rs.getInt(1);
 					if (newUserId > 0) {
-						newUser.setUserId(newUserId);
+						res.setObject(newUserId);
 						res.setVerified(true);
 						res.setStatus("User inserted successfully");
 						
