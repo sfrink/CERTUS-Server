@@ -2430,9 +2430,12 @@ public class DatabaseConnector
 				}
 			}
 
-			Validator vUpdateElection = editElectionWithNewlyAddedEmails(electionInDb, addedEmails);
-			valid &= vUpdateElection.isVerified();
-			status += vUpdateElection.getStatus() + newLine;
+			if (electionInDb.getStatus() == ElectionStatus.NEW.getCode()) {
+				Validator vUpdateElection = editElectionWithNewlyAddedEmails(electionInDb, addedEmails);
+				valid &= vUpdateElection.isVerified();
+				status += vUpdateElection.getStatus() + newLine;
+			} 
+			
 			
 			if (valid) {
 				status = "Users invited for the election successfully";
