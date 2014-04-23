@@ -36,12 +36,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 		new RMISSLClientSocketFactory(), 
 		new RMISSLServerSocketFactory());
     }
-
-
-
+    
     public static void main(String args[]) {
-    	
-    	
+
     	PORT = Integer.parseInt(ConfigurationProperties.rmiPort());
     	String filePath = ConfigurationProperties.rmiBasePath();
 		System.setProperty("java.security.policy", filePath + ConfigurationProperties.rmiFilePolicy());
@@ -79,7 +76,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     @Override
     public Validator checkIfUsernamePasswordMatch(String email, String plainPass)  throws RemoteException{
     	//Look up username in db, get salt, password hash
-    	//DatabaseConnector db = new DatabaseConnector();
     	Validator validator = dbc.checkIfUsernamePasswordMatch(email, plainPass);
     	if (validator.isVerified()){
     		UserDto user = (UserDto) validator.getObject();
@@ -121,8 +117,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.addAdditionalUsersToElection(electionDto);
         }
-        
-    	
     }
     
     public Validator selectAllUsers(String sessionID) throws RemoteException {
@@ -169,8 +163,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.editUserStatus(userId, userStatus);
         }
-    	
-    	
     }
       
     
@@ -220,7 +212,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.selectElectionFullDetail(electionId);
         }
-    	
     }
     
     @Override
@@ -270,7 +261,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return  dbc.selectElectionsForOwner(electionOwnerId);
         }
-    	
     }
     
     @Override
@@ -287,7 +277,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.addElection(electionDto);
         }
-    	
     }
 
     @Override
@@ -304,9 +293,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.editElection(electionDto);
         }
-    	
     }
-
     
     @Override
     public Validator editElectionStatus(int electionId, ElectionStatus electionStatus, String sessionID) throws RemoteException{
@@ -322,7 +309,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.editElectionStatus(electionId, electionStatus);
         }
-    	
     }
     
     @Override
@@ -339,7 +325,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.openElectionAndPopulateCandidates(electionId);
         }
-    	
     }
     
     //Vote
@@ -357,7 +342,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.vote(v);
         }
-    	
     }
     
     @Override
@@ -391,7 +375,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.selectElectionsForVoter(userId);
         }
-    	
     }
     
     
@@ -409,7 +392,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.voteProgressStatusForElection(electionId);
         }
-    	
     }
     
     @Override
@@ -427,7 +409,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	Validator v = dbc.publishResults(electionId, password);
         	return v;
         }
-    	
     }
     
     @Override
@@ -444,7 +425,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.selectResults(electionId);
         }
-    	
     }
     
     @Override
@@ -491,7 +471,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	}
         	return res;
         }
-    	
     }
     
       
@@ -515,7 +494,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	}
         	return res;
         }
-    	
     }
        
     @Override 
@@ -537,10 +515,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	}
         	return res;
         }
-    	
     }    
-    
-    
     
     @Override
     public Validator generateNewKeys(int userID, String newKeyPass, String userPassword, String sessionID) {
@@ -555,7 +530,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	return res;
         }else{
         	return dbc.generateNewKeys(userID, newKeyPass, userPassword);
-        	
         }
     }
     
@@ -597,7 +571,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	userDto.setUserId(requesterID);
         	return dbc.updateUser(userDto);
         }
-        
     }
     
     @Override
@@ -665,50 +638,38 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }else{
         	return dbc.deleteElection(electionId);
         }
-
     }
-
-
 
 	@Override
 	public Validator sendTempPassword(UserDto u, String sessionID) throws RemoteException {
-		//String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	//int requesterID = clientSessions.getSession(sessionID);
-        //boolean allowed = refMonitor.gotRightsGroup0(requesterID, action);
+
         Validator val=new Validator();
+
+    	String temp=PasswordHasher.generateRandomString();
+    	String salt=PasswordHasher.generateSalt();
+    	String tempHash=PasswordHasher.sha512(temp, salt);
+    	Validator set=dbc.setTempPassword(u,tempHash,salt);
+    	if(set.isVerified()){
+    		String message="Your temporary CERTUS password is: "+temp+".\n"+
+    				"Use this password with your email address.  This password will only "
+    				+ "work one time, so be sure to change your password once you log in.\n "+
+    				"\n\nIf you have received this email in error, you can continue to "+
+    				"login with your usual password.";
+    		EmailExchanger.sendEmail(u.getEmail(), "Temporary CERTUS Password", message);
+    		val.setStatus("Sent temp password email");
+    		val.setVerified(true);
+    	}
+    	else{
+    		val=set;
+    	}
         
-        /*if (!allowed){
-        	val.setVerified(false);
-        	val.setStatus("Permission denied.");
-        }else{*/
-        	String temp=PasswordHasher.generateRandomString();
-        	String salt=PasswordHasher.generateSalt();
-        	String tempHash=PasswordHasher.sha512(temp, salt);
-        	Validator set=dbc.setTempPassword(u,tempHash,salt);
-        	if(set.isVerified()){
-        		String message="Your temporary CERTUS password is: "+temp+".\n"+
-        				"Use this password with your email address.  This password will only "
-        				+ "work one time, so be sure to change your password once you log in.\n "+
-        				"\n\nIf you have received this email in error, you can continue to "+
-        				"login with your usual password.";
-        		EmailExchanger.sendEmail(u.getEmail(), "Temporary CERTUS Password", message);
-        		val.setStatus("Sent temp password email");
-        		val.setVerified(true);
-        	}
-        	else{
-        		val=set;
-        	}
-        //}
         return val;
 	}
-
-
 
 	@Override
 	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass, String newPassword) 
 			throws RemoteException {
 		//Look up username in db, get salt, password hash
-    	//DatabaseConnector db = new DatabaseConnector();
     	Validator validator = dbc.checkIfUsernameTempPasswordMatch(email, plainPass, newPassword);
     	if (validator.isVerified()){
     		UserDto user = (UserDto) validator.getObject();
