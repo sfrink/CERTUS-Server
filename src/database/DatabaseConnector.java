@@ -3299,8 +3299,10 @@ public class DatabaseConnector
 			
 			int updateCount = st.getUpdateCount();
 			if (updateCount > 0) {
+				
 				res.setStatus("Password updated successfully");
 				res.setVerified(true);
+				res.setObject(userInfo);
 			} else {
 				res.setStatus("Failed to update password");
 			}
@@ -3319,6 +3321,52 @@ public class DatabaseConnector
 		
 	}
 	
+	public Validator updateUserPassword(UserDto userInfo, String newPassword){
+		Validator res = new Validator();
+		
+		int userID = userInfo.getUserId();
+		
+		//first we need to generate some salt to hash the password:
+		String newSalt = PasswordHasher.generateSalt();
+		
+		//hash the password:
+		String hashedPass = PasswordHasher.sha512(newPassword, newSalt);
+		
+		//ready to update the password:
+		PreparedStatement st = null;
+		try {
+			String query = "UPDATE users SET password = ?, salt = ? WHERE user_id=?";
+
+			st = this.con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, hashedPass);
+			st.setString(2, newSalt);
+			st.setInt(3, userID);
+			
+			st.executeUpdate();
+			
+			int updateCount = st.getUpdateCount();
+			if (updateCount > 0) {
+				
+				res.setStatus("Password updated successfully");
+				res.setVerified(true);
+				res.setObject(userInfo);
+			} else {
+				res.setStatus("Failed to update password");
+			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res.setStatus("SQL Error");
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			res.setStatus("SQL Error");
+		}
+
+		return res;
+		
+	}
 
 	/**
 	 * Upload public keys for user
