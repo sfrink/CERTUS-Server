@@ -1429,6 +1429,11 @@ public class DatabaseConnector
 		int displayOrder = 1;
 		boolean status = true;
 		for (String candidateName : candidateNames) {
+			candidateName = candidateName.trim();
+			if (candidateName.isEmpty()){
+				continue;
+			}
+			
 			// add each candidate to this election
 			CandidateDto candidateDto = new CandidateDto();
 			candidateDto.setCandidateName(candidateName);
