@@ -1567,7 +1567,7 @@ public class DatabaseConnector
 				
 				// invite existing users to vote
 				UserDto userDto = selectUserByEmailLimited(email);
-				if (userDto.getUserId() > 0) {
+				if ((userDto != null) && (userDto.getUserId() > 0)) {
 					// user exist
 					notifyUsersByEmail(electionName, email);
 				}
