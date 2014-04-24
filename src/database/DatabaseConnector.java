@@ -2041,7 +2041,7 @@ public class DatabaseConnector
 				String emailTrimmed = email.trim();
 				if (!emailTrimmed.isEmpty()) {
 					UserDto userDto = selectUserByEmailLimited(emailTrimmed);
-					if (userDto.getUserId() > 0) {
+					if (userDto != null && userDto.getUserId() > 0) {
 						if (registeredEmails.indexOf(emailTrimmed) == -1) {
 							registeredEmails += emailTrimmed + newLine;
 						}
@@ -2533,7 +2533,10 @@ public class DatabaseConnector
 				if (email.trim().isEmpty()) { continue; }
 				
 				// do nothing if user already exist
-				if (selectUserByEmailLimited( email.trim()).getUserId() > 0){ continue; }
+				UserDto uTemp = selectUserByEmailLimited(email.trim());
+				if(uTemp != null && uTemp.getUserId() > 0) {
+					continue;
+				}
 				
 				// add a user with a temporary password
 				Validator vInviteUser = addUserInvitation(email); 
