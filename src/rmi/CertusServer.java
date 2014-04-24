@@ -698,10 +698,11 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	String salt=PasswordHasher.generateSalt();
     	String tempHash=PasswordHasher.sha512(temp, salt);
     	
-    	u.setPassword(temp);
+    	u.setPassword(tempHash);
     	u.setSalt(salt);
-    	Validator set=dbc.setTempPassword(u,tempHash,salt);
+    	Validator set=dbc.updateUserPassword(u);
     	if(set.isVerified()){
+    		u.setPassword(temp);
     		EmailExchanger.sendEmail( u.getEmail()
     								, EmailExchanger.getInvitationSubject()
     								, EmailExchanger.getInvitationBody(u)
