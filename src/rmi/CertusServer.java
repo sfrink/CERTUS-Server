@@ -652,7 +652,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	if(set.isVerified()){
     		String message="Your temporary CERTUS password is: "+temp+".\n"+
     				"Use this password with your email address.  This password will only "
-    				+ "work one time, so be sure to change your password once you log in.\n "+
+    				+ "work one time, so be sure to change your password once you log in.\n "
+    				+ "Login Page: "+ConfigurationProperties.resetPasswordUrl()+
     				"\n\nIf you have received this email in error, you can continue to "+
     				"login with your usual password.";
     		EmailExchanger.sendEmail(u.getEmail(), "Temporary CERTUS Password", message);
