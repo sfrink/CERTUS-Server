@@ -1292,6 +1292,8 @@ public class DatabaseConnector
 				val.setStatus(vEditElection.getStatus());
 				val.setVerified(vEditElection.isVerified() & !electionDto.isEmailListError());
 			} else {
+				electionDto.setRegisteredEmailList(vElectionCurrent.getRegisteredEmailList().trim());
+				electionDto.setUnregisteredEmailList("");
 				val = vElection;
 				val.setObject(electionDto);
 			}
