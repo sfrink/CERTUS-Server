@@ -1649,44 +1649,7 @@ public class DatabaseConnector
 		return val;
 	}
 	
-	
-	/**
-	 * Updates the candidate status
-	 * @param CandidateDto cand
-	 * @return Validator
-	 * @author Hirosh Wickramasuriya
-	 */
-	public Validator editCandidateStatus(CandidateDto cand) {
-		PreparedStatement st = null;
-		//InputValidation iv = new InputValidation();
-		Validator val = new Validator();
-		try {
-			//val = iv.validateInt(cand.getStatus(), "Candidate Status");
-			if (val.isVerified()) {
-				String query = "UPDATE candidate SET status=? WHERE candidate_id=?";
-				st = this.con.prepareStatement(query);
-				st.setInt(1, cand.getStatus());
-				st.setInt(2, cand.getCandidateId());
-				
-				st.execute();
-				
-				val.setVerified(true);
-				val.setStatus("Candidate status updated");
-			} else {
-				val.setStatus("Status failed to verify");
-			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
-		}
-		return val;
-	}
+
 
 	/**
 	 * @param electionId 	- election identification number
