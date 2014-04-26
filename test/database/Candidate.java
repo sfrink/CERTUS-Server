@@ -57,23 +57,6 @@ public class Candidate
 		assertTrue("select elections by status (closed)", val.isVerified());
 	}
 
-	@Test
-	public void testEditCandidateStatus() {
-		int candidateId = 80;
-		
-		Validator val = dbc.selectCandidate(candidateId);
-		if (val.isVerified()){
-			CandidateDto candidate = (CandidateDto) val.getObject();
-			CandidateDto candidateWithNewStatus = new CandidateDto();
-			candidateWithNewStatus.setCandidateId(candidateId);
-			candidateWithNewStatus.setStatus(candidate.getStatus());
-			
-			Validator valEdit = dbc.editCandidateStatus(candidateWithNewStatus);
-			assertFalse("edit candidate status ", valEdit.isVerified());
-			
-		} else {
-			assertFalse("select candidate failed", val.isVerified());
-		}
-	}
+	
 
 }
