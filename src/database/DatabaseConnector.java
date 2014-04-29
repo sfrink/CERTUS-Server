@@ -3143,6 +3143,7 @@ public class DatabaseConnector
 			if(rs.next()){
 				res.setVerified(true);		
 				res.setStatus(rs.getString(1));
+				res.setObject(rs.getString(1));
 			}else{
 				res.setVerified(false);
 				res.setStatus("User not found");

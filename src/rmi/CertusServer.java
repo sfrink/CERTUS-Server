@@ -683,28 +683,55 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 	}
 	
     public Validator selectUserByEmail(String email, String sessionID) throws RemoteException{
-    	UserDto u=dbc.selectUserByEmailNoPassword(email);
-    	Validator val=new Validator();
-    	val.setObject(u);
-    	if(u!=null){
-    		val.setVerified(true);
-    		val.setStatus("Retrieved user");
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int requesterID = clientSessions.getSession(sessionID);
+    	Validator targetedUser = dbc.getUserEmail(requesterID);
+    	Validator res = new Validator();
+    	
+    	if (targetedUser.isVerified()){
+        	int targetedID = (int) targetedUser.getObject();
+            boolean allowed = refMonitor.gotRightsGroup1(requesterID, targetedID, action);
+
+            if (!allowed){
+            	res.setVerified(false);
+            	res.setStatus("Permission denied.");
+            	return res;
+            }else{
+            	UserDto u=dbc.selectUserByEmailNoPassword(email);
+            	res.setObject(u);
+            	if(u!=null){
+            		res.setVerified(true);
+            		res.setStatus("Retrieved user");
+            	}
+            	return res;	
+            }    		
+    	}else{
+    		res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
     	}
-    	return val;
     }
 
-    public void resendInvitation(UserDto u, String sessionID) throws RemoteException{
-    
-    	String password=PasswordHasher.generateRandomString();
+    public Validator resendInvitation(UserDto u, String sessionID) throws RemoteException{
+    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
+    	int requesterID = clientSessions.getSession(sessionID);
+    	int targetedID = u.getUserId();
+    	boolean allowed = refMonitor.gotRightsGroup1(requesterID, targetedID, action);
+    	Validator res = new Validator();
     	
-    	Validator vUpdated=dbc.updateUserPassword(u, password);
-    	if(vUpdated.isVerified()){
-    		u.setPassword(password);
-    		
-    		EmailExchanger.sendEmail( u.getEmail()
-    								, EmailExchanger.getInvitationSubject()
-    								, EmailExchanger.getInvitationBody(u)
-    								);
+    	if (!allowed){
+        	res.setVerified(false);
+        	res.setStatus("Permission denied.");
+        	return res;
+        }else{
+        	String password=PasswordHasher.generateRandomString();
+        	
+        	res=dbc.updateUserPassword(u, password);
+        	if(res.isVerified()){
+        		u.setPassword(password);
+        		EmailExchanger.sendEmail(u.getEmail(), EmailExchanger.getInvitationSubject(), EmailExchanger.getInvitationBody(u));	
+        	}
+        	return res;
     	}
     }
 }
