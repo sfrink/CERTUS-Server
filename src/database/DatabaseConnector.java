@@ -285,6 +285,51 @@ public class DatabaseConnector
 
 		return userDto;
 	}
+	
+	
+	public UserDto selectUserByEmailNoPassword(String emailToSelect) {
+		UserDto userDto = new UserDto();
+
+		PreparedStatement st = null;
+
+		String query = "SELECT user_id, first_name, last_name, status, type "
+				+ " FROM users WHERE email = ?";
+
+		try {
+			st = this.con.prepareStatement(query);
+			st.setString(1, emailToSelect);
+			
+			ResultSet res = st.executeQuery();
+
+			if (res.next()) {
+				int user_id = res.getInt(1);
+				String first_name = res.getString(2);
+				String last_name = res.getString(3);
+				int statusId = res.getInt(4);
+				int type = res.getInt(5);
+				
+				userDto.setEmail(emailToSelect);
+				userDto.setUserId(user_id);
+				userDto.setFirstName(first_name);
+				userDto.setLastName(last_name);
+				userDto.setStatus(statusId);
+				userDto.setType(type);
+				
+			} else {
+				userDto=null;
+			}
+
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+
+		return userDto;
+	}
 
 	/**
 	 * This function selects an election for owner

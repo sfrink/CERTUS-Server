@@ -683,7 +683,7 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 	}
 	
     public Validator selectUserByEmail(String email, String sessionID) throws RemoteException{
-    	UserDto u=dbc.selectUserByEmailLimited(email);
+    	UserDto u=dbc.selectUserByEmailNoPassword(email);
     	Validator val=new Validator();
     	val.setObject(u);
     	if(u!=null){
