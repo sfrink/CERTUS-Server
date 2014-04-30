@@ -4237,7 +4237,7 @@ public class DatabaseConnector
 
 	}
 	
-	public Validator sendTempPassword(UserDto u, String sessionID) throws RemoteException {
+	public Validator sendTempPassword(UserDto u) throws RemoteException {
 
         Validator val=new Validator();
 
@@ -4263,7 +4263,7 @@ public class DatabaseConnector
         return val;
 	}
 	
-	public Validator resendInvitation(UserDto u, String sessionID) throws RemoteException{
+	public Validator resendInvitation(UserDto u) throws RemoteException{
     	Validator res = new Validator();
     	
     	String password=PasswordHasher.generateRandomString();
@@ -4275,4 +4275,15 @@ public class DatabaseConnector
     	}
     	return res;
     }
+	
+	 public Validator selectUserByEmail(String email) throws RemoteException{
+		 Validator res = new Validator();
+		 UserDto u = selectUserByEmailNoPassword(email);
+		 res.setObject(u);
+		 if(u!=null){
+			 res.setVerified(true);
+			 res.setStatus("Retrieved user");
+		 }
+		 return res;	
+	 }    		
 }

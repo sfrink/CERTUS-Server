@@ -71,7 +71,9 @@ public class SecurityValidator {
 	}
 
 	public Validator checkSignature(VoteDto voteDto) {
-		return checkSignature(voteDto.getVoteSignature() , voteDto.getVoteEncrypted(), voteDto.getUserId());
+		return checkSignature(voteDto.getVoteSignature() , 
+				voteDto.getVoteEncrypted(), 
+				voteDto.getUserId());
 	}
 
 	public byte[] hexStringtoByteArray(String hex) {

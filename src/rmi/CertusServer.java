@@ -658,53 +658,22 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     	}
     	return validator;
 	}
-	
-    public Validator selectUserByEmail(String email, String sessionID) throws RemoteException{
-    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int requesterID = clientSessions.getSession(sessionID);
-    	Validator targetedUser = dbc.getUserEmail(requesterID);
-    	Validator res = new Validator();
-    	
-    	if (targetedUser.isVerified()){
-        	int targetedID = (int) targetedUser.getObject();
-            boolean allowed = refMonitor.gotRightsGroup1(requesterID, targetedID, action);
-
-            if (!allowed){
-            	res.setVerified(false);
-            	res.setStatus("Permission denied.");
-            	return res;
-            }else{
-            	UserDto u=dbc.selectUserByEmailNoPassword(email);
-            	res.setObject(u);
-            	if(u!=null){
-            		res.setVerified(true);
-            		res.setStatus("Retrieved user");
-            	}
-            	return res;	
-            }    		
-    	}else{
-    		res.setVerified(false);
-        	res.setStatus("Permission denied.");
-        	return res;
-    	}
-    }
-    
-    public Validator resetPassword(String email, String sessionID) throws RemoteException{
-    	
-    	
+	  
+	@Override
+    public Validator resetPassword(String email) throws RemoteException{
     	Validator val=new Validator();
-    	Validator v=selectUserByEmail(email, sessionID);
+    	Validator v=dbc.selectUserByEmail(email);
 		UserDto u=(UserDto)v.getObject();
 		if(v.isVerified()) {
 			if(u.getStatus()!=UserStatus.LOCKED.getCode()){
 				if(u.getType()==UserType.ELECTORATE.getCode() || u.getType()==UserType.AUTHORITY.getCode()){
-					if(dbc.sendTempPassword(u, sessionID).isVerified()){
+					if(dbc.sendTempPassword(u).isVerified()){
 						val.setVerified(true);
 						val.setStatus("Temp password sent");
 					}
 					
 				} else if(u.getType()==UserType.INVITED.getCode()){
-					if(dbc.resendInvitation(u, sessionID).isVerified()){
+					if(dbc.resendInvitation(u).isVerified()){
 						val.setVerified(true);
 						val.setStatus("Invitation sent");
 					}
