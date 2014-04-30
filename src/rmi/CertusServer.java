@@ -6,12 +6,14 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+
 import server.Authoriser;
 import server.ClientsSessions;
 import server.ConfigurationProperties;
 import server.EmailExchanger;
 import server.PasswordHasher;
 import server.SecurityValidator;
+
 import database.DatabaseConnector;
 import dto.ElectionDto;
 import dto.UserDto;
@@ -19,6 +21,7 @@ import dto.Validator;
 import dto.VoteDto;
 import enumeration.ElectionStatus;
 import enumeration.UserStatus;
+import enumeration.UserType;
 
 
 public class CertusServer extends UnicastRemoteObject implements ServerInterface {
@@ -640,32 +643,6 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         }
     }
 
-	@Override
-	public Validator sendTempPassword(UserDto u, String sessionID) throws RemoteException {
-
-        Validator val=new Validator();
-
-    	String temp=PasswordHasher.generateRandomString();
-    	String salt=PasswordHasher.generateSalt();
-    	String tempHash=PasswordHasher.sha512(temp, salt);
-    	Validator set=dbc.setTempPassword(u,tempHash,salt);
-    	if(set.isVerified()){
-    		String message="Your temporary CERTUS password is: "+temp+".\n"+
-    				"Use this password with your email address.  This password will only "
-    				+ "work one time, so be sure to change your password once you log in.\n "
-    				+ "Login Page: "+ConfigurationProperties.resetPasswordUrl()+
-    				"\n\nIf you have received this email in error, you can continue to "+
-    				"login with your usual password.";
-    		EmailExchanger.sendEmail(u.getEmail(), "Temporary CERTUS Password", message);
-    		val.setStatus("Sent temp password email");
-    		val.setVerified(true);
-    	}
-    	else{
-    		val=set;
-    	}
-        
-        return val;
-	}
 
 	@Override
 	public Validator checkIfUsernameTempPasswordMatch(String email, String plainPass, String newPassword) 
@@ -711,27 +688,37 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         	return res;
     	}
     }
-
-    public Validator resendInvitation(UserDto u, String sessionID) throws RemoteException{
-    	String action = Thread.currentThread().getStackTrace()[1].getMethodName();
-    	int requesterID = clientSessions.getSession(sessionID);
-    	int targetedID = u.getUserId();
-    	boolean allowed = refMonitor.gotRightsGroup1(requesterID, targetedID, action);
-    	Validator res = new Validator();
+    
+    public Validator resetPassword(String email, String sessionID) throws RemoteException{
     	
-    	if (!allowed){
-        	res.setVerified(false);
-        	res.setStatus("Permission denied.");
-        	return res;
-        }else{
-        	String password=PasswordHasher.generateRandomString();
-        	
-        	res=dbc.updateUserPassword(u, password);
-        	if(res.isVerified()){
-        		u.setPassword(password);
-        		EmailExchanger.sendEmail(u.getEmail(), EmailExchanger.getInvitationSubject(), EmailExchanger.getInvitationBody(u));	
-        	}
-        	return res;
-    	}
+    	
+    	Validator val=new Validator();
+    	Validator v=selectUserByEmail(email, sessionID);
+		UserDto u=(UserDto)v.getObject();
+		if(v.isVerified()) {
+			if(u.getStatus()!=UserStatus.LOCKED.getCode()){
+				if(u.getType()==UserType.ELECTORATE.getCode() || u.getType()==UserType.AUTHORITY.getCode()){
+					if(dbc.sendTempPassword(u, sessionID).isVerified()){
+						val.setVerified(true);
+						val.setStatus("Temp password sent");
+					}
+					
+				} else if(u.getType()==UserType.INVITED.getCode()){
+					if(dbc.resendInvitation(u, sessionID).isVerified()){
+						val.setVerified(true);
+						val.setStatus("Invitation sent");
+					}
+				}
+			}
+			else{
+				val.setVerified(false);
+				val.setStatus("User is locked");
+			}
+		}
+		else{
+			val.setVerified(false);
+			val.setStatus("Email not registered");
+		}
+    	return val;
     }
 }
