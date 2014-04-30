@@ -28,8 +28,12 @@ import dto.UserDto;
 
 public class EmailExchanger {
 
-	private static String username = "Certus.Voting@gmail.com";
-	private static String password = "Deid*3@3ed";
+	private static String username = ConfigurationProperties.emailAddress();
+	private static String password = ConfigurationProperties.emailPassword();
+	private static String smtpServer = ConfigurationProperties.smtpServer();
+	private static String smtpPort = ConfigurationProperties.smtpPort();
+	
+	
 	private static String newLine = System.getProperty("line.separator");
 
 	/**
@@ -41,8 +45,8 @@ public class EmailExchanger {
 		Properties props = new Properties();
 		props.put("mail.smtp.starttls.enable", "true");
 		props.put("mail.smtp.auth", "true");
-		props.put("mail.smtp.host", "smtp.gmail.com");
-		props.put("mail.smtp.port", "587");
+		props.put("mail.smtp.host", smtpServer);
+		props.put("mail.smtp.port", smtpPort);
 
 		Session session = Session.getInstance(props,
 				new javax.mail.Authenticator() {

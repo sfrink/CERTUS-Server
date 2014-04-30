@@ -88,6 +88,23 @@ public class ConfigurationProperties {
 		return properties.getProperty("rmi_file_keystore_password");
 	}
 	
+	public static String emailAddress(){
+		return properties.getProperty("email_address");
+	}
+
+	public static String emailPassword(){
+		return properties.getProperty("email_password");
+	}
+	
+	public static String smtpServer(){
+		return properties.getProperty("smtp_server");
+	}
+	
+	public static String smtpPort(){
+		return properties.getProperty("smtp_port");
+	}
+
+	
 	public static String emailSystemUrl(){
 		return properties.getProperty("email_system_url");
 	}
