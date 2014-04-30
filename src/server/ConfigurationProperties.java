@@ -93,6 +93,6 @@ public class ConfigurationProperties {
 	}
 	
 	public static String resetPasswordUrl(){
-		return properties.getProperty("reset_pw_url");
+		return properties.getProperty("email_password_reset_url");
 	}
 }
