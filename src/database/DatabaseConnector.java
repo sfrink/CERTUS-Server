@@ -1,5 +1,6 @@
 package database;
 
+import java.rmi.RemoteException;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -4235,4 +4236,43 @@ public class DatabaseConnector
 	return res;
 
 	}
+	
+	public Validator sendTempPassword(UserDto u, String sessionID) throws RemoteException {
+
+        Validator val=new Validator();
+
+    	String temp=PasswordHasher.generateRandomString();
+    	String salt=PasswordHasher.generateSalt();
+    	String tempHash=PasswordHasher.sha512(temp, salt);
+    	Validator set=setTempPassword(u,tempHash,salt);
+    	if(set.isVerified()){
+    		String message="Your temporary CERTUS password is: "+temp+".\n"+
+    				"Use this password with your email address.  This password will only "
+    				+ "work one time, so be sure to change your password once you log in.\n "
+    				+ "Login Page: "+ConfigurationProperties.resetPasswordUrl()+
+    				"\n\nIf you have received this email in error, you can continue to "+
+    				"login with your usual password.";
+    		EmailExchanger.sendEmail(u.getEmail(), "Temporary CERTUS Password", message);
+    		val.setStatus("Sent temp password email");
+    		val.setVerified(true);
+    	}
+    	else{
+    		val=set;
+    	}
+        
+        return val;
+	}
+	
+	public Validator resendInvitation(UserDto u, String sessionID) throws RemoteException{
+    	Validator res = new Validator();
+    	
+    	String password=PasswordHasher.generateRandomString();
+    	
+    	res=updateUserPassword(u, password);
+    	if(res.isVerified()){
+    		u.setPassword(password);
+    		EmailExchanger.sendEmail(u.getEmail(), EmailExchanger.getInvitationSubject(), EmailExchanger.getInvitationBody(u));	
+    	}
+    	return res;
+    }
 }
