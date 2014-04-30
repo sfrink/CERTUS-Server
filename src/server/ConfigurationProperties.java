@@ -88,32 +88,28 @@ public class ConfigurationProperties {
 		return properties.getProperty("rmi_file_keystore_password");
 	}
 	
+	public static String emailAddress(){
+		return properties.getProperty("email_address");
+	}
 
-	public static String securityKeyBasePath(){
-		return properties.getProperty("security_key_base_path");
-	}
-			
-	public static String securityKeystoreTallierAllias(){
-		return properties.getProperty("security_keystore_tallier_alias");
+	public static String emailPassword(){
+		return properties.getProperty("email_password");
 	}
 	
-	public static String securityKeystoreTallierPassword(){
-		return properties.getProperty("security_keystore_tallier_password");
+	public static String smtpServer(){
+		return properties.getProperty("email_smtp_server");
 	}
 	
-	public static String securityKeystoreTallierFile(){
-		return properties.getProperty("security_keystore_tallier_file");
+	public static String smtpPort(){
+		return properties.getProperty("email_smtp_port");
 	}
-	
-	public static String securityKeystoreTallierPrivatekey(){
-		return properties.getProperty("security_keystore_tallier_privatekey");
-	}
+
 	
 	public static String emailSystemUrl(){
 		return properties.getProperty("email_system_url");
 	}
 	
 	public static String resetPasswordUrl(){
-		return properties.getProperty("reset_pw_url");
+		return properties.getProperty("email_password_reset_url");
 	}
 }
