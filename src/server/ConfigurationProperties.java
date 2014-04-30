@@ -97,11 +97,11 @@ public class ConfigurationProperties {
 	}
 	
 	public static String smtpServer(){
-		return properties.getProperty("smtp_server");
+		return properties.getProperty("email_smtp_server");
 	}
 	
 	public static String smtpPort(){
-		return properties.getProperty("smtp_port");
+		return properties.getProperty("email_smtp_port");
 	}
 
 	
