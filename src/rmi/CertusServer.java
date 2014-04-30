@@ -11,9 +11,9 @@ import server.Authoriser;
 import server.ClientsSessions;
 import server.ConfigurationProperties;
 import server.EmailExchanger;
+import server.LoggerCustom;
 import server.PasswordHasher;
 import server.SecurityValidator;
-
 import database.DatabaseConnector;
 import dto.ElectionDto;
 import dto.UserDto;
@@ -87,6 +87,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
     		validator.setObject(user);    		
     	}
+
+    	LoggerCustom.logRmiActivity(0, "PUBLIC: checkIfUsernamePasswordMatch", true);
     	return validator;
     }
     
@@ -432,11 +434,13 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
     
     @Override
     public Validator addUser (UserDto userDto){
+		LoggerCustom.logRmiActivity(userDto.getUserId(), "PUBLIC: addUser", true);
     	return dbc.addUser(userDto);
     }
     
     @Override
     public Validator addUserWithPP (UserDto userDto){
+		LoggerCustom.logRmiActivity(userDto.getUserId(), "PUBLIC: addUserWithPP", true);
     	return dbc.addUserWithPP(userDto);
     }
     
@@ -448,10 +452,12 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
         if (userDto.getPublicKeyBytes().length > 10240){
         	res.setVerified(false);
         	res.setStatus("Large file");
-        	return res;
-        }else{
-        	return dbc.addUserWithKey(userDto);
+        } else {
+        	res = dbc.addUserWithKey(userDto);
         }
+
+		LoggerCustom.logRmiActivity(userDto.getUserId(), "PUBLIC: addUserWithKey", true);
+        return res;
     }
     
     @Override 
@@ -656,6 +662,8 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 
     		validator.setObject(user);    		
     	}
+    	
+		LoggerCustom.logRmiActivity(0, "PUBLIC: checkIfUsernameTempPasswordMatch", true);
     	return validator;
 	}
 	  
@@ -688,6 +696,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 			val.setVerified(false);
 			val.setStatus("Email not registered");
 		}
+		
+		LoggerCustom.logRmiActivity(0, "PUBLIC: resetPassword", true);
+
     	return val;
     }
 }

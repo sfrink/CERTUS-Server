@@ -112,4 +112,8 @@ public class ConfigurationProperties {
 	public static String resetPasswordUrl(){
 		return properties.getProperty("email_password_reset_url");
 	}
+	
+	public static String logFilename(){
+		return properties.getProperty("log_filename");
+	}
 }

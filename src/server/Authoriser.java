@@ -42,6 +42,7 @@ public class Authoriser {
 		//requesterID should be invited to electionID:
 		res &= dbc.isInvited(requesterID, electionID);
 		
+		LoggerCustom.logRmiActivity(requesterID, action, res);
 		return res;
 	}
 	
@@ -64,6 +65,7 @@ public class Authoriser {
 			return false;
 		}
 
+		LoggerCustom.logRmiActivity(requesterID, action, res);
 		return res;
 	}
 	
@@ -94,6 +96,7 @@ public class Authoriser {
 		Validator canBeInvoked = dbc.checkRoleRight(userRoleID, actionID);
 		allowed = canBeInvoked.isVerified();
 		
+		LoggerCustom.logRmiActivity(userID, methodName, allowed);
 		return allowed;
 	}
 
@@ -119,6 +122,7 @@ public class Authoriser {
 			return false;
 		}
 		
+		LoggerCustom.logRmiActivity(requesterID, action, res);
 		return res;
 	}
 	
@@ -142,6 +146,7 @@ public class Authoriser {
 			return false;
 		}
 
+		LoggerCustom.logRmiActivity(requesterID, action, res);
 		return res;
 	}
 	
