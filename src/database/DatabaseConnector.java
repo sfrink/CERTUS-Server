@@ -2262,20 +2262,21 @@ public class DatabaseConnector
 				st = this.con.prepareStatement(query);
 				st.setInt(1, electionId);
 			}
-			
-			ResultSet res = st.executeQuery();
-			if (res.next()) {
-				if (isCountEmails) {
-					String emails = res.getString(1);
-					String[] emailList = emails.split(newLine);
-					for (String email : emailList){
-						if (!email.trim().isEmpty()) {
-							count++;
+			if (st != null) {
+				ResultSet res = st.executeQuery();
+				if (res.next()) {
+					if (isCountEmails) {
+						String emails = res.getString(1);
+						String[] emailList = emails.split(newLine);
+						for (String email : emailList){
+							if (!email.trim().isEmpty()) {
+								count++;
+							}
 						}
+						
+					} else {
+						count = res.getInt(1);
 					}
-					
-				} else {
-					count = res.getInt(1);
 				}
 			}
 		} catch (MySQLNonTransientConnectionException ex) {
