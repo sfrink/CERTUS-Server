@@ -2215,7 +2215,7 @@ public class DatabaseConnector
 				electionProgressDto.setTotalVotes(votes.size());
 
 				// set the total number of allowed votes
-				electionProgressDto.setTotalEligible(countElligibleVoters(electionId));
+				electionProgressDto.setTotalEligible(countEligibleVoters(electionId));
 
 				// bind the final result to the validator
 				val.setObject(electionProgressDto);
@@ -2240,27 +2240,43 @@ public class DatabaseConnector
 	 *  			public election  - total non admin active users.
 	 * @author Hirosh
 	 */
-	private int countElligibleVoters(int electionId){
+	private int countEligibleVoters(int electionId){
 		
 		int count = 0;
 		Validator vElection = selectElectionForOwner(electionId);
 		ElectionDto electionDto = (ElectionDto)vElection.getObject();
 		String query = "";
 		PreparedStatement st = null;
-		
+		boolean isCountEmails = false;
 		try {
 			if (electionDto.getElectionType() == ElectionType.PUBLIC.getCode()) {
 				query = "SELECT COUNT(user_id) FROM users WHERE type IN (0,2) AND status = 1";
 				st = this.con.prepareStatement(query);
 			} else if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
-				query = "SELECT COUNT(id) FROM participate WHERE election_id =  ?" ;
+				if (electionDto.getStatus() == ElectionStatus.NEW.getCode()) {
+					isCountEmails = true;
+					query = "SELECT allowed_users_emails FROM election WHERE election_id =  ?" ;
+				} else {
+					query = "SELECT COUNT(id) FROM participate WHERE election_id =  ?" ;
+				}
 				st = this.con.prepareStatement(query);
 				st.setInt(1, electionId);
 			}
 			
 			ResultSet res = st.executeQuery();
 			if (res.next()) {
-				count = res.getInt(1);
+				if (isCountEmails) {
+					String emails = res.getString(1);
+					String[] emailList = emails.split(newLine);
+					for (String email : emailList){
+						if (!email.trim().isEmpty()) {
+							count++;
+						}
+					}
+					
+				} else {
+					count = res.getInt(1);
+				}
 			}
 		} catch (MySQLNonTransientConnectionException ex) {
 			reconnectToDb();
