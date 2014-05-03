@@ -2214,18 +2214,8 @@ public class DatabaseConnector
 				ArrayList<VoteDto> votes = (ArrayList<VoteDto>) valVote.getObject();
 				electionProgressDto.setTotalVotes(votes.size());
 
-				for (VoteDto voteDto : votes) {
-
-					// check for the validity
-					if (sec.checkSignature(voteDto).isVerified()) {
-						// valid vote
-						electionProgressDto.addValidVotes(1);
-
-					} else {
-						// rejected vote
-						electionProgressDto.addRejectedVotes(1);
-					}
-				}
+				// set the total number of allowed votes
+				electionProgressDto.setTotalEligible(countEligibleVoters(electionId));
 
 				// bind the final result to the validator
 				val.setObject(electionProgressDto);
@@ -2241,6 +2231,64 @@ public class DatabaseConnector
 		}
 
 		return val;
+	}
+	
+	/**
+	 * @param electionId - election identifying number
+	 * @return - count of number of eligible user who can vote for this election
+	 *  			private election - count of users in the participate table
+	 *  			public election  - total non admin active users.
+	 * @author Hirosh
+	 */
+	private int countEligibleVoters(int electionId){
+		
+		int count = 0;
+		Validator vElection = selectElectionForOwner(electionId);
+		ElectionDto electionDto = (ElectionDto)vElection.getObject();
+		String query = "";
+		PreparedStatement st = null;
+		boolean isCountEmails = false;
+		try {
+			if (electionDto.getElectionType() == ElectionType.PUBLIC.getCode()) {
+				query = "SELECT COUNT(user_id) FROM users WHERE type IN (0,2) AND status = 1";
+				st = this.con.prepareStatement(query);
+			} else if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
+				if (electionDto.getStatus() == ElectionStatus.NEW.getCode()) {
+					isCountEmails = true;
+					query = "SELECT allowed_users_emails FROM election WHERE election_id =  ?" ;
+				} else {
+					query = "SELECT COUNT(id) FROM participate WHERE election_id =  ?" ;
+				}
+				st = this.con.prepareStatement(query);
+				st.setInt(1, electionId);
+			}
+			if (st != null) {
+				ResultSet res = st.executeQuery();
+				if (res.next()) {
+					if (isCountEmails) {
+						String emails = res.getString(1);
+						String[] emailList = emails.split(newLine);
+						for (String email : emailList){
+							if (!email.trim().isEmpty()) {
+								count++;
+							}
+						}
+						
+					} else {
+						count = res.getInt(1);
+					}
+				}
+			}
+		} catch (MySQLNonTransientConnectionException ex) {
+			reconnectToDb();
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (SQLException ex) {
+			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		}
+		
+		return count;
 	}
 
 	/**
