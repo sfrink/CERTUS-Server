@@ -2250,8 +2250,7 @@ public class DatabaseConnector
 		boolean isCountEmails = false;
 		try {
 			if (electionDto.getElectionType() == ElectionType.PUBLIC.getCode()) {
-				query = "SELECT COUNT(user_id) FROM users WHERE type IN (0,2) AND status = 1";
-				st = this.con.prepareStatement(query);
+				count = -1;
 			} else if (electionDto.getElectionType() == ElectionType.PRIVATE.getCode()) {
 				if (electionDto.getStatus() == ElectionStatus.NEW.getCode()) {
 					isCountEmails = true;
@@ -2261,21 +2260,22 @@ public class DatabaseConnector
 				}
 				st = this.con.prepareStatement(query);
 				st.setInt(1, electionId);
-			}
-			if (st != null) {
-				ResultSet res = st.executeQuery();
-				if (res.next()) {
-					if (isCountEmails) {
-						String emails = res.getString(1);
-						String[] emailList = emails.split(newLine);
-						for (String email : emailList){
-							if (!email.trim().isEmpty()) {
-								count++;
+			
+				if (st != null) {
+					ResultSet res = st.executeQuery();
+					if (res.next()) {
+						if (isCountEmails) {
+							String emails = res.getString(1);
+							String[] emailList = emails.split(newLine);
+							for (String email : emailList){
+								if (!email.trim().isEmpty()) {
+									count++;
+								}
 							}
+							
+						} else {
+							count = res.getInt(1);
 						}
-						
-					} else {
-						count = res.getInt(1);
 					}
 				}
 			}
