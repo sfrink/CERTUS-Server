@@ -280,8 +280,8 @@ public class DatabaseConnector
 			if(repeatDbCon) {
 				// Revoke D one more time
 				reconnectToDb();
-				userDto = selectUserByEmailLimited(emailToSelect);
 				repeatDbCon = false;
+				userDto = selectUserByEmailLimited(emailToSelect);
 			} else {
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
