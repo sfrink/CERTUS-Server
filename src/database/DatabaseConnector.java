@@ -2906,15 +2906,18 @@ System.out.println("asdasdasd");
 			} else {
 				val.setStatus("User not found ");
 			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("Select failed");
+			repeatDbCon = true;
 		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("Select failed");
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = selectElectionForOwner(userId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return val;
@@ -2950,11 +2953,18 @@ System.out.println("asdasdasd");
 			} else {
 				val.setStatus("Failed to update the user");
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = editUser(userDto);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}		
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -2988,12 +2998,20 @@ System.out.println("asdasdasd");
 			} else {
 				val.setStatus("Failed to update the user status");
 			}
-			
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = editUserStatus(userId, userStatus);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
+			
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3028,11 +3046,19 @@ System.out.println("asdasdasd");
 				val.setVerified(false);
 				val.setStatus("User not found.");
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");			
+			val.setStatus("SQL Error");
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = getUserRoleByID(userID);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		} catch (SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3069,11 +3095,22 @@ System.out.println("asdasdasd");
 				val.setVerified(false);
 				val.setStatus("User role is not allowed to invoke action.");
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");			
+			
+			val.setStatus("SQL Error");
+			
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = checkRoleRight(roleID, actionID);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
+			
 		} catch (SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3109,11 +3146,21 @@ System.out.println("asdasdasd");
 				val.setVerified(false);
 				val.setStatus("Method name is not found.");
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");			
+			
+			val.setStatus("SQL Error");
+			
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = getActionIDbyMethod(methodName);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		} catch (SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3159,11 +3206,20 @@ System.out.println("asdasdasd");
 				val.setStatus("No rights found.");
 			}
 			
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");			
+			val.setStatus("SQL Error");
+			
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = getRoleRights(roleID);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		} catch (SQLException ex){
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3242,11 +3298,20 @@ System.out.println("asdasdasd");
 					} else {
 						res.setStatus("Failed to insert user");
 					}
+					repeatDbCon = true;
 				} catch (MySQLNonTransientConnectionException ex) {
-					reconnectToDb();
-					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-					lgr.log(Level.WARNING, ex.getMessage(), ex);
 					res.setStatus("SQL Error");
+					if(repeatDbCon) {
+						// Revoke one more time
+						reconnectToDb();
+						repeatDbCon = false;
+						res = addUser(newUser);
+					} else {
+						Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+						lgr.log(Level.WARNING, ex.getMessage(), ex);
+						repeatDbCon = true;
+					}
+					
 				} catch (SQLException ex) {
 					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 					lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3287,10 +3352,18 @@ System.out.println("asdasdasd");
 				res.setVerified(false);
 				res.setStatus("User not found");
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				res = getUserEmail (userID);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3354,10 +3427,21 @@ System.out.println("asdasdasd");
 				//send the private key as an email:
 				rsaKeys.sendProtectedPrivateKey(email);				
 				
+				repeatDbCon = true;
 			} catch (MySQLNonTransientConnectionException ex) {
-				reconnectToDb();
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				
+				
+				if(repeatDbCon) {
+					// Revoke one more time
+					reconnectToDb();
+					repeatDbCon = false;
+					res = generateNewKeys(userID, newKeyPass, userPassword);
+				} else {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					repeatDbCon = true;
+				}
+				
 			} catch (SQLException ex) {
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3397,11 +3481,20 @@ System.out.println("asdasdasd");
 			} else {
 				val.setStatus("Failed to update the user");
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			val.setStatus("SQL Error");
+			 
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = updateUser(userDto);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3464,11 +3557,20 @@ System.out.println("asdasdasd");
 			} else {
 				res.setStatus("Failed to update password");
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			res.setStatus("SQL Error");
+			
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				res = updateUserPassword(userInfo);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3511,11 +3613,22 @@ System.out.println("asdasdasd");
 			} else {
 				res.setStatus("Failed to update password");
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			res.setStatus("SQL Error");
+			
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				res = updateUserPassword(userInfo, newPassword);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
+			
+			
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
 			lgr.log(Level.WARNING, ex.getMessage(), ex);
@@ -3575,12 +3688,22 @@ System.out.println("asdasdasd");
 				res.setVerified(false);
 				res.setStatus("Failed to update public key");
 			}
-			
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
 			res.setStatus("SQL Exception");
+			
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				res = uploadPubKey(keyBytes, userID, userPassword);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
+			
+			
 		} catch (SQLException ex) {
 			ex.printStackTrace();
 			res.setVerified(false);
@@ -3610,10 +3733,18 @@ System.out.println("asdasdasd");
 				int type = rs.getInt(1);
 				res = (type == 1) ? true : false;
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				res = isPublicElection(electionID);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}	
 			res = false;
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -3651,10 +3782,19 @@ System.out.println("asdasdasd");
 			st.setInt(2, electionID);
 			ResultSet rs = st.executeQuery();
 			res = (rs.next()) ? true : false;	
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				res = gotAccessToElection(userID, electionID);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 			res = false;
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -3684,10 +3824,19 @@ System.out.println("asdasdasd");
 			st.setInt(2, userID);
 			ResultSet rs = st.executeQuery();
 			res = (rs.next()) ? true : false;	
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				res = isElectionAuth(userID, electionID);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
+			
 			res = false;
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -3724,10 +3873,18 @@ System.out.println("asdasdasd");
 				val.setVerified(false);
 				val.setStatus("Public key does not exist for this election");
 			}
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = getTallierPublicKey(electionId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 			val.setVerified(false);
 			val.setStatus("Failed to retrieve public key");
 		} catch(SQLException ex){
@@ -3769,10 +3926,19 @@ System.out.println("asdasdasd");
 				val.setVerified(false);
 				val.setStatus("Private key does not exist for this election");
 			}
+			repeatDbCon = true;
 		} catch(MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = getPrivateKey(electionId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
+
 			val.setVerified(false);
 			val.setStatus("Failed to retrieve private key");
 		} catch(SQLException ex){
@@ -3807,10 +3973,19 @@ System.out.println("asdasdasd");
 			st.setInt(2, requesterID);
 			ResultSet rs = st.executeQuery();
 			res = (rs.next()) ? true : false;	
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				res = isInvited(requesterID, electionID);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
+			
 			res = false;
 		} catch (SQLException ex) {
 			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
@@ -3820,9 +3995,7 @@ System.out.println("asdasdasd");
 		
 		return res;
 	}
-	
-	
-	
+
 	/**
 	 * Gets the private key of the election
 	 * @param electionId
@@ -3832,7 +4005,6 @@ System.out.println("asdasdasd");
 	public Validator getElectionPrivateKey(int electionId, String password) {
 		Validator vKey = new Validator();
 		Validator vKeyDb = getPrivateKey(electionId);
-		
 		
 		if(vKeyDb.isVerified()) {			
 			// key from DB has been fetched
@@ -3874,10 +4046,20 @@ System.out.println("asdasdasd");
 			st.execute();
 			val.setStatus("Updated temp password");
 			val.setVerified(true);
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = setTempPassword(u, temp, salt);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
+			
 			val.setVerified(false);
 			val.setStatus("Failed to add temp password");
 		} catch(SQLException ex){
@@ -4009,10 +4191,20 @@ System.out.println("asdasdasd");
 					} else {
 						res.setStatus("Failed to insert user");
 					}
+					repeatDbCon = true;
 				} catch (MySQLNonTransientConnectionException ex) {
-					reconnectToDb();
-					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					
+					if(repeatDbCon) {
+						// Revoke one more time
+						reconnectToDb();
+						repeatDbCon = false;
+						res = addUserWithPP(newUser);
+					} else {
+						Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+						lgr.log(Level.WARNING, ex.getMessage(), ex);
+						repeatDbCon = true;
+					}
+					
 					res.setVerified(false);
 					res.setStatus("SQL Error");
 				} catch (SQLException ex) {
@@ -4092,10 +4284,20 @@ System.out.println("asdasdasd");
 					} else {
 						res.setStatus("Failed to insert user");
 					}
+					
+					repeatDbCon = true;
 				} catch (MySQLNonTransientConnectionException ex) {
-					reconnectToDb();
-					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					if(repeatDbCon) {
+						// Revoke one more time
+						reconnectToDb();
+						repeatDbCon = false;
+						res = addUserWithKey(newUser);
+					} else {
+						Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+						lgr.log(Level.WARNING, ex.getMessage(), ex);
+						repeatDbCon = true;
+					}
+
 					res.setVerified(false);
 					res.setStatus("SQL Error");
 				} catch (SQLException ex) {
@@ -4129,10 +4331,19 @@ System.out.println("asdasdasd");
 			st.execute();
 			val.setVerified(true);
 			val.setStatus("Temporary password removed");
+			repeatDbCon = true;
 		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = removeTempPassword(u);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
+			
 			val.setVerified(false);
 			val.setStatus("SQL Error");
 		} catch(SQLException ex){
@@ -4202,10 +4413,21 @@ System.out.println("asdasdasd");
 				} else {
 					res.setStatus("Failed to update user");
 				}
+				
+				repeatDbCon = true;
 			} catch (MySQLNonTransientConnectionException ex) {
-				reconnectToDb();
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
+
+				if(repeatDbCon) {
+					// Revoke one more time
+					reconnectToDb();
+					repeatDbCon = false;
+					res = updateTempUser(user);
+				} else {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					repeatDbCon = true;
+				}
+				
 				res.setVerified(false);
 				res.setStatus("SQL Error");
 			} catch (SQLException ex) {
@@ -4280,10 +4502,20 @@ System.out.println("asdasdasd");
 				} else {
 					res.setStatus("Failed to update user");
 				}
+				repeatDbCon = true;
 			} catch (MySQLNonTransientConnectionException ex) {
-				reconnectToDb();
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
+
+				if(repeatDbCon) {
+					// Revoke one more time
+					reconnectToDb();
+					repeatDbCon = false;
+					res = UpdateTempUserWithPP(user);
+				} else {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					repeatDbCon = true;
+				}
+				
 				res.setVerified(false);
 				res.setStatus("SQL Error");
 			} catch (SQLException ex) {
@@ -4355,10 +4587,20 @@ System.out.println("asdasdasd");
 				} else {
 					res.setStatus("Failed to update user");
 				}
+				repeatDbCon = true;
 			} catch (MySQLNonTransientConnectionException ex) {
-				reconnectToDb();
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
+
+				if(repeatDbCon) {
+					// Revoke one more time
+					reconnectToDb();
+					repeatDbCon = false;
+					res = UpdateTempUserWithKey(user);
+				} else {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					repeatDbCon = true;
+				}
+
 				res.setVerified(false);
 				res.setStatus("SQL Error");
 			} catch (SQLException ex) {
