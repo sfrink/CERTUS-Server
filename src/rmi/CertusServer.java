@@ -67,11 +67,9 @@ public class CertusServer extends UnicastRemoteObject implements ServerInterface
 			refMonitor = new Authoriser(dbc);
 			clientSessions = new ClientsSessions();
 			
-			System.out.println("Certus Service bound in registry");
-			
-			
+			System.out.println("Certus Service bound in registry");			
 		} catch (Exception e) {
-			System.out.println("Certus RMI service exception: " + e.getMessage());
+			System.out.println("ERROR: CERTUS RMI service exception: " + e.getMessage());
 			e.printStackTrace();
 		}
     }

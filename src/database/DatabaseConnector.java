@@ -55,6 +55,8 @@ public class DatabaseConnector
 	private static String	dbName;
 	private Connection		con;
 	private static String 	newLine = System.getProperty("line.separator");
+	private static boolean repeatDbCon = true;
+
 	
 	public DatabaseConnector()
 	{
@@ -270,18 +272,21 @@ public class DatabaseConnector
 				userDto.setType(type);
 				userDto.setTempPassword(res.getString(8));
 				userDto.setTempSalt(res.getString(9));
-				
+				repeatDbCon = true;
 			} else {
 				userDto=null;
 			}
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke D one more time
+				reconnectToDb();
+				userDto = selectUserByEmailLimited(emailToSelect);
+				repeatDbCon = false;
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return userDto;
