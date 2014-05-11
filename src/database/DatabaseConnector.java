@@ -48,13 +48,13 @@ import enumeration.UserStatus;
 
 public class DatabaseConnector
 {
-	private static String	dbHost;
-	private static String	dbPort;
-	private static String	dbUser;
-	private static String	dbPassword;
-	private static String	dbName;
-	private Connection		con;
-	private static String 	newLine = System.getProperty("line.separator");
+	private static String dbHost;
+	private static String dbPort;
+	private static String dbUser;
+	private static String dbPassword;
+	private static String dbName;
+	private Connection con;
+	private static String newLine = System.getProperty("line.separator");
 	private static boolean repeatDbCon = true;
 
 	
@@ -117,15 +117,21 @@ public class DatabaseConnector
 				u.setPublicKey(res.getString(10));
 				u.setType(res.getInt(11));
 				u.setStatus(res.getInt(12));
+				repeatDbCon = true;
 			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				u = selectUserById(userId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
+
 
 		return u;
 	}
@@ -219,15 +225,19 @@ public class DatabaseConnector
 			if (res.next()) {
 				v.setVerified(true);
 				v.setStatus("");
-				return v;
+				repeatDbCon = true;
 			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				v = checkUserEmail(emailToSelect);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return v;
@@ -240,7 +250,7 @@ public class DatabaseConnector
 	 */
 	public UserDto selectUserByEmailLimited(String emailToSelect) {
 		UserDto userDto = new UserDto();
-
+System.out.println("asdasdasd");
 		PreparedStatement st = null;
 
 		String query = "SELECT user_id, first_name, last_name, password, salt, status, type, "
@@ -276,17 +286,20 @@ public class DatabaseConnector
 			} else {
 				userDto=null;
 			}
-		} catch (Exception ex) {
+		} catch (MySQLNonTransientConnectionException e) {
+			System.out.println("FAILED DB");
 			if(repeatDbCon) {
-				// Revoke D one more time
+				// Revoke one more time
 				reconnectToDb();
 				repeatDbCon = false;
 				userDto = selectUserByEmailLimited(emailToSelect);
 			} else {
 				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				lgr.log(Level.WARNING, e.getMessage(), e);
 				repeatDbCon = true;
 			}
+		} catch (Exception e) {
+			System.out.println("FAILED DB");
 		}
 
 		return userDto;
@@ -320,20 +333,22 @@ public class DatabaseConnector
 				userDto.setLastName(last_name);
 				userDto.setStatus(statusId);
 				userDto.setType(type);
-				
+				repeatDbCon = true;
 			} else {
 				userDto=null;
 			}
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				userDto = selectUserByEmailNoPassword(emailToSelect);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
-
 		return userDto;
 	}
 
@@ -393,20 +408,21 @@ public class DatabaseConnector
 				validator.setVerified(true);
 				validator.setObject(electionDto);
 				validator.setStatus("Select successful");
+				repeatDbCon = true;
 			} else {
 				validator.setStatus("Election not found");
 			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			validator.setVerified(false);
-			validator.setStatus("Select failed");
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			validator.setVerified(false);
-			validator.setStatus("Select failed");
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				validator = selectElectionForOwner(id);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return validator;
@@ -471,20 +487,21 @@ public class DatabaseConnector
 				validator.setVerified(true);
 				validator.setObject(electionDto);
 				validator.setStatus("Select successful");
+				repeatDbCon = true;
 			} else {
 				validator.setStatus("Election not found");
 			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setVerified(false);
-			validator.setStatus("Select failed");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setVerified(false);
-			validator.setStatus("Select failed");
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				validator = selectElectionForVoter(id);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		
 		return validator;
@@ -551,22 +568,21 @@ public class DatabaseConnector
 				validator.setVerified(true);
 				validator.setObject(electionDto);
 				validator.setStatus("Select successful");
+				repeatDbCon = true;
 			} else {
 				validator.setStatus("Election not found");
 			}
-			
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setVerified(false);
-			validator.setStatus("Select failed");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setVerified(false);
-			validator.setStatus("Select failed");
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				validator = selectElectionFullDetail(id);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return validator;
@@ -631,16 +647,18 @@ public class DatabaseConnector
 			validator.setVerified(true);
 			validator.setObject(elections);
 			validator.setStatus("Successfully selected");
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select Failed.");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select Failed.");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				validator = selectElectionsForAdmin();
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return validator;
@@ -725,16 +743,18 @@ public class DatabaseConnector
 			validator.setVerified(true);
 			validator.setObject(elections);
 			validator.setStatus("Successfully selected");
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select failed");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select failed");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				validator = selectElectionsForResults(userId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return validator;
@@ -802,16 +822,18 @@ public class DatabaseConnector
 			validator.setVerified(true);
 			validator.setObject(elections);
 			validator.setStatus("Successfully selected");
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select failed");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select failed");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				validator = selectElectionsForOwner(electionOwnerId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return validator;
@@ -874,17 +896,19 @@ public class DatabaseConnector
 			val.setStatus("Retrieved Elections");
 			val.setVerified(true);
 			val.setObject(elecs);
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("Select failed");
-			val.setVerified(false);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("Select failed");
-			val.setVerified(false);
+			repeatDbCon = true;
+
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = selectElectionsForVoter(user_id);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		return val;
 
@@ -929,19 +953,22 @@ public class DatabaseConnector
 				validator.setVerified(true);
 				validator.setObject(candidateDto);
 				validator.setStatus("Successfully selected");
+				repeatDbCon = true;
 			} else {
 				validator.setStatus("Candidate not found");
 			}
 
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select failed");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select failed");
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				validator = selectCandidate(id);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return validator;
@@ -989,16 +1016,18 @@ public class DatabaseConnector
 			validator.setVerified(true);
 			validator.setObject(candidates);
 			validator.setStatus("Successfully selected");
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("Select failed");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setStatus("select failed");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				validator = selectCandidatesOfElection(electionIdKey);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return validator;
@@ -1050,19 +1079,21 @@ public class DatabaseConnector
 			validator.setVerified(true);
 			validator.setObject(candidates);
 			validator.setStatus("Successfully selected");
+			repeatDbCon = true;
 
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setVerified(false);
-			validator.setStatus("Database Connection Failed");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			validator.setVerified(false);
-			validator.setStatus("Select failed");
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				validator = selectCandidatesOfElection(electionIdKey, candidateStatus);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
+
 		return validator;
 	}
 
@@ -1094,14 +1125,19 @@ public class DatabaseConnector
 			while (res.next()) {
 				currentEmailList += res.getString(3) + newLine;
 			}
+			repeatDbCon = true;
 
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);			
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				currentEmailList = selectParticipatingVotersOfElection(electionIdKey);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return currentEmailList;
@@ -1157,20 +1193,21 @@ public class DatabaseConnector
 					newId = rs.getInt(1);
 				}
 			}
+			repeatDbCon = true;
 
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);	
-		} catch (Exception e){
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, e.getMessage(), e);	
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				newId = addElectionWithCandidatesString(electionDto);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		
-
 		return newId;
 	}
 	
@@ -1274,18 +1311,18 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to insert candidate");
 			}
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setVerified(false);
-			val.setStatus("SQL Error");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setVerified(false);
-			val.setStatus("SQL Error");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = addCandidate(candidateDto);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return val;
@@ -1683,18 +1720,18 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to insert user : " + email);
 			}
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setVerified(false);
-			val.setStatus("SQL Error");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setVerified(false);
-			val.setStatus("SQL Error");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = AddAllowedUser(electionId, email, userRole);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return val;
@@ -1725,14 +1762,18 @@ public class DatabaseConnector
 				// delete= sucessful
 				status = true;
 			}
-
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				status = deleteCandidates(electionId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		return status;
 	}
@@ -1770,15 +1811,18 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to update the election status");
 			}
-			
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = editElectionStatus(electionId, electionStatus);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		return val;
 	}
@@ -1807,15 +1851,19 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to delete the election");
 			}
-			
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
+			repeatDbCon = true;
+
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = deleteElection(electionId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		return val;
 	}
@@ -1861,14 +1909,18 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to update the election");
 			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = editElectionWithCandidatesString(electionDto);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return val;
@@ -1921,15 +1973,18 @@ public class DatabaseConnector
 					val.setObject(voteDto);
 					val.setStatus("invalid signature for this vote");
 				}
-			} catch (MySQLNonTransientConnectionException ex) {
-				reconnectToDb();
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-				val.setStatus("SQL Error");
-			} catch (SQLException ex) {
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-				val.setStatus("SQL Error");
+				repeatDbCon = true;
+			} catch (Exception ex) {
+				if(repeatDbCon) {
+					// Revoke one more time
+					reconnectToDb();
+					repeatDbCon = false;
+					val = vote(voteDto);
+				} else {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					repeatDbCon = true;
+				}
 			}
 		} else {
 			val.setStatus("Vote information did not validate");
@@ -1970,16 +2025,18 @@ public class DatabaseConnector
 				} else {
 					val.setStatus("No public key for this user id");
 				}
-
-			} catch (MySQLNonTransientConnectionException ex) {
-				reconnectToDb();
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-				val.setStatus("SQL Error");
-			} catch (SQLException ex) {
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-				val.setStatus("SQL Error");
+				repeatDbCon = true;
+			} catch (Exception ex) {
+				if(repeatDbCon) {
+					// Revoke one more time
+					reconnectToDb();
+					repeatDbCon = false;
+					val = selectUserPublicKey(userDto);
+				} else {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					repeatDbCon = true;
+				}
 			}
 		} else {
 			val = vUserDto; // Failed to validate the user id
@@ -2028,15 +2085,18 @@ public class DatabaseConnector
 			} else {
 				val = vElection; // Failed to validate the election id
 			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = selectVotesByElectionId(election_id);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		return val;
 	}
@@ -2049,7 +2109,7 @@ public class DatabaseConnector
 	 * @return Validator with electionDto object
 	 * @author Hirosh Wickramasuriya
 	 */
-	private Validator checkUserEmails(ElectionDto electionDto){
+	private Validator checkUserEmails(ElectionDto electionDto) {
 		Validator val=new Validator();
 		
 		String registeredEmails = "";
@@ -2091,6 +2151,7 @@ public class DatabaseConnector
 		
 		return val;
 	}
+	
 	private Map<Integer, CandidateDto> initMap(ElectionDto elec){
 		Map<Integer, CandidateDto> map = new HashMap<Integer, CandidateDto>();
 		
@@ -2245,7 +2306,7 @@ public class DatabaseConnector
 	 *  			public election  - total non admin active users.
 	 * @author Hirosh
 	 */
-	private int countEligibleVoters(int electionId){
+	private int countEligibleVoters(int electionId) {
 		
 		int count = 0;
 		Validator vElection = selectElectionForOwner(electionId);
@@ -2284,13 +2345,19 @@ public class DatabaseConnector
 					}
 				}
 			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+			repeatDbCon = true;
+			
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				count = countEligibleVoters(electionId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		
 		return count;
@@ -2448,14 +2515,19 @@ public class DatabaseConnector
 			rs = st.getGeneratedKeys();
 			rs.next();
 			newId = rs.getInt(1);
+			repeatDbCon = true;
 
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				newId = addResult(candidateDto); 
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return newId;
@@ -2484,14 +2556,19 @@ public class DatabaseConnector
 				// delete= sucessful
 				status = true;
 			}
+			repeatDbCon = true;
 
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				status = deleteResults(electionId);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		return status;
 	}
@@ -2561,16 +2638,18 @@ public class DatabaseConnector
 				val.setVerified(true);
 				val.setObject(electionDto);
 				val.setStatus("Results selected successfully");
-
-			} catch (MySQLNonTransientConnectionException ex) {
-				reconnectToDb();
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-				val.setStatus("Select failed");
-			} catch (SQLException ex) {
-				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-				lgr.log(Level.WARNING, ex.getMessage(), ex);
-				val.setStatus("Select failed");
+				repeatDbCon = true;
+			} catch (Exception ex) {
+				if(repeatDbCon) {
+					// Revoke one more time
+					reconnectToDb();
+					repeatDbCon = false;
+					val = selectResults(electionId);
+				} else {
+					Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+					lgr.log(Level.WARNING, ex.getMessage(), ex);
+					repeatDbCon = true;
+				}
 			}
 		} else {
 			val = vElectionStatus;
@@ -2714,16 +2793,19 @@ public class DatabaseConnector
 			} else {
 				val.setStatus("Failed to insert user");
 			}
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("SQL Error");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			
-			val.setStatus("SQL Error");
+			repeatDbCon = true;
+
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = addUserInvitation(emailInvited);
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 		
 		return val;
@@ -2766,15 +2848,18 @@ public class DatabaseConnector
 			val.setStatus("Retrieved Users");
 			val.setVerified(true);
 			val.setObject(users);
-		} catch (MySQLNonTransientConnectionException ex) {
-			reconnectToDb();
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("Select failed");
-		} catch (SQLException ex) {
-			Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
-			lgr.log(Level.WARNING, ex.getMessage(), ex);
-			val.setStatus("Select failed");
+			repeatDbCon = true;
+		} catch (Exception ex) {
+			if(repeatDbCon) {
+				// Revoke one more time
+				reconnectToDb();
+				repeatDbCon = false;
+				val = selectAllUsers();
+			} else {
+				Logger lgr = Logger.getLogger(DatabaseConnector.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+				repeatDbCon = true;
+			}
 		}
 
 		return val;
