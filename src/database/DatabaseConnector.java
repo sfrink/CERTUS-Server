@@ -250,7 +250,7 @@ public class DatabaseConnector
 	 */
 	public UserDto selectUserByEmailLimited(String emailToSelect) {
 		UserDto userDto = new UserDto();
-System.out.println("asdasdasd");
+
 		PreparedStatement st = null;
 
 		String query = "SELECT user_id, first_name, last_name, password, salt, status, type, "
